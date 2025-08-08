@@ -4,9 +4,34 @@
 
 ## Discord Bot
 
-The `bot/` directory contains a Python application using `discord.py` that relays FetLife updates into Discord. It implements `/fl` slash commands for managing subscriptions and exposes Prometheus metrics at `/metrics`. The bot reads `DISCORD_TOKEN` from a `.env` file.
+The `bot/` directory contains a Python application using `discord.py` that relays FetLife updates into Discord. It implements `/fl` slash commands for managing subscriptions and exposes Prometheus metrics at `/metrics`. Configuration is read from a `.env` file and an optional `config.yaml`.
 
-Run it with:
+### Setup
+
+1. Copy `.env.example` to `.env` and fill in your FetLife credentials, Discord token, database details, and any proxy settings:
+
+   ```bash
+   cp .env.example .env
+   ```
+
+   The `.env` file contains secrets and **must not** be committed to version control.
+
+2. Customize `config.yaml` for per-guild or per-channel defaults. A minimal example:
+
+   ```yaml
+   defaults:
+     thread_per_event: false
+   guilds:
+     "123456789012345678":
+       thread_per_event: true
+       channels:
+         "234567890123456789":
+           attendee_sample: 5
+   ```
+
+   This file is loaded at runtime; avoid storing credentials in it.
+
+Run the bot with:
 
 ```bash
 cd bot
