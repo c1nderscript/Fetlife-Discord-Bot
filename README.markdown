@@ -6,7 +6,44 @@
 
 The `bot/` directory contains a Python application using `discord.py` that relays FetLife updates into Discord. It implements `/fl` slash commands for managing subscriptions and exposes Prometheus metrics at `/metrics` plus a readiness probe at `/ready`. Metrics include counters such as `fetlife_requests_total`, `discord_messages_sent_total`, and `duplicates_suppressed_total` as well as histograms like `poll_cycle_seconds` and gauges such as `rate_limit_tokens`. Configuration is read from a `.env` file and an optional `config.yaml`.
 
-### Setup
+### Docker Compose Quick Start
+
+1. `cp .env.example .env` and edit the file with your FetLife credentials, Discord token, and database settings.
+2. `docker compose up -d` to launch the adapter, bot, and database.
+3. `docker compose run --rm bot alembic upgrade head` to apply database migrations.
+4. Generate an invite link from the [Discord Developer Portal](https://discord.com/developers/applications), invite the bot to your server, then run `/fl login`, `/fl subscribe events location:cities/5898 min_attendees:10`, `/fl list`, and `/fl test <id>` in Discord.
+
+### Environment Variables
+
+The `.env` file supports these keys:
+
+- `FETLIFE_USERNAME` – FetLife account username.
+- `FETLIFE_PASSWORD` – FetLife account password.
+- `DISCORD_TOKEN` – Discord bot token.
+- `DB_HOST`, `DB_PORT`, `DB_NAME`, `DB_USER`, `DB_PASSWORD` – database connection settings.
+- `DATABASE_URL` – optional full connection URL that overrides the above.
+- `FETLIFE_PROXY`, `FETLIFE_PROXY_TYPE`, `FETLIFE_PROXY_USERNAME`, `FETLIFE_PROXY_PASSWORD` – optional proxy configuration.
+
+### Database Migrations
+
+The schema is managed with Alembic. Apply migrations with:
+
+```bash
+alembic upgrade head
+```
+
+When using Docker Compose:
+
+```bash
+docker compose run --rm bot alembic upgrade head
+```
+
+### Health Checks
+
+- Adapter: `GET http://localhost:8080/healthz` for liveness and `GET http://localhost:8080/metrics` for Prometheus metrics.
+- Bot: `GET http://localhost:8000/ready` for readiness and `GET http://localhost:8000/metrics` for Prometheus metrics.
+
+### Manual Setup
 
 1. Copy `.env.example` to `.env` and fill in your FetLife credentials, Discord token, database details, and any proxy settings:
 
@@ -256,3 +293,13 @@ paths:
       responses:
         '200': { description: Posts }
 ```
+
+## Contributing
+
+Pull requests are welcome. Please:
+
+- Limit each PR to a single feature or fix.
+- Include tests and documentation updates.
+- Run `make check` (lint, tests, schema) before submitting.
+- Follow semantic commit messages and Conventional Changelog guidelines.
+
