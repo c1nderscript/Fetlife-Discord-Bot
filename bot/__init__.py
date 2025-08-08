@@ -1,0 +1,1 @@
+"""FetLife Discord bot package."""
