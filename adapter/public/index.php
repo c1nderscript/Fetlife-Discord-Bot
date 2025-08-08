@@ -11,12 +11,38 @@ $dotenv->safeLoad();
 
 $app = AppFactory::create();
 
+$metrics = ['fetlife_requests_total' => 0];
+
+function metric_inc($name)
+{
+    global $metrics;
+    $metrics[$name] = ($metrics[$name] ?? 0) + 1;
+}
+
+function metrics_text()
+{
+    global $metrics;
+    $lines = [];
+    foreach ($metrics as $k => $v) {
+        $lines[] = "# TYPE $k counter";
+        $lines[] = "$k $v";
+    }
+    return implode("\n", $lines) . "\n";
+}
+
+function log_json($level, $message, $context = [])
+{
+    $data = array_merge(['level' => $level, 'message' => $message], $context);
+    error_log(json_encode($data));
+}
+
 function getUser()
 {
     return isset($_SESSION['fetlife_user']) ? unserialize($_SESSION['fetlife_user']) : null;
 }
 
 $app->post('/login', function ($request, $response) {
+    log_json('info', 'login');
     $params = (array) $request->getParsedBody();
     $username = $params['username'] ?? ($_ENV['FETLIFE_USERNAME'] ?? null);
     $password = $params['password'] ?? ($_ENV['FETLIFE_PASSWORD'] ?? null);
@@ -32,6 +58,7 @@ $app->post('/login', function ($request, $response) {
         }
         $user->connection->setProxy($_ENV['FETLIFE_PROXY'], $type);
     }
+    metric_inc('fetlife_requests_total');
     if ($user->logIn()) {
         $_SESSION['fetlife_user'] = serialize($user);
         $response->getBody()->write(json_encode(['status' => 'ok']));
@@ -53,6 +80,8 @@ $app->get('/events', function ($request, $response) {
         $response->getBody()->write(json_encode(['error' => 'missing location']));
         return $response->withStatus(400)->withHeader('Content-Type', 'application/json');
     }
+    log_json('info', 'events', ['location' => $location]);
+    metric_inc('fetlife_requests_total');
     $events = $user->getUpcomingEventsInLocation($location, 1);
     $data = [];
     foreach ($events as $node) {
@@ -75,6 +104,8 @@ $app->get('/events/{id}', function ($request, $response, $args) {
         $response->getBody()->write(json_encode(['error' => 'not authenticated']));
         return $response->withStatus(401)->withHeader('Content-Type', 'application/json');
     }
+    log_json('info', 'event_detail', ['id' => $args['id']]);
+    metric_inc('fetlife_requests_total');
     $event = $user->getEventById($args['id']);
     $data = [
         'id' => $event->id,
@@ -93,6 +124,8 @@ $app->get('/users/{id}/writings', function ($request, $response, $args) {
         $response->getBody()->write(json_encode(['error' => 'not authenticated']));
         return $response->withStatus(401)->withHeader('Content-Type', 'application/json');
     }
+    log_json('info', 'writings', ['id' => $args['id']]);
+    metric_inc('fetlife_requests_total');
     $writings = $user->getWritingsOf($args['id']);
     $data = [];
     foreach ($writings as $w) {
@@ -114,6 +147,8 @@ $app->get('/groups/{id}/posts', function ($request, $response, $args) {
         return $response->withStatus(401)->withHeader('Content-Type', 'application/json');
     }
     $id = $args['id'];
+    log_json('info', 'group_posts', ['id' => $id]);
+    metric_inc('fetlife_requests_total');
     $res = $user->connection->doHttpGet("/groups/$id/group_posts");
     $doc = new DOMDocument();
     @$doc->loadHTML($res['body']);
@@ -132,6 +167,16 @@ $app->get('/groups/{id}/posts', function ($request, $response, $args) {
     }
     $response->getBody()->write(json_encode($posts));
     return $response->withHeader('Content-Type', 'application/json');
+});
+
+$app->get('/healthz', function ($request, $response) {
+    $response->getBody()->write(json_encode(['status' => 'ok']));
+    return $response->withHeader('Content-Type', 'application/json');
+});
+
+$app->get('/metrics', function ($request, $response) {
+    $response->getBody()->write(metrics_text());
+    return $response->withHeader('Content-Type', 'text/plain; version=0.0.4');
 });
 
 $app->run();
