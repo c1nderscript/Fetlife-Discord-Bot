@@ -2,6 +2,17 @@
 
 `libFetLife` is a PHP class implementing a simple API useful for interfacing with the amateur porn and fetish dating website [FetLife.com](https://fetlife.com/). Learn more [about the political motivation for this library](https://web.archive.org/web/20150912020717/https://bandanablog.wordpress.com/2015/04/30/fetlifes-best-customers/).
 
+## Discord Bot
+
+The `bot/` directory contains a Python application using `discord.py` that relays FetLife updates into Discord. It implements `/fl` slash commands for managing subscriptions and exposes Prometheus metrics at `/metrics`. The bot reads `DISCORD_TOKEN` from a `.env` file.
+
+Run it with:
+
+```bash
+cd bot
+python main.py
+```
+
 ## System requirements
 
 To run `libFetLife`, you need PHP version 5.3.6 or greater (with [PHP's cURL extension](https://php.net/manual/book.curl.php) installed).
