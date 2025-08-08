@@ -1,0 +1,7 @@
+aiohttp
+apscheduler
+discord.py
+python-dotenv
+prometheus-client
+SQLAlchemy
+alembic

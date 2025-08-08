@@ -1,81 +1,88 @@
-import json
-import sqlite3
+from __future__ import annotations
+
 from typing import Any, Dict, Iterable, Tuple
 
-DB_PATH = "bot.db"
+from sqlalchemy.orm import Session
+
+from .db import init_db as _init_db
+from . import models
 
 
-def init_db(path: str = DB_PATH) -> sqlite3.Connection:
-    conn = sqlite3.connect(path)
-    cur = conn.cursor()
-    cur.execute(
-        """
-        CREATE TABLE IF NOT EXISTS subscriptions (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            channel_id INTEGER NOT NULL,
-            type TEXT NOT NULL,
-            target TEXT NOT NULL,
-            filters TEXT
-        )
-        """
-    )
-    cur.execute(
-        """
-        CREATE TABLE IF NOT EXISTS channel_settings (
-            channel_id INTEGER PRIMARY KEY,
-            settings TEXT
-        )
-        """
-    )
-    conn.commit()
-    return conn
+def init_db(url: str | None = None) -> Session:
+    return _init_db(url)
 
 
 def add_subscription(
-    conn: sqlite3.Connection,
+    db: Session,
     channel_id: int,
     sub_type: str,
     target: str,
     filters: Dict[str, Any] | None = None,
 ) -> int:
-    cur = conn.cursor()
-    cur.execute(
-        "INSERT INTO subscriptions(channel_id, type, target, filters) VALUES(?, ?, ?, ?)",
-        (channel_id, sub_type, target, json.dumps(filters or {})),
+    if ":" in target:
+        target_kind, target_id = target.split(":", 1)
+    else:
+        target_kind, target_id = "raw", target
+    channel = db.get(models.Channel, channel_id)
+    if not channel:
+        channel = models.Channel(id=channel_id)
+        db.add(channel)
+    sub = models.Subscription(
+        channel_id=channel_id,
+        type=sub_type,
+        target_id=target_id,
+        target_kind=target_kind,
+        filters_json=filters or {},
     )
-    conn.commit()
-    return cur.lastrowid
+    db.add(sub)
+    db.commit()
+    db.refresh(sub)
+    return sub.id
 
 
-def list_subscriptions(conn: sqlite3.Connection, channel_id: int) -> Iterable[Tuple[int, str, str]]:
-    cur = conn.cursor()
-    cur.execute(
-        "SELECT id, type, target FROM subscriptions WHERE channel_id = ? ORDER BY id",
-        (channel_id,),
+def list_subscriptions(db: Session, channel_id: int) -> Iterable[Tuple[int, str, str]]:
+    subs = (
+        db.query(models.Subscription.id, models.Subscription.type, models.Subscription.target_id)
+        .filter(models.Subscription.channel_id == channel_id)
+        .order_by(models.Subscription.id)
+        .all()
     )
-    return cur.fetchall()
+    return subs
 
 
-def remove_subscription(conn: sqlite3.Connection, sub_id: int, channel_id: int) -> None:
-    cur = conn.cursor()
-    cur.execute(
-        "DELETE FROM subscriptions WHERE id = ? AND channel_id = ?",
-        (sub_id, channel_id),
+def remove_subscription(db: Session, sub_id: int, channel_id: int) -> None:
+    db.query(models.Subscription).filter(
+        models.Subscription.id == sub_id, models.Subscription.channel_id == channel_id
+    ).delete()
+    db.commit()
+
+
+def set_channel_settings(db: Session, channel_id: int, **settings: Any) -> None:
+    channel = db.get(models.Channel, channel_id)
+    if not channel:
+        channel = models.Channel(id=channel_id, settings_json=settings)
+        db.add(channel)
+    else:
+        current = channel.settings_json or {}
+        current.update(settings)
+        channel.settings_json = current
+    db.commit()
+
+
+def get_channel_settings(db: Session, channel_id: int) -> Dict[str, Any]:
+    channel = db.get(models.Channel, channel_id)
+    return channel.settings_json or {} if channel else {}
+
+
+def has_relayed(db: Session, sub_id: int, item_id: str) -> bool:
+    return (
+        db.query(models.RelayLog)
+        .filter(models.RelayLog.subscription_id == sub_id, models.RelayLog.item_id == item_id)
+        .first()
+        is not None
     )
-    conn.commit()
 
 
-def set_channel_settings(conn: sqlite3.Connection, channel_id: int, **settings: Any) -> None:
-    cur = conn.cursor()
-    cur.execute(
-        "REPLACE INTO channel_settings(channel_id, settings) VALUES(?, ?)",
-        (channel_id, json.dumps(settings)),
-    )
-    conn.commit()
-
-
-def get_channel_settings(conn: sqlite3.Connection, channel_id: int) -> Dict[str, Any]:
-    cur = conn.cursor()
-    cur.execute("SELECT settings FROM channel_settings WHERE channel_id = ?", (channel_id,))
-    row = cur.fetchone()
-    return json.loads(row[0]) if row else {}
+def record_relay(db: Session, sub_id: int, item_id: str, item_hash: str | None = None) -> None:
+    db.add(models.RelayLog(subscription_id=sub_id, item_id=item_id, item_hash=item_hash))
+    db.commit()
