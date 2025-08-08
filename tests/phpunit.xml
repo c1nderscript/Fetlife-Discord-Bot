@@ -1,0 +1,7 @@
+<phpunit bootstrap="bootstrap.php" convertNoticesToExceptions="false">
+    <php>
+        <env name="FETLIFE_USERNAME" value="%FETLIFE_USERNAME%" />
+        <env name="FETLIFE_PASSWORD" value="%FETLIFE_PASSWORD%" />
+        <env name="FETLIFE_PROXYURL" value="%FETLIFE_PROXYURL%" />
+    </php>
+</phpunit>
