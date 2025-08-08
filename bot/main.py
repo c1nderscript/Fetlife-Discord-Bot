@@ -20,9 +20,12 @@ TOKEN = os.getenv("DISCORD_TOKEN")
 messages_sent = Counter("discord_messages_sent_total", "Messages sent by bot")
 
 
-async def poll_adapter(sub_id: int, data: Dict[str, Any]):
+async def poll_adapter(db, sub_id: int, data: Dict[str, Any]):
     """Placeholder polling job that would contact adapter service."""
-    # In a real implementation this would make HTTP requests to the adapter.
+    item_id = "sample"
+    if storage.has_relayed(db, sub_id, item_id):
+        return
+    storage.record_relay(db, sub_id, item_id)
     await asyncio.sleep(0)
 
 
@@ -60,7 +63,7 @@ async def fl_subscribe(
     sub_id = storage.add_subscription(
         bot.db, interaction.channel_id, sub_type, target, filters_json
     )
-    bot.scheduler.add_job(poll_adapter, args=[sub_id, filters_json], id=str(sub_id))
+    bot.scheduler.add_job(poll_adapter, args=[bot.db, sub_id, filters_json], id=str(sub_id))
     await interaction.response.send_message(f"Subscribed with id {sub_id}")
 
 
