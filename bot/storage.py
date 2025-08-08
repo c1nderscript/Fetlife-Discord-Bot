@@ -74,6 +74,26 @@ def get_channel_settings(db: Session, channel_id: int) -> Dict[str, Any]:
     return channel.settings_json or {} if channel else {}
 
 
+def get_cursor(db: Session, sub_id: int) -> Tuple[Any | None, list[str]]:
+    cur = db.get(models.Cursor, sub_id)
+    if not cur:
+        return None, []
+    ids = cur.last_item_ids_json or []
+    return cur.last_seen_at, ids
+
+
+def update_cursor(
+    db: Session, sub_id: int, last_seen_at: Any, last_item_ids: list[str]
+) -> None:
+    cur = db.get(models.Cursor, sub_id)
+    if not cur:
+        cur = models.Cursor(subscription_id=sub_id)
+        db.add(cur)
+    cur.last_seen_at = last_seen_at
+    cur.last_item_ids_json = last_item_ids
+    db.commit()
+
+
 def has_relayed(db: Session, sub_id: int, item_id: str) -> bool:
     return (
         db.query(models.RelayLog)
