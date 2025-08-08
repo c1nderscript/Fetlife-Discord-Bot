@@ -12,6 +12,7 @@ from dotenv import load_dotenv
 from prometheus_client import CONTENT_TYPE_LATEST, Counter, generate_latest
 
 from . import storage
+from .config import get_channel_config, load_config
 
 load_dotenv()
 TOKEN = os.getenv("DISCORD_TOKEN")
@@ -36,6 +37,7 @@ class FLBot(commands.Bot):
         self.tree.add_command(fl_group)
         self.db = storage.init_db()
         self.scheduler = AsyncIOScheduler()
+        self.config = load_config()
 
     async def setup_hook(self) -> None:
         self.scheduler.start()
@@ -93,7 +95,9 @@ async def fl_test(interaction: discord.Interaction, sub_id: int) -> None:
     embed = discord.Embed(title="Test Notification", description=f"sub {sub_id}")
     msg = await interaction.response.send_message(embed=embed)
     messages_sent.inc()
-    settings = storage.get_channel_settings(bot.db, interaction.channel_id)
+    db_settings = storage.get_channel_settings(bot.db, interaction.channel_id)
+    cfg = get_channel_config(bot.config, interaction.guild_id, interaction.channel_id)
+    settings = {**db_settings, **cfg}
     if settings.get("thread_per_event"):
         await interaction.followup.send("Thread created", ephemeral=True)
 
@@ -106,7 +110,9 @@ async def fl_settings(
         storage.set_channel_settings(bot.db, interaction.channel_id, **{key: value})
         await interaction.response.send_message("Updated settings")
     else:
-        settings = storage.get_channel_settings(bot.db, interaction.channel_id)
+        db_settings = storage.get_channel_settings(bot.db, interaction.channel_id)
+        cfg = get_channel_config(bot.config, interaction.guild_id, interaction.channel_id)
+        settings = {**db_settings, **cfg}
         await interaction.response.send_message(json.dumps(settings or {}))
 
 
