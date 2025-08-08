@@ -175,3 +175,48 @@ $partial_kinksters = $FL->searchKinksters('maymay', 5) // only first 5 pages of 
 * [FetLife Bridge](https://github.com/fabacab/fetlife-bridge/)
 
 Are you using `libFetLife`? [Let me know](http://maybemaimed.com/seminars/#booking-inquiry).
+
+## Adapter HTTP Service
+
+The `adapter/` directory provides a small Slim-based HTTP service that wraps `FetLife.php`.
+It reads credentials from environment variables (`FETLIFE_USERNAME`, `FETLIFE_PASSWORD`, `FETLIFE_PROXY`, `FETLIFE_PROXY_TYPE`).
+
+### OpenAPI
+
+```yaml
+openapi: 3.0.0
+info:
+  title: FetLife Adapter API
+  version: 1.0.0
+paths:
+  /login:
+    post:
+      summary: Authenticate and store session
+      responses:
+        '200': { description: Logged in }
+  /events:
+    get:
+      summary: List upcoming events for a location
+      parameters:
+        - in: query
+          name: location
+          required: true
+          schema: { type: string }
+      responses:
+        '200': { description: Array of events }
+  /events/{id}:
+    get:
+      summary: Fetch event details
+      responses:
+        '200': { description: Event }
+  /users/{id}/writings:
+    get:
+      summary: List writings for a user
+      responses:
+        '200': { description: Writings }
+  /groups/{id}/posts:
+    get:
+      summary: List posts in a group
+      responses:
+        '200': { description: Posts }
+```
