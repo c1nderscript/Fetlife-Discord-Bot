@@ -4,7 +4,7 @@
 
 ## Discord Bot
 
-The `bot/` directory contains a Python application using `discord.py` that relays FetLife updates into Discord. It implements `/fl` slash commands for managing subscriptions and exposes Prometheus metrics at `/metrics`. Configuration is read from a `.env` file and an optional `config.yaml`.
+The `bot/` directory contains a Python application using `discord.py` that relays FetLife updates into Discord. It implements `/fl` slash commands for managing subscriptions and exposes Prometheus metrics at `/metrics` plus a readiness probe at `/ready`. Metrics include counters such as `fetlife_requests_total`, `discord_messages_sent_total`, and `duplicates_suppressed_total` as well as histograms like `poll_cycle_seconds` and gauges such as `rate_limit_tokens`. Configuration is read from a `.env` file and an optional `config.yaml`.
 
 ### Setup
 
@@ -215,7 +215,7 @@ Are you using `libFetLife`? [Let me know](http://maybemaimed.com/seminars/#booki
 ## Adapter HTTP Service
 
 The `adapter/` directory provides a small Slim-based HTTP service that wraps `FetLife.php`.
-It reads credentials from environment variables (`FETLIFE_USERNAME`, `FETLIFE_PASSWORD`, `FETLIFE_PROXY`, `FETLIFE_PROXY_TYPE`).
+It reads credentials from environment variables (`FETLIFE_USERNAME`, `FETLIFE_PASSWORD`, `FETLIFE_PROXY`, `FETLIFE_PROXY_TYPE`) and exposes a `/healthz` endpoint along with Prometheus metrics at `/metrics`.
 
 ### OpenAPI
 
