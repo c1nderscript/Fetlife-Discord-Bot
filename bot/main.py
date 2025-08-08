@@ -3,7 +3,8 @@ import json
 import os
 import time
 import logging
-from datetime import datetime
+import random
+from datetime import datetime, timedelta
 from typing import Any, Dict
 
 import discord
@@ -22,6 +23,7 @@ from prometheus_client import (
 
 from . import storage
 from .config import get_channel_config, load_config
+from .rate_limit import TokenBucket
 
 load_dotenv()
 TOKEN = os.getenv("DISCORD_TOKEN")
@@ -50,11 +52,13 @@ poll_cycle = Summary("poll_cycle_seconds", "Duration of poll cycles")
 duplicates_suppressed = Counter(
     "duplicates_suppressed_total", "Duplicate messages not relayed"
 )
-rate_limit_tokens = Gauge(
-    "rate_limit_tokens", "Tokens currently available in rate limiter"
+adapter_tokens = Gauge(
+    "adapter_rate_limit_tokens", "Tokens currently available for adapter"
 )
+bot_tokens = Gauge("bot_rate_limit_tokens", "Tokens currently available for bot")
 
-rate_limiter = asyncio.Semaphore(5)
+adapter_bucket = TokenBucket(5, 1)
+bot_bucket = TokenBucket(5, 1)
 
 fl_group = app_commands.Group(name="fl", description="FetLife commands")
 
@@ -62,24 +66,46 @@ fl_group = app_commands.Group(name="fl", description="FetLife commands")
 
 
 async def poll_adapter(db, sub_id: int, data: Dict[str, Any]):
-    """Placeholder polling job that would contact adapter service."""
+    """Poll adapter with jitter and backoff, caching cursor and deduping."""
     start = time.perf_counter()
-    await rate_limiter.acquire()
-    rate_limit_tokens.set(rate_limiter._value)
+    await adapter_bucket.acquire()
+    adapter_tokens.set(adapter_bucket.get_tokens())
+    success = True
     try:
+        last_seen, last_ids = storage.get_cursor(db, sub_id)
         item_id = "sample"
         fetlife_requests.inc()
         if storage.has_relayed(db, sub_id, item_id):
             duplicates_suppressed.inc()
             logger.info("duplicate", extra={"sub_id": sub_id, "item": item_id})
-            return
-        storage.record_relay(db, sub_id, item_id)
-        await asyncio.sleep(0)
+        else:
+            storage.record_relay(db, sub_id, item_id)
+            storage.update_cursor(db, sub_id, datetime.utcnow(), [item_id])
+            await asyncio.sleep(0)
+    except Exception as exc:  # pragma: no cover - error path
+        logger.error("poll_error", extra={"sub_id": sub_id, "error": str(exc)})
+        success = False
     finally:
         poll_cycle.observe(time.perf_counter() - start)
-        rate_limiter.release()
-        rate_limit_tokens.set(rate_limiter._value)
+        adapter_tokens.set(adapter_bucket.get_tokens())
         bot.last_poll = time.time()
+
+    interval = data.get("interval", 60)
+    backoff = data.get("backoff", interval)
+    if success:
+        backoff = interval
+    else:
+        backoff = min(backoff * 2, interval * 60)
+    jitter = random.uniform(0, interval * 0.1)
+    run_in = backoff + jitter
+    data["backoff"] = backoff
+    bot.scheduler.add_job(
+        poll_adapter,
+        args=[db, sub_id, data],
+        id=str(sub_id),
+        replace_existing=True,
+        run_date=datetime.utcnow() + timedelta(seconds=run_in),
+    )
 
 
 class FLBot(commands.Bot):
@@ -108,6 +134,8 @@ async def on_ready() -> None:
 
 @fl_group.command(name="login", description="Validate adapter service connectivity")
 async def fl_login(interaction: discord.Interaction) -> None:
+    await bot_bucket.acquire()
+    bot_tokens.set(bot_bucket.get_tokens())
     await interaction.response.send_message("Adapter login successful")
 
 
@@ -122,7 +150,13 @@ async def fl_subscribe(
     sub_id = storage.add_subscription(
         bot.db, interaction.channel_id, sub_type, target, filters_json
     )
-    bot.scheduler.add_job(poll_adapter, args=[bot.db, sub_id, filters_json], id=str(sub_id))
+    bot.scheduler.add_job(
+        poll_adapter,
+        args=[bot.db, sub_id, {"interval": 60}],
+        id=str(sub_id),
+    )
+    await bot_bucket.acquire()
+    bot_tokens.set(bot_bucket.get_tokens())
     await interaction.response.send_message(f"Subscribed with id {sub_id}")
 
 
@@ -130,10 +164,14 @@ async def fl_subscribe(
 async def fl_list(interaction: discord.Interaction) -> None:
     subs = storage.list_subscriptions(bot.db, interaction.channel_id)
     if not subs:
+        await bot_bucket.acquire()
+        bot_tokens.set(bot_bucket.get_tokens())
         await interaction.response.send_message("No subscriptions")
         return
     desc = "\n".join(f"`{sid}` {typ} {tgt}" for sid, typ, tgt in subs)
     embed = discord.Embed(title="Subscriptions", description=desc)
+    await bot_bucket.acquire()
+    bot_tokens.set(bot_bucket.get_tokens())
     await interaction.response.send_message(embed=embed)
 
 
@@ -144,18 +182,24 @@ async def fl_unsubscribe(interaction: discord.Interaction, sub_id: int) -> None:
         bot.scheduler.remove_job(str(sub_id))
     except Exception:
         pass
+    await bot_bucket.acquire()
+    bot_tokens.set(bot_bucket.get_tokens())
     await interaction.response.send_message(f"Unsubscribed {sub_id}")
 
 
 @fl_group.command(name="test", description="Preview an embed")
 async def fl_test(interaction: discord.Interaction, sub_id: int) -> None:
     embed = discord.Embed(title="Test Notification", description=f"sub {sub_id}")
+    await bot_bucket.acquire()
+    bot_tokens.set(bot_bucket.get_tokens())
     msg = await interaction.response.send_message(embed=embed)
     messages_sent.inc()
     db_settings = storage.get_channel_settings(bot.db, interaction.channel_id)
     cfg = get_channel_config(bot.config, interaction.guild_id, interaction.channel_id)
     settings = {**db_settings, **cfg}
     if settings.get("thread_per_event"):
+        await bot_bucket.acquire()
+        bot_tokens.set(bot_bucket.get_tokens())
         await interaction.followup.send("Thread created", ephemeral=True)
 
 
@@ -165,11 +209,15 @@ async def fl_settings(
 ) -> None:
     if key and value:
         storage.set_channel_settings(bot.db, interaction.channel_id, **{key: value})
+        await bot_bucket.acquire()
+        bot_tokens.set(bot_bucket.get_tokens())
         await interaction.response.send_message("Updated settings")
     else:
         db_settings = storage.get_channel_settings(bot.db, interaction.channel_id)
         cfg = get_channel_config(bot.config, interaction.guild_id, interaction.channel_id)
         settings = {**db_settings, **cfg}
+        await bot_bucket.acquire()
+        bot_tokens.set(bot_bucket.get_tokens())
         await interaction.response.send_message(json.dumps(settings or {}))
 
 
@@ -181,6 +229,8 @@ async def fl_health(interaction: discord.Interaction) -> None:
         if bot.last_poll
         else "never"
     )
+    await bot_bucket.acquire()
+    bot_tokens.set(bot_bucket.get_tokens())
     await interaction.response.send_message(
         f"last_poll: {last}; queue_depth: {depth}"
     )
@@ -188,6 +238,8 @@ async def fl_health(interaction: discord.Interaction) -> None:
 
 @fl_group.command(name="purge", description="Purge local caches")
 async def fl_purge(interaction: discord.Interaction) -> None:
+    await bot_bucket.acquire()
+    bot_tokens.set(bot_bucket.get_tokens())
     await interaction.response.send_message("Purged")
 
 
