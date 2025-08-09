@@ -1,7 +1,15 @@
 import asyncio
+import sys
+from pathlib import Path
 
-from bot import storage
-from bot.main import duplicates_suppressed, fetlife_requests, poll_adapter
+sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
+
+from bot import storage  # noqa: E402
+from bot.main import (  # noqa: E402
+    duplicates_suppressed,
+    fetlife_requests,
+    poll_adapter,
+)
 
 
 def test_poll_metrics():
@@ -18,4 +26,3 @@ def test_poll_metrics():
 
     assert fetlife_requests._value.get() == 2
     assert duplicates_suppressed._value.get() == 1
-

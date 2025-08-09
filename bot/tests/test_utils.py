@@ -1,11 +1,10 @@
 import sys
 from pathlib import Path
+import discord
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 
-import discord
-
-from bot.utils import (
+from bot.utils import (  # noqa: E402
     format_event_embed,
     matches_filters,
     parse_subscribe_command,
@@ -13,7 +12,9 @@ from bot.utils import (
 
 
 def test_parse_subscribe_command():
-    sub_type, target, filters = parse_subscribe_command("events location:cities/1 min_attendees:10 keywords:rope,consent")
+    sub_type, target, filters = parse_subscribe_command(
+        "events location:cities/1 min_attendees:10 keywords:rope,consent"
+    )
     assert sub_type == "events"
     assert target == "location:cities/1"
     assert filters == {"min_attendees": 10, "keywords": ["rope", "consent"]}
