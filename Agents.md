@@ -259,7 +259,7 @@ Unit: Command parsing, formatting, filter logic, dedupe.
 
 Contract: JSON schema tests for adapter responses.
 
-Integration: Mock adapter fixtures; simulate pagination and errors.
+Integration: Docker Compose harness with mock adapter fixtures to simulate `/fl subscribe` and verify metrics; simulate pagination and errors.
 
 Live: Opt-in; dedicated staging guild + test FetLife account; reduced scopes.
 
