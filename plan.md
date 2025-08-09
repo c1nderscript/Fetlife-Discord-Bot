@@ -1,19 +1,19 @@
 # Plan
 
 ## Goal
-Pin dependency versions for Python and PHP components and refresh lock files.
+Harden session handling by avoiding object serialization and regenerating session IDs in adapter/public/index.php.
 
 ## Constraints
-- Maintain compatibility with existing code.
-- Respect current project structure.
+- Maintain existing adapter endpoints.
+- Use minimal session data (user id, nickname, cookie).
 
 ## Risks
-- Version incompatibilities may surface after pinning.
+- Reconstruction of user from cookie data may fail if library interfaces change.
+- Additional disk I/O for cookie storage.
 
 ## Test Plan
-- Run `flake8 bot`.
-- Run `pytest`.
-- Run `composer update` and `vendor/bin/phpunit` if possible.
+- Run `php -l adapter/public/index.php`.
+- Run `make check` (may fail if Docker unavailable).
 
 ## Semver
-Patch bump to v0.1.2.
+Patch bump to v0.1.3.
