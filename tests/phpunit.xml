@@ -1,4 +1,7 @@
 <phpunit bootstrap="bootstrap.php" convertNoticesToExceptions="false">
+    <testsuite name="default">
+        <directory>.</directory>
+    </testsuite>
     <php>
         <env name="FETLIFE_USERNAME" value="%FETLIFE_USERNAME%" />
         <env name="FETLIFE_PASSWORD" value="%FETLIFE_PASSWORD%" />

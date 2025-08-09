@@ -1,5 +1,4 @@
 <?php
-/**
- * This file is part of the libFetLife Tests package.
- */
-require_once dirname(__FILE__) . '/../FetLife.php';
+declare(strict_types=1);
+
+require __DIR__ . '/../vendor/autoload.php';
