@@ -1,5 +1,14 @@
-from sqlalchemy import BigInteger, Boolean, Column, DateTime, ForeignKey, Integer, JSON, String, Text
-from sqlalchemy.sql import func
+from sqlalchemy import (
+    Column,
+    Integer,
+    String,
+    DateTime,
+    Boolean,
+    JSON,
+    BigInteger,
+    ForeignKey,
+    func,
+)
 
 from .db import Base
 
