@@ -5,7 +5,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 
-from bot.rate_limit import TokenBucket
+from bot.rate_limit import TokenBucket  # noqa: E402
 
 
 def test_token_bucket_refill():

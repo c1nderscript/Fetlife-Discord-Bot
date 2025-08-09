@@ -1,22 +1,20 @@
 # Plan
 
 ## Goal
-Implement adapter polling for subscriptions to fetch events, deduplicate relayed items, update cursors with real IDs, and reschedule with backoff on errors.
+Ensure select test files run standalone by adding missing imports and path adjustments.
 
 ## Constraints
-- Use existing `adapter_client.fetch_events` for event subscriptions.
-- Maintain idempotency by checking `storage.has_relayed` before recording.
-- Update cursor with processed item IDs and timestamps.
-- Handle HTTP errors gracefully and apply exponential backoff before rescheduling.
-- Keep job rescheduling within AsyncIOScheduler.
+- Preserve existing test logic.
+- Use `# noqa: E402` for imports after path manipulations.
 
 ## Risks
-- Missing adapter service or unexpected response shapes may raise runtime errors.
-- Backoff logic could starve jobs if errors persist.
+- Path modifications may conceal other import issues.
 
 ## Test Plan
-- Unit test successful polling updates cursor and deduplicates relayed items.
-- Unit test HTTP errors trigger backoff and reschedule.
+- Run `flake8` on modified tests.
+- Execute each test module with `python` to confirm no import errors.
+- Attempt `make check` (fails without Docker).
+- Run `pytest` on modified tests to surface runtime issues.
 
 ## Semver
-Minor bump to v0.1.0 for initial feature release.
+Patch bump to v0.1.1.

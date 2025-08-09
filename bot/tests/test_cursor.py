@@ -4,7 +4,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 
-from bot import storage
+from bot import storage  # noqa: E402
 
 
 def setup_db():
