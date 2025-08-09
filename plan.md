@@ -1,19 +1,20 @@
 # Plan
 
 ## Goal
-Harden session handling by avoiding object serialization and regenerating session IDs in adapter/public/index.php.
+Add Docker-based integration test harness simulating `/fl subscribe` flow with mock adapter and wire into `make check`.
 
 ## Constraints
-- Maintain existing adapter endpoints.
-- Use minimal session data (user id, nickname, cookie).
+- Use docker compose to launch bot test container and mock adapter.
+- Integration test must operate without Discord or real FetLife access.
+- Keep changes minimal and avoid modifying runtime logic.
 
 ## Risks
-- Reconstruction of user from cookie data may fail if library interfaces change.
-- Additional disk I/O for cookie storage.
+- Docker may be unavailable in some environments, causing tests to fail.
+- Mock adapter responses could drift from real adapter behavior.
 
 ## Test Plan
-- Run `php -l adapter/public/index.php`.
-- Run `make check` (may fail if Docker unavailable).
+- `docker compose -f tests/docker-compose.test.yml run --rm bot-test` to execute integration test.
+- `make check` (build, lint, unit tests, integration test, phpunit).
 
 ## Semver
-Patch bump to v0.1.3.
+Patch bump to v0.1.4.
