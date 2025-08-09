@@ -3,6 +3,10 @@ All notable changes to this project will be documented here.
 
 ## [Unreleased]
 
+## [0.1.3] - 2025-08-09
+### Security
+- Store only session tokens instead of serialized objects and regenerate session IDs after login.
+
 ## [0.1.2] - 2025-08-09
 ### Changed
 - Pin Python and PHP dependency versions.

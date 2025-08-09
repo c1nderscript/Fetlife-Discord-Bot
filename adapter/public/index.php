@@ -3,6 +3,8 @@ require __DIR__ . '/../vendor/autoload.php';
 
 use Dotenv\Dotenv;
 use Slim\Factory\AppFactory;
+use FetLife\User as FetLifeUser;
+use FetLife\Connection;
 
 session_start();
 
@@ -38,7 +40,18 @@ function log_json($level, $message, $context = [])
 
 function getUser()
 {
-    return isset($_SESSION['fetlife_user']) ? unserialize($_SESSION['fetlife_user']) : null;
+    if (!isset($_SESSION['fetlife'])) {
+        return null;
+    }
+    $data = $_SESSION['fetlife'];
+    $cookieFile = tempnam(sys_get_temp_dir(), 'fl');
+    if (isset($data['cookie'])) {
+        file_put_contents($cookieFile, $data['cookie']);
+    }
+    $user = new FetLifeUser($data['nickname'], '');
+    $user->id = $data['id'];
+    $user->connection = new Connection($cookieFile);
+    return $user;
 }
 
 $app->post('/login', function ($request, $response) {
@@ -50,7 +63,8 @@ $app->post('/login', function ($request, $response) {
         $response->getBody()->write(json_encode(['error' => 'missing credentials']));
         return $response->withStatus(400)->withHeader('Content-Type', 'application/json');
     }
-    $user = new FetLifeUser($username, $password);
+    $cookieFile = tempnam(sys_get_temp_dir(), 'fl');
+    $user = new FetLifeUser($username, $password, new Connection($cookieFile));
     if (!empty($_ENV['FETLIFE_PROXY'])) {
         $type = $_ENV['FETLIFE_PROXY_TYPE'] ?? CURLPROXY_HTTP;
         if (is_string($type) && defined($type)) {
@@ -60,7 +74,12 @@ $app->post('/login', function ($request, $response) {
     }
     metric_inc('fetlife_requests_total');
     if ($user->logIn()) {
-        $_SESSION['fetlife_user'] = serialize($user);
+        $_SESSION['fetlife'] = [
+            'id' => $user->id,
+            'nickname' => $username,
+            'cookie' => file_get_contents($cookieFile) ?: '',
+        ];
+        session_regenerate_id(true);
         $response->getBody()->write(json_encode(['status' => 'ok']));
         return $response->withHeader('Content-Type', 'application/json');
     }
