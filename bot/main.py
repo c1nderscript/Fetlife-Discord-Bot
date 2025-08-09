@@ -8,7 +8,7 @@ from datetime import datetime, timedelta
 from typing import Any, Dict
 
 import discord
-from aiohttp import web
+from aiohttp import web, ClientError
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from discord import app_commands
 from discord.ext import commands
@@ -21,12 +21,13 @@ from prometheus_client import (
     generate_latest,
 )
 
-from . import storage
+from . import storage, adapter_client, models
 from .config import get_channel_config, load_config
 from .rate_limit import TokenBucket
 
 load_dotenv()
 TOKEN = os.getenv("DISCORD_TOKEN")
+ADAPTER_BASE_URL = os.getenv("ADAPTER_BASE_URL", "http://adapter:8080")
 
 
 class JsonFormatter(logging.Formatter):
@@ -72,16 +73,32 @@ async def poll_adapter(db, sub_id: int, data: Dict[str, Any]):
     adapter_tokens.set(adapter_bucket.get_tokens())
     success = True
     try:
+        sub = db.get(models.Subscription, sub_id)
+        if not sub:
+            raise RuntimeError("subscription missing")
         last_seen, last_ids = storage.get_cursor(db, sub_id)
-        item_id = "sample"
+        items: list[dict[str, Any]] = []
+        if sub.type == "events":
+            items = await adapter_client.fetch_events(
+                ADAPTER_BASE_URL, sub.target_id
+            )
         fetlife_requests.inc()
-        if storage.has_relayed(db, sub_id, item_id):
-            duplicates_suppressed.inc()
-            logger.info("duplicate", extra={"sub_id": sub_id, "item": item_id})
-        else:
+        new_ids: list[str] = []
+        for item in items:
+            item_id = str(item.get("id"))
+            if not item_id:
+                continue
+            if storage.has_relayed(db, sub_id, item_id):
+                duplicates_suppressed.inc()
+                logger.info("duplicate", extra={"sub_id": sub_id, "item": item_id})
+                continue
             storage.record_relay(db, sub_id, item_id)
-            storage.update_cursor(db, sub_id, datetime.utcnow(), [item_id])
-            await asyncio.sleep(0)
+            new_ids.append(item_id)
+        if new_ids:
+            storage.update_cursor(db, sub_id, datetime.utcnow(), new_ids)
+    except ClientError as exc:  # pragma: no cover - network error path
+        logger.error("poll_http_error", extra={"sub_id": sub_id, "error": str(exc)})
+        success = False
     except Exception as exc:  # pragma: no cover - error path
         logger.error("poll_error", extra={"sub_id": sub_id, "error": str(exc)})
         success = False
