@@ -1,20 +1,18 @@
 # Plan
 
 ## Goal
-Add a commit-msg git hook enforcing Conventional Commits and document installation steps for contributors.
+Handle invalid JSON in filter parsing within the `/fl subscribe` command and cover it with tests.
 
 ## Constraints
-- Hook must validate commit messages against Conventional Commits regex.
-- Instructions belong in Agents.md per repository guidelines.
-- Maintain changelog entry without releasing a new version.
+- Follow existing logging and rate limit patterns in `fl_subscribe`.
+- Maintain repository conventions including changelog and version updates.
 
 ## Risks
-- Contributors may skip installing the hook and experience commit failures later.
-- Hook script may not be portable across all shells.
+- Misplaced error handling could still raise uncaught exceptions.
+- Additional test may require event loop setup and mocking scheduler.
 
 ## Test Plan
 - `make check`
-- `scripts/agents-verify.sh`
 
 ## Semver
-Patch; documentation and tooling only.
+Patch: backwards compatible bug fix.

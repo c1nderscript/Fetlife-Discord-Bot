@@ -10,6 +10,7 @@ from bot.main import (  # noqa: E402
     fetlife_requests,
     poll_adapter,
 )
+from unittest.mock import patch
 
 
 def test_poll_metrics():
@@ -19,8 +20,9 @@ def test_poll_metrics():
     sub_id = storage.add_subscription(db, 1, "events", "target")
 
     async def run() -> None:
-        await poll_adapter(db, sub_id, {})
-        await poll_adapter(db, sub_id, {})
+        with patch("bot.adapter_client.fetch_events", return_value=[{"id": 1}]):
+            await poll_adapter(db, sub_id, {})
+            await poll_adapter(db, sub_id, {})
 
     asyncio.run(run())
 

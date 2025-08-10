@@ -1,5 +1,5 @@
 import asyncio
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from unittest.mock import patch
 
 from bot import storage
@@ -17,7 +17,7 @@ class DummyResponse:
 @dataclass
 class DummyInteraction:
     channel_id: int = 1
-    response: DummyResponse = DummyResponse()
+    response: DummyResponse = field(default_factory=DummyResponse)
 
 
 async def run_flow():
@@ -25,8 +25,9 @@ async def run_flow():
     main.bot.db = storage.init_db("sqlite:///:memory:")
     interaction = DummyInteraction()
     with patch.object(main.bot.scheduler, "add_job"):
-        await main.fl_subscribe(interaction, "events", "cities/1")
-    await main.poll_adapter(main.bot.db, 1, {"interval": 60})
+        await main.fl_subscribe.callback(interaction, "events", "cities/1")
+    with patch("bot.adapter_client.fetch_events", return_value=[]):
+        await main.poll_adapter(main.bot.db, 1, {"interval": 60})
     return interaction
 
 

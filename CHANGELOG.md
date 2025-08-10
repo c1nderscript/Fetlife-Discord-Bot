@@ -3,8 +3,11 @@ All notable changes to this project will be documented here.
 
 ## [Unreleased]
 
+## [0.1.7] - 2025-08-10
 ### Added
 - commit-msg git hook enforcing Conventional Commits with installation instructions.
+### Fixed
+- Return informative error when subscription filters contain invalid JSON.
 
 ## [0.1.6] - 2025-08-10
 ### Added
