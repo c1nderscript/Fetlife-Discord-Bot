@@ -3,6 +3,11 @@ All notable changes to this project will be documented here.
 
 ## [Unreleased]
 
+## [0.1.6] - 2025-08-10
+### Added
+- CI release-hygiene workflow running make check, version/changelog verification, and Agents drift check.
+- Release workflow tagging main and publishing notes.
+
 ## [0.1.5] - 2025-08-10
 ### Added
 - AGPL-3.0-or-later license file and references in README and package metadata.

@@ -1,0 +1,25 @@
+name: release-hygiene
+on:
+  pull_request:
+    types: [opened, synchronize, edited, reopened]
+jobs:
+  guardrails:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: make check
+        run: make check
+      - name: Detect version and ensure CHANGELOG updated
+        run: |
+          set -euo pipefail
+          VERSION=$(grep -E '^version = ' pyproject.toml | head -1 | cut -d'"' -f2)
+          echo "Detected version: $VERSION"
+          test -f CHANGELOG.md
+          grep -qE "^## \[$VERSION\]" CHANGELOG.md || { echo "CHANGELOG.md missing entry for $VERSION"; exit 1; }
+          if ! echo "$VERSION" | grep -Eq '^[0-9]+\.[0-9]+\.[0-9]+(-[A-Za-z0-9.-]+)?$'; then
+            echo "Version is not SemVer: $VERSION"; exit 1
+          fi
+      - name: AGENTS drift check
+        run: bash scripts/agents-verify.sh

@@ -371,3 +371,7 @@ Contact: Open an issue with logs (redacted), guild/channel IDs, subscription con
 
 
 
+
+19) CI & Release
+release-hygiene GitHub workflow runs `make check`, ensures version in `pyproject.toml` matches `CHANGELOG.md`, and executes `scripts/agents-verify.sh`.
+Releases are tagged from `main` and publish notes from `.github/RELEASE_NOTES.md`.
