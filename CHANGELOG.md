@@ -3,6 +3,10 @@ All notable changes to this project will be documented here.
 
 ## [Unreleased]
 
+## [0.1.5] - 2025-08-10
+### Added
+- AGPL-3.0-or-later license file and references in README and package metadata.
+
 ## [0.1.4] - 2025-08-09
 ### Added
 - Docker-based integration test harness for subscribe flow.

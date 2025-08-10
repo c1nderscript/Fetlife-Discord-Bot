@@ -303,3 +303,7 @@ Pull requests are welcome. Please:
 - Run `make check` (lint, tests, schema) before submitting.
 - Follow semantic commit messages and Conventional Changelog guidelines.
 
+## License
+
+This project is licensed under the [GNU Affero General Public License v3.0 or later](LICENSE).
+
