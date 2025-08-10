@@ -163,7 +163,18 @@ async def fl_subscribe(
     target: str,
     filters: str | None = None,
 ) -> None:
-    filters_json = json.loads(filters) if filters else {}
+    if filters:
+        try:
+            filters_json = json.loads(filters)
+        except json.JSONDecodeError:
+            await bot_bucket.acquire()
+            bot_tokens.set(bot_bucket.get_tokens())
+            await interaction.response.send_message(
+                "Invalid JSON for filters"
+            )
+            return
+    else:
+        filters_json = {}
     sub_id = storage.add_subscription(
         bot.db, interaction.channel_id, sub_type, target, filters_json
     )
