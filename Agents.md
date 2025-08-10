@@ -353,6 +353,12 @@ Run make check (lint, tests, schema) before PR.
 
 Follow semantic commits and Conventional Changelog.
 
+Install the commit-msg hook to enforce Conventional Commits:
+
+```bash
+cp scripts/commit-msg .git/hooks/commit-msg && chmod +x .git/hooks/commit-msg
+```
+
 18) Risk Register (tl;dr)
 ToS/Access: Authentication may break if site changes → adapter abstraction + schema tests.
 

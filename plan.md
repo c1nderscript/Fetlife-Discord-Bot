@@ -1,20 +1,20 @@
 # Plan
 
 ## Goal
-Add CI workflows for release hygiene and automated tagging.
+Add a commit-msg git hook enforcing Conventional Commits and document installation steps for contributors.
 
 ## Constraints
-- release-hygiene must run `make check`, verify `pyproject.toml` version against `CHANGELOG.md`, and run AGENTS drift script.
-- release workflow tags releases from main and publishes notes.
-- Follow semantic versioning and Keep a Changelog.
+- Hook must validate commit messages against Conventional Commits regex.
+- Instructions belong in Agents.md per repository guidelines.
+- Maintain changelog entry without releasing a new version.
 
 ## Risks
-- `make check` may fail due to missing Docker or dependencies.
-- Tag creation can fail if the tag already exists.
+- Contributors may skip installing the hook and experience commit failures later.
+- Hook script may not be portable across all shells.
 
 ## Test Plan
 - `make check`
 - `scripts/agents-verify.sh`
 
 ## Semver
-Patch bump to v0.1.6.
+Patch; documentation and tooling only.
