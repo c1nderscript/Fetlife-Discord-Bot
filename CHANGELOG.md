@@ -3,6 +3,9 @@ All notable changes to this project will be documented here.
 
 ## [Unreleased]
 
+### Added
+- commit-msg git hook enforcing Conventional Commits with installation instructions.
+
 ## [0.1.6] - 2025-08-10
 ### Added
 - CI release-hygiene workflow running make check, version/changelog verification, and Agents drift check.
