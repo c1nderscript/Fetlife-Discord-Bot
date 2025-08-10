@@ -1,7 +1,11 @@
 [project]
 name = "fetlife-discord-bot"
-version = "0.1.4"
+version = "0.1.5"
+license = { file = "LICENSE" }
 requires-python = ">=3.11"
+classifiers = [
+    "License :: OSI Approved :: GNU Affero General Public License v3 or later (AGPLv3+)"
+]
 
 [build-system]
 requires = ["setuptools>=61.0"]
