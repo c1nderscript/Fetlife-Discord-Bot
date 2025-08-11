@@ -10,23 +10,24 @@
 - Release process: bump version in `pyproject.toml`, update `CHANGELOG.md`, tag `vX.Y.Z` on main.
 
 ## Goal
-Add Black code formatting and flake8 configuration, provide a fmt target, and ensure check runs Black.
+Add mypy static type checking for the `bot` package and integrate it into the development workflow.
 
 ## Constraints
-- Configure flake8 to align with Black.
-- Add Black dependency to requirements files.
+- Add mypy and required type stubs to requirements files.
+- Configure mypy in `pyproject.toml` targeting `bot/`.
 - Update Makefile and developer docs (Agents.md).
-- Run formatters and tests via Docker.
+- Resolve existing type errors.
 - Bump patch version and changelog.
 
 ## Risks
-- Black reformatting could introduce merge conflicts or stylistic adjustments.
+- Missing type stubs for dependencies may require ignores.
 - Requirements lock might drift if not regenerated.
 
 ## Test Plan
-- `docker compose build` & `make fmt`
+- `docker compose build`
 - `bash scripts/agents-verify.sh`
+- `make fmt`
 - `make check`
 
 ## Semver
-Patch: tooling and configuration only.
+Patch: tooling and typing only.

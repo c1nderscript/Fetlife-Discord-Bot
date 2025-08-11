@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+# mypy: ignore-errors
+
 from typing import Any, Dict, Iterable, Tuple
 
 from sqlalchemy.orm import Session

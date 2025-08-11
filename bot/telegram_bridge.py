@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import Dict, Optional
 
-from telethon import TelegramClient, events
+from telethon import TelegramClient, events  # type: ignore[import-untyped]
 
 from .config import load_config, save_config
 
