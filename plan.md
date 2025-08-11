@@ -1,20 +1,19 @@
 # Plan
 
 ## Goal
-Constrain `/fl subscribe` to valid types and document target formats while scheduling polls using stored subscription types.
+Add a unit test covering writings subscriptions to ensure `poll_adapter` sends Discord messages and updates the cursor.
 
 ## Constraints
-- Use `discord.app_commands.choices` for `sub_type` limited to `events` or `writings`.
-- Update command descriptions and docstrings for `target` (`user:<nickname>` for writings, `location:<...>` for events).
-- When scheduling `poll_adapter`, pass the canonical `sub.type` from the database.
-- Maintain existing behavior for filters and metrics.
+- Mock `adapter_client.fetch_writings` to avoid network calls.
+- Reuse existing `bot/tests/fixtures/writing.json` for sample payload.
+- Patch Discord and scheduler interactions to keep the test self-contained.
 
 ## Risks
-- Direct invocation in tests may bypass decorator validation.
-- Fetching the stored subscription may fail if the database returns `None`.
+- Incorrect patching could leave background jobs running or unawaited coroutines.
+- Cursor assertions may fail if IDs are not coerced to strings.
 
 ## Test Plan
 - `make check`
 
 ## Semver
-Patch: bugfix and documentation.
+Patch: tests only.
