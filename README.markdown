@@ -11,7 +11,7 @@ The `bot/` directory contains a Python application using `discord.py` that relay
 1. `cp .env.example .env` and edit the file with your FetLife credentials, Discord token, and database settings.
 2. `docker compose up -d` to launch the adapter, bot, and database.
 3. `docker compose run --rm bot alembic upgrade head` to apply database migrations.
-4. Generate an invite link from the [Discord Developer Portal](https://discord.com/developers/applications), invite the bot to your server, then run `/fl login`, `/fl subscribe events location:cities/5898 min_attendees:10`, `/fl subscribe group_posts group:1`, `/fl list`, and `/fl test <id>` in Discord.
+4. Generate an invite link from the [Discord Developer Portal](https://discord.com/developers/applications), invite the bot to your server, then run `/fl login` to verify adapter authentication, `/fl subscribe events location:cities/5898 min_attendees:10`, `/fl subscribe group_posts group:1`, `/fl list`, and `/fl test <id>` in Discord.
 
 ### Environment Variables
 

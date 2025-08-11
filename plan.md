@@ -1,20 +1,19 @@
 # Plan
 
 ## Goal
-Relay messages from specified Telegram chats into Discord channels with runtime mapping commands.
+Implement adapter authentication verification via `/fl login` command using a new helper.
 
 ## Constraints
-- Use Telethon for Telegram client functionality.
-- Maintain chat-to-channel mappings in `config.yaml`.
-- Provide `/fl telegram add|remove` commands for runtime management.
-- Integrate bridge startup/shutdown with existing bot process.
+- Use aiohttp for HTTP requests.
+- Follow existing command structure and metrics rate limiting.
+- Maintain documentation and tests in sync with behavior.
 
 ## Risks
-- Misconfigured mappings could relay to incorrect channels.
-- Telethon client failures may block shutdown.
+- Network errors during adapter login could produce unclear user feedback.
+- Misreported status if adapter returns unexpected codes.
 
 ## Test Plan
 - `make check`
 
 ## Semver
-Minor: new backwards-compatible feature.
+Patch: fixes `/fl login` to verify adapter authentication.

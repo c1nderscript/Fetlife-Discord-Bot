@@ -3,6 +3,10 @@ All notable changes to this project will be documented here.
 
 ## [Unreleased]
 
+## [0.7.1] - 2025-08-11
+### Fixed
+- `/fl login` now verifies adapter authentication and reports failures.
+
 ## [0.7.0] - 2025-08-11
 ### Added
 - Relay Telegram chats into Discord with a Telethon bridge and `/fl telegram` commands.

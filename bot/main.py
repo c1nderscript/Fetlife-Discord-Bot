@@ -200,9 +200,14 @@ async def on_ready() -> None:
 
 @fl_group.command(name="login", description="Validate adapter service connectivity")
 async def fl_login(interaction: discord.Interaction) -> None:
+    try:
+        ok = await adapter_client.login_adapter(ADAPTER_BASE_URL)
+        msg = "Adapter login successful" if ok else "Adapter login failed"
+    except ClientError as exc:  # pragma: no cover - network error path
+        msg = f"Adapter login failed: {exc}"
     await bot_bucket.acquire()
     bot_tokens.set(bot_bucket.get_tokens())
-    await interaction.response.send_message("Adapter login successful")
+    await interaction.response.send_message(msg)
 
 
 @account_group.command(name="add", description="Add a FetLife account")
