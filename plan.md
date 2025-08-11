@@ -1,16 +1,17 @@
 # Plan
 
 ## Goal
-Add group_posts subscriptions allowing the bot to poll the adapter for group posts and relay them, including target validation.
+Relay messages from specified Telegram chats into Discord channels with runtime mapping commands.
 
 ## Constraints
-- Support `sub_type="group_posts"` in `/fl subscribe`.
-- Require targets formatted as `group:<id>` where `<id>` is numeric.
-- Preserve existing event, writing, and attendee behavior.
+- Use Telethon for Telegram client functionality.
+- Maintain chat-to-channel mappings in `config.yaml`.
+- Provide `/fl telegram add|remove` commands for runtime management.
+- Integrate bridge startup/shutdown with existing bot process.
 
 ## Risks
-- Missing validation could allow malformed targets.
-- Embed formatting may omit published timestamps.
+- Misconfigured mappings could relay to incorrect channels.
+- Telethon client failures may block shutdown.
 
 ## Test Plan
 - `make check`

@@ -19,6 +19,14 @@ def load_config(path: str = "config.yaml") -> Dict[str, Any]:
     return data
 
 
+def save_config(config: Dict[str, Any], path: str = "config.yaml") -> None:
+    cfg_path = Path(path)
+    if not cfg_path.exists():
+        cfg_path = Path(__file__).resolve().parent.parent / path
+    with cfg_path.open("w", encoding="utf-8") as f:
+        yaml.safe_dump(config, f)
+
+
 def get_channel_config(config: Dict[str, Any], guild_id: int | None, channel_id: int) -> Dict[str, Any]:
     settings: Dict[str, Any] = {}
     if not config:

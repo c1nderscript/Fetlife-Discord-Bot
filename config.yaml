@@ -10,3 +10,7 @@ defaults:
 #     channels:
 #       "234567890123456789":
 #         attendee_sample: 5
+
+telegram_bridge:
+  mappings:
+    "-1001234567890": "234567890123456789"
