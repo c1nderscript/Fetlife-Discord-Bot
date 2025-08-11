@@ -3,6 +3,10 @@ All notable changes to this project will be documented here.
 
 ## [Unreleased]
 
+## [0.6.0] - 2025-08-11
+### Added
+- Subscribe to group posts with `/fl subscribe group_posts group:<id>` and relay new posts.
+
 ## [0.5.0] - 2025-08-11
 ### Added
 - Adapter endpoint `/events/{id}/attendees` returning RSVP status and comments.

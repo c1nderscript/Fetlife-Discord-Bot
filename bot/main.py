@@ -4,6 +4,7 @@ import os
 import time
 import logging
 import random
+import re
 from datetime import datetime, timedelta
 from typing import Any, Dict
 
@@ -89,6 +90,10 @@ async def poll_adapter(db, sub_id: int, data: Dict[str, Any]):
             items = await adapter_client.fetch_writings(
                 ADAPTER_BASE_URL, sub.target_id, account_id=sub.account_id
             )
+        elif sub.type == "group_posts":
+            items = await adapter_client.fetch_group_posts(
+                ADAPTER_BASE_URL, sub.target_id, account_id=sub.account_id
+            )
         elif sub.type == "attendees":
             items = await adapter_client.fetch_attendees(
                 ADAPTER_BASE_URL, sub.target_id, account_id=sub.account_id
@@ -119,7 +124,7 @@ async def poll_adapter(db, sub_id: int, data: Dict[str, Any]):
                     )
                     if sub.type == "events" and item.get("time"):
                         embed.add_field(name="Start", value=item["time"])
-                    if sub.type == "writings" and item.get("published"):
+                    if sub.type in ("writings", "group_posts") and item.get("published"):
                         embed.add_field(name="Published", value=item["published"])
                 await bot_bucket.acquire()
                 bot_tokens.set(bot_bucket.get_tokens())
@@ -227,7 +232,7 @@ async def fl_account_remove(interaction: discord.Interaction, account_id: int) -
 @fl_group.command(name="subscribe", description="Create a new subscription")
 @app_commands.describe(
     sub_type="Type of content to subscribe to",
-    target="Target identifier: user:<nickname> for writings, location:<...> for events, event:<id> for attendees",
+    target="Target identifier: user:<nickname> for writings, location:<...> for events, group:<id> for group posts, event:<id> for attendees",
     filters="Optional JSON filters",
     account="ID of stored account to use",
 )
@@ -235,6 +240,7 @@ async def fl_account_remove(interaction: discord.Interaction, account_id: int) -
     sub_type=[
         app_commands.Choice(name="events", value="events"),
         app_commands.Choice(name="writings", value="writings"),
+        app_commands.Choice(name="group_posts", value="group_posts"),
         app_commands.Choice(name="attendees", value="attendees"),
     ]
 )
@@ -245,9 +251,10 @@ async def fl_subscribe(
     filters: str | None = None,
     account: int | None = None,
 ) -> None:
-    """Subscribe channel to FetLife events, writings, or attendees.
+    """Subscribe channel to FetLife events, writings, group posts, or attendees.
 
-    target formats: `user:<nickname>` for writings, `location:<...>` for events, `event:<id>` for attendees.
+    target formats: `user:<nickname>` for writings, `location:<...>` for events,
+    `group:<id>` for group posts, `event:<id>` for attendees.
     """
     if filters:
         try:
@@ -261,6 +268,11 @@ async def fl_subscribe(
             return
     else:
         filters_json = {}
+    if sub_type == "group_posts" and not re.fullmatch(r"group:\d+", target):
+        await bot_bucket.acquire()
+        bot_tokens.set(bot_bucket.get_tokens())
+        await interaction.response.send_message("Target must be group:<id>")
+        return
     sub_id = storage.add_subscription(
         bot.db,
         interaction.channel_id,
