@@ -1,20 +1,21 @@
 # Plan
 
 ## Goal
-Provide an interactive setup script that writes required environment variables, applies database migrations, and launches the bot. Update documentation to reference the new script.
+Document how to run the bot 24/7 on a remote server in README.
 
 ## Constraints
-- Bash script must skip existing `.env` entries.
-- Support optional creation of `config.yaml`.
-- Adhere to repository release and documentation conventions.
+- Include Docker Compose and systemd options.
+- Reference `scripts/setup.sh` for initial configuration.
+- Mention log locations and service status commands.
+- Follow repository documentation and release conventions.
 
 ## Risks
-- Script may fail if dependencies like Alembic or Docker are missing.
-- Writing to existing files could overwrite user configuration.
+- `systemd` paths differ across distributions.
+- Inaccurate log paths could mislead users.
 
 ## Test Plan
 - `bash scripts/agents-verify.sh`
 - `make check`
 
 ## Semver
-Minor: adds a new setup feature.
+Patch: documentation-only change.
