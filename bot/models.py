@@ -29,6 +29,14 @@ class Channel(Base):
     settings_json = Column(JSON, nullable=True)
 
 
+class Account(Base):
+    __tablename__ = "accounts"
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    username = Column(String, nullable=False)
+    credential_hash = Column(String, nullable=False, unique=True)
+    created_at = Column(DateTime, server_default=func.now(), nullable=False)
+
+
 class Subscription(Base):
     __tablename__ = "subscriptions"
     id = Column(Integer, primary_key=True, autoincrement=True)
@@ -40,6 +48,7 @@ class Subscription(Base):
     created_by = Column(BigInteger, nullable=True)
     created_at = Column(DateTime, server_default=func.now(), nullable=False)
     active = Column(Boolean, server_default="1", nullable=False)
+    account_id = Column(Integer, ForeignKey("accounts.id"), nullable=True)
 
 
 class Cursor(Base):

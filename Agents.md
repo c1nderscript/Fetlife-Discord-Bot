@@ -18,6 +18,8 @@ Discord UX:
 
 Slash commands to subscribe/unsubscribe sources (users, groups, locations, events).
 
+Slash commands to add, list, or remove stored FetLife accounts and select one per subscription.
+
 Per-channel filters (location radius, keywords, content types, frequency).
 
 Rich embeds, optional attendee sampling, thread-per-event option.
@@ -60,7 +62,9 @@ guilds(id, name, created_at)
 
 channels(id, guild_id, name, created_at)
 
-subscriptions(id, channel_id, type, target_id, target_kind, filters_json, created_by, created_at, active)
+subscriptions(id, channel_id, type, target_id, target_kind, filters_json, created_by, created_at, active, account_id)
+
+accounts(id, username, credential_hash, created_at)
 
 type: events|writings|group_posts|attendees
 

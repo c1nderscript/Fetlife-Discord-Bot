@@ -1,6 +1,7 @@
 import os
 from sqlalchemy import create_engine
 from sqlalchemy.orm import declarative_base, sessionmaker
+import hashlib
 
 
 def _build_url() -> str:
@@ -23,6 +24,10 @@ DATABASE_URL = _build_url()
 engine = create_engine(DATABASE_URL, future=True)
 SessionLocal = sessionmaker(bind=engine, autoflush=False, autocommit=False)
 Base = declarative_base()
+
+
+def hash_credentials(username: str, password: str) -> str:
+    return hashlib.sha256(f"{username}:{password}".encode()).hexdigest()
 
 def init_db(url: str | None = None):
     global engine, SessionLocal
