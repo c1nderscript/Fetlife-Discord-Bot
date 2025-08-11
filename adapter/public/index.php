@@ -3,6 +3,7 @@ require __DIR__ . '/../vendor/autoload.php';
 
 use Dotenv\Dotenv;
 use Slim\Factory\AppFactory;
+use Slim\Psr7\Response;
 use FetLife\User as FetLifeUser;
 use FetLife\Connection;
 
@@ -15,6 +16,22 @@ $dotenv = Dotenv::createImmutable(__DIR__ . '/..');
 $dotenv->safeLoad();
 
 $app = AppFactory::create();
+
+$token = $_ENV['ADAPTER_AUTH_TOKEN'] ?? null;
+
+$app->add(function ($request, $handler) use ($token) {
+    $path = $request->getUri()->getPath();
+    if (in_array($path, ['/healthz', '/metrics'])) {
+        return $handler->handle($request);
+    }
+    $auth = $request->getHeaderLine('Authorization');
+    if ($token && $auth !== "Bearer $token") {
+        $response = new Response();
+        $response->getBody()->write(json_encode(['error' => 'unauthorized']));
+        return $response->withStatus(401)->withHeader('Content-Type', 'application/json');
+    }
+    return $handler->handle($request);
+});
 
 $metrics = ['fetlife_requests_total' => 0];
 

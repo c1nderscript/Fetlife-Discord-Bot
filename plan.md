@@ -10,21 +10,23 @@
 - Release process: bump version in `pyproject.toml`, update `CHANGELOG.md`, tag `vX.Y.Z` on main.
 
 ## Goal
-Enhance `scripts/agents-verify.sh` to ensure tools referenced in `Agents.md` exist and document these checks.
+Require a shared token for adapter requests using middleware, configured via `ADAPTER_AUTH_TOKEN`, and document the setup.
 
 ## Constraints
-- Verify presence of `docker`, `make check` target, `flake8`, and `phpunit` when mentioned in `Agents.md`.
-- Fail the script if any referenced command or file is missing.
-- Update `Agents.md` to describe the new verification.
-- Bump patch version and changelog.
+- Middleware in `adapter/public/index.php` must enforce `Authorization: Bearer <token>` from `ADAPTER_AUTH_TOKEN`.
+- Requests with missing/invalid token return HTTP 401.
+- Update adapter client to send the token from environment variable.
+- Include token variable in Docker Compose, `.env.example`, README, and Agents spec.
+- Bump version and changelog; add decision log entry.
 
 ## Risks
-- Missing system dependencies (e.g., Docker daemon) may cause checks to fail.
-- Installing required tooling can be slow in CI environments.
+- Existing deployments without token will fail to authenticate.
+- Token leakage in logs or configs could expose adapter.
 
 ## Test Plan
 - `bash scripts/agents-verify.sh`
+- `pytest bot/tests/test_adapter_client.py::test_auth_header`
 - `make check` (may fail if Docker is unavailable)
 
 ## Semver
-Patch: CI tooling only.
+Major: adapter API now requires authentication.

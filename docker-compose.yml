@@ -17,6 +17,8 @@ services:
       context: .
       dockerfile: adapter/Dockerfile
     env_file: .env
+    environment:
+      ADAPTER_AUTH_TOKEN: ${ADAPTER_AUTH_TOKEN}
     depends_on:
       - db
     ports:
@@ -30,6 +32,7 @@ services:
     environment:
       TELEGRAM_API_ID: ${TELEGRAM_API_ID}
       TELEGRAM_API_HASH: ${TELEGRAM_API_HASH}
+      ADAPTER_AUTH_TOKEN: ${ADAPTER_AUTH_TOKEN}
     depends_on:
       - adapter
       - db

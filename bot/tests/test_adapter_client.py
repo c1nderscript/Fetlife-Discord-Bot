@@ -4,6 +4,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 
 import asyncio
+import os
 from unittest.mock import patch
 
 from bot.adapter_client import (
@@ -12,10 +13,13 @@ from bot.adapter_client import (
     fetch_group_posts,
     fetch_writings,
     login,
+    login_adapter,
 )
 
 
 class DummyResp:
+    status = 200
+
     async def __aenter__(self):
         return self
 
@@ -30,6 +34,9 @@ class DummyResp:
 
 
 class DummySession:
+    def __init__(self):
+        self.headers = None
+
     async def __aenter__(self):
         return self
 
@@ -37,9 +44,11 @@ class DummySession:
         pass
 
     def get(self, url, params=None, headers=None):
+        self.headers = headers
         return DummyResp()
 
     def post(self, url, json=None, headers=None):
+        self.headers = headers
         return DummyResp()
 
 
@@ -71,3 +80,11 @@ def test_login_mocked():
     with patch("aiohttp.ClientSession", return_value=DummySession()):
         resp = asyncio.run(login("http://adapter", "u", "p", account_id=1))
     assert resp == [{"id": 1}]
+
+
+def test_auth_header():
+    dummy = DummySession()
+    with patch("aiohttp.ClientSession", return_value=dummy):
+        with patch.dict(os.environ, {"ADAPTER_AUTH_TOKEN": "tok"}):
+            asyncio.run(login_adapter("http://adapter"))
+    assert dummy.headers == {"Authorization": "Bearer tok"}

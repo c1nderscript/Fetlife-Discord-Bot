@@ -3,6 +3,10 @@ All notable changes to this project will be documented here.
 
 ## [Unreleased]
 
+## [1.0.0] - 2025-08-11
+### Added
+- Token-based adapter authentication via `ADAPTER_AUTH_TOKEN`.
+
 ## [0.8.4] - 2025-08-11
 ### Added
 - agents-verify script validates presence of tools referenced in Agents.md (docker, make check, flake8, phpunit).

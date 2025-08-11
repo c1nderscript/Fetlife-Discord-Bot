@@ -21,6 +21,7 @@ The `.env` file supports these keys:
 - `FETLIFE_PASSWORD` – FetLife account password.
 - `DISCORD_TOKEN` – Discord bot token.
 - `TELEGRAM_API_ID`, `TELEGRAM_API_HASH` – Telegram API credentials for the bridge.
+- `ADAPTER_AUTH_TOKEN` – shared token clients must send via `Authorization: Bearer` to the adapter.
 - `DB_HOST`, `DB_PORT`, `DB_NAME`, `DB_USER`, `DB_PASSWORD` – database connection settings.
 - `DATABASE_URL` – optional full connection URL that overrides the above.
 - `FETLIFE_PROXY`, `FETLIFE_PROXY_TYPE`, `FETLIFE_PROXY_USERNAME`, `FETLIFE_PROXY_PASSWORD` – optional proxy configuration.
@@ -310,6 +311,7 @@ Are you using `libFetLife`? [Let me know](http://maybemaimed.com/seminars/#booki
 
 The `adapter/` directory provides a small Slim-based HTTP service that wraps `FetLife.php`.
 It reads credentials from environment variables (`FETLIFE_USERNAME`, `FETLIFE_PASSWORD`, `FETLIFE_PROXY`, `FETLIFE_PROXY_TYPE`) and exposes a `/healthz` endpoint along with Prometheus metrics at `/metrics`.
+All requests must include an `Authorization: Bearer` token matching `ADAPTER_AUTH_TOKEN`.
 
 ### OpenAPI
 
