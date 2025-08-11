@@ -8,6 +8,7 @@ from unittest.mock import patch
 
 from bot.adapter_client import (
     fetch_events,
+    fetch_attendees,
     fetch_group_posts,
     fetch_writings,
     login,
@@ -58,6 +59,12 @@ def test_fetch_group_posts_mocked():
     with patch("aiohttp.ClientSession", return_value=DummySession()):
         posts = asyncio.run(fetch_group_posts("http://adapter", "1", account_id=1))
     assert posts == [{"id": 1}]
+
+
+def test_fetch_attendees_mocked():
+    with patch("aiohttp.ClientSession", return_value=DummySession()):
+        attendees = asyncio.run(fetch_attendees("http://adapter", "1", account_id=1))
+    assert attendees == [{"id": 1}]
 
 
 def test_login_mocked():

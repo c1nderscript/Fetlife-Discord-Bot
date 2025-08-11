@@ -1,0 +1,14 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "array",
+  "items": {
+    "type": "object",
+    "required": ["id", "nickname", "status", "comment"],
+    "properties": {
+      "id": {"type": "integer"},
+      "nickname": {"type": "string"},
+      "status": {"type": "string"},
+      "comment": {"type": ["string", "null"]}
+    }
+  }
+}

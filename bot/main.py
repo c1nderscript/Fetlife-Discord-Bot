@@ -89,6 +89,10 @@ async def poll_adapter(db, sub_id: int, data: Dict[str, Any]):
             items = await adapter_client.fetch_writings(
                 ADAPTER_BASE_URL, sub.target_id, account_id=sub.account_id
             )
+        elif sub.type == "attendees":
+            items = await adapter_client.fetch_attendees(
+                ADAPTER_BASE_URL, sub.target_id, account_id=sub.account_id
+            )
         fetlife_requests.inc()
         channel = bot.get_channel(sub.channel_id)
         new_ids: list[str] = []
@@ -102,13 +106,21 @@ async def poll_adapter(db, sub_id: int, data: Dict[str, Any]):
                 continue
             storage.record_relay(db, sub_id, item_id)
             if channel:
-                embed = discord.Embed(
-                    title=item.get("title", ""), url=item.get("link")
-                )
-                if sub.type == "events" and item.get("time"):
-                    embed.add_field(name="Start", value=item["time"])
-                if sub.type == "writings" and item.get("published"):
-                    embed.add_field(name="Published", value=item["published"])
+                if sub.type == "attendees":
+                    embed = discord.Embed(
+                        title=item.get("nickname", ""),
+                        description=item.get("comment") or "",
+                    )
+                    if item.get("status"):
+                        embed.add_field(name="Status", value=item["status"])
+                else:
+                    embed = discord.Embed(
+                        title=item.get("title", ""), url=item.get("link")
+                    )
+                    if sub.type == "events" and item.get("time"):
+                        embed.add_field(name="Start", value=item["time"])
+                    if sub.type == "writings" and item.get("published"):
+                        embed.add_field(name="Published", value=item["published"])
                 await bot_bucket.acquire()
                 bot_tokens.set(bot_bucket.get_tokens())
                 await channel.send(embed=embed)
@@ -215,7 +227,7 @@ async def fl_account_remove(interaction: discord.Interaction, account_id: int) -
 @fl_group.command(name="subscribe", description="Create a new subscription")
 @app_commands.describe(
     sub_type="Type of content to subscribe to",
-    target="Target identifier: user:<nickname> for writings, location:<...> for events",
+    target="Target identifier: user:<nickname> for writings, location:<...> for events, event:<id> for attendees",
     filters="Optional JSON filters",
     account="ID of stored account to use",
 )
@@ -223,6 +235,7 @@ async def fl_account_remove(interaction: discord.Interaction, account_id: int) -
     sub_type=[
         app_commands.Choice(name="events", value="events"),
         app_commands.Choice(name="writings", value="writings"),
+        app_commands.Choice(name="attendees", value="attendees"),
     ]
 )
 async def fl_subscribe(
@@ -232,9 +245,9 @@ async def fl_subscribe(
     filters: str | None = None,
     account: int | None = None,
 ) -> None:
-    """Subscribe channel to FetLife events or writings.
+    """Subscribe channel to FetLife events, writings, or attendees.
 
-    target formats: `user:<nickname>` for writings, `location:<...>` for events.
+    target formats: `user:<nickname>` for writings, `location:<...>` for events, `event:<id>` for attendees.
     """
     if filters:
         try:

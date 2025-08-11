@@ -31,3 +31,9 @@ def test_group_post_contract():
     data = load("group_post.json", FIXTURES)
     schema = load("group_post.json", SCHEMAS)
     validate(instance=data, schema=schema)
+
+
+def test_event_attendees_contract():
+    data = load("event_attendees.json", FIXTURES)
+    schema = load("event_attendees.json", SCHEMAS)
+    validate(instance=data, schema=schema)

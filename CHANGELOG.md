@@ -3,6 +3,11 @@ All notable changes to this project will be documented here.
 
 ## [Unreleased]
 
+## [0.5.0] - 2025-08-11
+### Added
+- Adapter endpoint `/events/{id}/attendees` returning RSVP status and comments.
+- Bot support for `attendees` subscriptions with embedded RSVP notifications.
+
 ## [0.4.0] - 2025-08-11
 ### Added
 - Manage multiple FetLife accounts with `/fl account` subcommands and optional per-subscription selection.
