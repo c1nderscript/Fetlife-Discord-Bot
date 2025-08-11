@@ -174,12 +174,27 @@ async def fl_login(interaction: discord.Interaction) -> None:
 
 
 @fl_group.command(name="subscribe", description="Create a new subscription")
+@app_commands.describe(
+    sub_type="Type of content to subscribe to",
+    target="Target identifier: user:<nickname> for writings, location:<...> for events",
+    filters="Optional JSON filters",
+)
+@app_commands.choices(
+    sub_type=[
+        app_commands.Choice(name="events", value="events"),
+        app_commands.Choice(name="writings", value="writings"),
+    ]
+)
 async def fl_subscribe(
     interaction: discord.Interaction,
     sub_type: str,
     target: str,
     filters: str | None = None,
 ) -> None:
+    """Subscribe channel to FetLife events or writings.
+
+    target formats: `user:<nickname>` for writings, `location:<...>` for events.
+    """
     if filters:
         try:
             filters_json = json.loads(filters)
@@ -195,9 +210,10 @@ async def fl_subscribe(
     sub_id = storage.add_subscription(
         bot.db, interaction.channel_id, sub_type, target, filters_json
     )
+    sub = bot.db.get(models.Subscription, sub_id)
     bot.scheduler.add_job(
         poll_adapter,
-        args=[bot.db, sub_id, {"interval": 60}],
+        args=[bot.db, sub_id, {"interval": 60, "type": sub.type if sub else sub_type}],
         id=str(sub_id),
     )
     await bot_bucket.acquire()

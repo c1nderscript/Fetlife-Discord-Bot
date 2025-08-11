@@ -3,6 +3,10 @@ All notable changes to this project will be documented here.
 
 ## [Unreleased]
 
+## [0.3.1] - 2025-08-11
+### Fixed
+- Constrain subscription type to events or writings, clarify target formats, and schedule polling with stored type.
+
 ## [0.3.0] - 2025-08-11
 ### Added
 - Relay events and user writings as Discord embeds during polling.

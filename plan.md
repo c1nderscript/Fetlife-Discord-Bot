@@ -1,19 +1,20 @@
 # Plan
 
 ## Goal
-Relay new events and writings from the adapter as Discord embeds during polling.
+Constrain `/fl subscribe` to valid types and document target formats while scheduling polls using stored subscription types.
 
 ## Constraints
-- Preserve existing dedupe, cursor, and metrics behavior.
-- Support both `events` and `writings` subscription types using adapter client helpers.
-- Follow repository conventions for changelog, version bump, and tests.
+- Use `discord.app_commands.choices` for `sub_type` limited to `events` or `writings`.
+- Update command descriptions and docstrings for `target` (`user:<nickname>` for writings, `location:<...>` for events).
+- When scheduling `poll_adapter`, pass the canonical `sub.type` from the database.
+- Maintain existing behavior for filters and metrics.
 
 ## Risks
-- Unexpected payload fields could render incomplete embeds.
-- Additional rate-limit calls may slow tests.
+- Direct invocation in tests may bypass decorator validation.
+- Fetching the stored subscription may fail if the database returns `None`.
 
 ## Test Plan
 - `make check`
 
 ## Semver
-Minor: backwards-compatible feature.
+Patch: bugfix and documentation.
