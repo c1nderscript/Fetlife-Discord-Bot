@@ -3,6 +3,10 @@ All notable changes to this project will be documented here.
 
 ## [Unreleased]
 
+## [0.3.0] - 2025-08-11
+### Added
+- Relay events and user writings as Discord embeds during polling.
+
 ## [0.2.0] - 2025-08-11
 ### Added
 - Adapter client helpers for fetching user writings and group posts.

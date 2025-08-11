@@ -1,15 +1,16 @@
 # Plan
 
 ## Goal
-Add asynchronous client helpers to fetch user writings and group posts from the adapter service.
+Relay new events and writings from the adapter as Discord embeds during polling.
 
 ## Constraints
-- Follow repository conventions including changelog, version bump, and tests.
-- Mirror existing aiohttp usage without introducing new dependencies.
+- Preserve existing dedupe, cursor, and metrics behavior.
+- Support both `events` and `writings` subscription types using adapter client helpers.
+- Follow repository conventions for changelog, version bump, and tests.
 
 ## Risks
-- Incorrect endpoint URLs could break polling.
-- Tests may need mocking to avoid network access.
+- Unexpected payload fields could render incomplete embeds.
+- Additional rate-limit calls may slow tests.
 
 ## Test Plan
 - `make check`

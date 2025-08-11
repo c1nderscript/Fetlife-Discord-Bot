@@ -82,7 +82,12 @@ async def poll_adapter(db, sub_id: int, data: Dict[str, Any]):
             items = await adapter_client.fetch_events(
                 ADAPTER_BASE_URL, sub.target_id
             )
+        elif sub.type == "writings":
+            items = await adapter_client.fetch_writings(
+                ADAPTER_BASE_URL, sub.target_id
+            )
         fetlife_requests.inc()
+        channel = bot.get_channel(sub.channel_id)
         new_ids: list[str] = []
         for item in items:
             item_id = str(item.get("id"))
@@ -93,6 +98,18 @@ async def poll_adapter(db, sub_id: int, data: Dict[str, Any]):
                 logger.info("duplicate", extra={"sub_id": sub_id, "item": item_id})
                 continue
             storage.record_relay(db, sub_id, item_id)
+            if channel:
+                embed = discord.Embed(
+                    title=item.get("title", ""), url=item.get("link")
+                )
+                if sub.type == "events" and item.get("time"):
+                    embed.add_field(name="Start", value=item["time"])
+                if sub.type == "writings" and item.get("published"):
+                    embed.add_field(name="Published", value=item["published"])
+                await bot_bucket.acquire()
+                bot_tokens.set(bot_bucket.get_tokens())
+                await channel.send(embed=embed)
+                messages_sent.inc()
             new_ids.append(item_id)
         if new_ids:
             storage.update_cursor(db, sub_id, datetime.utcnow(), new_ids)
