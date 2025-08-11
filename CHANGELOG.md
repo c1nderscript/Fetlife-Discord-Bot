@@ -3,6 +3,10 @@ All notable changes to this project will be documented here.
 
 ## [Unreleased]
 
+## [0.3.2] - 2025-08-11
+### Added
+- Test verifying writings subscription updates the cursor and sends a message.
+
 ## [0.3.1] - 2025-08-11
 ### Fixed
 - Constrain subscription type to events or writings, clarify target formats, and schedule polling with stored type.
