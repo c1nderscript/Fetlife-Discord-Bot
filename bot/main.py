@@ -9,8 +9,9 @@ from datetime import datetime, timedelta
 from typing import Any, Dict
 
 import discord
+import discord.abc
 from aiohttp import web, ClientError
-from apscheduler.schedulers.asyncio import AsyncIOScheduler
+from apscheduler.schedulers.asyncio import AsyncIOScheduler  # type: ignore[import-untyped]
 from discord import app_commands
 from discord.ext import commands
 from dotenv import load_dotenv
@@ -114,7 +115,7 @@ async def poll_adapter(db, sub_id: int, data: Dict[str, Any]):
                 logger.info("duplicate", extra={"sub_id": sub_id, "item": item_id})
                 continue
             storage.record_relay(db, sub_id, item_id)
-            if channel:
+            if isinstance(channel, discord.abc.Messageable):
                 if sub.type == "attendees":
                     embed = discord.Embed(
                         title=item.get("nickname", ""),
@@ -310,9 +311,13 @@ async def fl_subscribe(
         bot_tokens.set(bot_bucket.get_tokens())
         await interaction.response.send_message("Target must be group:<id>")
         return
+    channel_id = interaction.channel_id
+    if channel_id is None:
+        await interaction.response.send_message("Channel not found")
+        return
     sub_id = storage.add_subscription(
         bot.db,
-        interaction.channel_id,
+        channel_id,
         sub_type,
         target,
         filters_json,
@@ -331,7 +336,11 @@ async def fl_subscribe(
 
 @fl_group.command(name="list", description="List channel subscriptions")
 async def fl_list(interaction: discord.Interaction) -> None:
-    subs = storage.list_subscriptions(bot.db, interaction.channel_id)
+    channel_id = interaction.channel_id
+    if channel_id is None:
+        await interaction.response.send_message("Channel not found")
+        return
+    subs = storage.list_subscriptions(bot.db, channel_id)
     if not subs:
         await bot_bucket.acquire()
         bot_tokens.set(bot_bucket.get_tokens())
@@ -346,7 +355,11 @@ async def fl_list(interaction: discord.Interaction) -> None:
 
 @fl_group.command(name="unsubscribe", description="Remove a subscription")
 async def fl_unsubscribe(interaction: discord.Interaction, sub_id: int) -> None:
-    storage.remove_subscription(bot.db, sub_id, interaction.channel_id)
+    channel_id = interaction.channel_id
+    if channel_id is None:
+        await interaction.response.send_message("Channel not found")
+        return
+    storage.remove_subscription(bot.db, sub_id, channel_id)
     try:
         bot.scheduler.remove_job(str(sub_id))
     except Exception:
@@ -363,8 +376,11 @@ async def fl_test(interaction: discord.Interaction, sub_id: int) -> None:
     bot_tokens.set(bot_bucket.get_tokens())
     await interaction.response.send_message(embed=embed)
     messages_sent.inc()
-    db_settings = storage.get_channel_settings(bot.db, interaction.channel_id)
-    cfg = get_channel_config(bot.config, interaction.guild_id, interaction.channel_id)
+    channel_id = interaction.channel_id
+    if channel_id is None:
+        return
+    db_settings = storage.get_channel_settings(bot.db, channel_id)
+    cfg = get_channel_config(bot.config, interaction.guild_id, channel_id)
     settings = {**db_settings, **cfg}
     if settings.get("thread_per_event"):
         await bot_bucket.acquire()
@@ -376,16 +392,18 @@ async def fl_test(interaction: discord.Interaction, sub_id: int) -> None:
 async def fl_settings(
     interaction: discord.Interaction, key: str | None = None, value: str | None = None
 ) -> None:
+    channel_id = interaction.channel_id
+    if channel_id is None:
+        await interaction.response.send_message("Channel not found")
+        return
     if key and value:
-        storage.set_channel_settings(bot.db, interaction.channel_id, **{key: value})
+        storage.set_channel_settings(bot.db, channel_id, **{key: value})
         await bot_bucket.acquire()
         bot_tokens.set(bot_bucket.get_tokens())
         await interaction.response.send_message("Updated settings")
     else:
-        db_settings = storage.get_channel_settings(bot.db, interaction.channel_id)
-        cfg = get_channel_config(
-            bot.config, interaction.guild_id, interaction.channel_id
-        )
+        db_settings = storage.get_channel_settings(bot.db, channel_id)
+        cfg = get_channel_config(bot.config, interaction.guild_id, channel_id)
         settings = {**db_settings, **cfg}
         await bot_bucket.acquire()
         bot_tokens.set(bot_bucket.get_tokens())

@@ -10,3 +10,7 @@ jsonschema==4.25.0
 
 telethon==1.36.0
 black==25.1.0
+
+mypy==1.17.1
+types-PyYAML==6.0.12.20250809
+types-jsonschema==4.25.0.20250809

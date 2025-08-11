@@ -3,6 +3,10 @@ All notable changes to this project will be documented here.
 
 ## [Unreleased]
 
+## [0.8.3] - 2025-08-11
+### Added
+- MyPy static type checking and integration into `make check`.
+
 ## [0.8.2] - 2025-08-11
 ### Added
 - Black code formatting configuration and `make fmt` target.
