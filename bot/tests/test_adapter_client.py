@@ -6,7 +6,11 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 import asyncio
 from unittest.mock import patch
 
-from bot.adapter_client import fetch_events
+from bot.adapter_client import (
+    fetch_events,
+    fetch_group_posts,
+    fetch_writings,
+)
 
 
 class DummyResp:
@@ -38,3 +42,16 @@ def test_fetch_events_mocked():
     with patch("aiohttp.ClientSession", return_value=DummySession()):
         events = asyncio.run(fetch_events("http://adapter", "cities/1"))
     assert events == [{"id": 1}]
+
+
+def test_fetch_writings_mocked():
+    with patch("aiohttp.ClientSession", return_value=DummySession()):
+        writings = asyncio.run(fetch_writings("http://adapter", "1"))
+    assert writings == [{"id": 1}]
+
+
+def test_fetch_group_posts_mocked():
+    with patch("aiohttp.ClientSession", return_value=DummySession()):
+        posts = asyncio.run(fetch_group_posts("http://adapter", "1"))
+    assert posts == [{"id": 1}]
+

@@ -1,18 +1,18 @@
 # Plan
 
 ## Goal
-Ensure temporary cookie files are cleaned up and verify removal with PHPUnit.
+Add asynchronous client helpers to fetch user writings and group posts from the adapter service.
 
 ## Constraints
 - Follow repository conventions including changelog, version bump, and tests.
-- Maintain existing login flow without external network dependencies in tests.
+- Mirror existing aiohttp usage without introducing new dependencies.
 
 ## Risks
-- Improper cleanup could leave lingering files.
-- Test may need to mock network interactions.
+- Incorrect endpoint URLs could break polling.
+- Tests may need mocking to avoid network access.
 
 ## Test Plan
 - `make check`
 
 ## Semver
-Patch: backward-compatible bug fix.
+Minor: backwards-compatible feature.
