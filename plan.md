@@ -1,16 +1,16 @@
 # Plan
 
 ## Goal
-Support attendee subscriptions by adding adapter endpoint `/events/{id}/attendees` and bot polling that relays attendee RSVP statuses and comments into Discord.
+Add group_posts subscriptions allowing the bot to poll the adapter for group posts and relay them, including target validation.
 
 ## Constraints
-- Keep existing adapter service patterns and reuse session/account handling.
-- Responses must include attendee `id`, `nickname`, `status`, and optional `comment`.
-- Maintain backward compatibility for existing event and writing subscriptions.
+- Support `sub_type="group_posts"` in `/fl subscribe`.
+- Require targets formatted as `group:<id>` where `<id>` is numeric.
+- Preserve existing event, writing, and attendee behavior.
 
 ## Risks
-- Parsing attendee lists may be slow and fail if HTML structure changes.
-- Schema or embed formatting errors could break polling.
+- Missing validation could allow malformed targets.
+- Embed formatting may omit published timestamps.
 
 ## Test Plan
 - `make check`
