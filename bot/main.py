@@ -74,8 +74,6 @@ telegram_group = app_commands.Group(
 )
 
 
-
-
 async def poll_adapter(db, sub_id: int, data: Dict[str, Any]):
     """Poll adapter with jitter and backoff, caching cursor and deduping."""
     start = time.perf_counter()
@@ -130,7 +128,9 @@ async def poll_adapter(db, sub_id: int, data: Dict[str, Any]):
                     )
                     if sub.type == "events" and item.get("time"):
                         embed.add_field(name="Start", value=item["time"])
-                    if sub.type in ("writings", "group_posts") and item.get("published"):
+                    if sub.type in ("writings", "group_posts") and item.get(
+                        "published"
+                    ):
                         embed.add_field(name="Published", value=item["published"])
                 await bot_bucket.acquire()
                 bot_tokens.set(bot_bucket.get_tokens())
@@ -215,9 +215,7 @@ async def fl_account_add(
     interaction: discord.Interaction, username: str, password: str
 ) -> None:
     acct_id = storage.add_account(bot.db, username, password)
-    await adapter_client.login(
-        ADAPTER_BASE_URL, username, password, account_id=acct_id
-    )
+    await adapter_client.login(ADAPTER_BASE_URL, username, password, account_id=acct_id)
     await bot_bucket.acquire()
     bot_tokens.set(bot_bucket.get_tokens())
     await interaction.response.send_message(f"Account {acct_id} added")
@@ -261,9 +259,7 @@ async def fl_telegram_add(
 
 
 @telegram_group.command(name="remove", description="Stop relaying a Telegram chat")
-async def fl_telegram_remove(
-    interaction: discord.Interaction, chat_id: str
-) -> None:
+async def fl_telegram_remove(interaction: discord.Interaction, chat_id: str) -> None:
     bot.bridge.remove_mapping(int(chat_id))
     bot.config.get("telegram_bridge", {}).get("mappings", {}).pop(str(chat_id), None)
     save_config(bot.config)
@@ -305,9 +301,7 @@ async def fl_subscribe(
         except json.JSONDecodeError:
             await bot_bucket.acquire()
             bot_tokens.set(bot_bucket.get_tokens())
-            await interaction.response.send_message(
-                "Invalid JSON for filters"
-            )
+            await interaction.response.send_message("Invalid JSON for filters")
             return
     else:
         filters_json = {}
@@ -343,9 +337,7 @@ async def fl_list(interaction: discord.Interaction) -> None:
         bot_tokens.set(bot_bucket.get_tokens())
         await interaction.response.send_message("No subscriptions")
         return
-    desc = "\n".join(
-        f"`{sid}` {typ} {tgt} (acct {aid})" for sid, typ, tgt, aid in subs
-    )
+    desc = "\n".join(f"`{sid}` {typ} {tgt} (acct {aid})" for sid, typ, tgt, aid in subs)
     embed = discord.Embed(title="Subscriptions", description=desc)
     await bot_bucket.acquire()
     bot_tokens.set(bot_bucket.get_tokens())
@@ -369,7 +361,7 @@ async def fl_test(interaction: discord.Interaction, sub_id: int) -> None:
     embed = discord.Embed(title="Test Notification", description=f"sub {sub_id}")
     await bot_bucket.acquire()
     bot_tokens.set(bot_bucket.get_tokens())
-    msg = await interaction.response.send_message(embed=embed)
+    await interaction.response.send_message(embed=embed)
     messages_sent.inc()
     db_settings = storage.get_channel_settings(bot.db, interaction.channel_id)
     cfg = get_channel_config(bot.config, interaction.guild_id, interaction.channel_id)
@@ -391,7 +383,9 @@ async def fl_settings(
         await interaction.response.send_message("Updated settings")
     else:
         db_settings = storage.get_channel_settings(bot.db, interaction.channel_id)
-        cfg = get_channel_config(bot.config, interaction.guild_id, interaction.channel_id)
+        cfg = get_channel_config(
+            bot.config, interaction.guild_id, interaction.channel_id
+        )
         settings = {**db_settings, **cfg}
         await bot_bucket.acquire()
         bot_tokens.set(bot_bucket.get_tokens())
@@ -408,9 +402,7 @@ async def fl_health(interaction: discord.Interaction) -> None:
     )
     await bot_bucket.acquire()
     bot_tokens.set(bot_bucket.get_tokens())
-    await interaction.response.send_message(
-        f"last_poll: {last}; queue_depth: {depth}"
-    )
+    await interaction.response.send_message(f"last_poll: {last}; queue_depth: {depth}")
 
 
 @fl_group.command(name="purge", description="Purge local caches")

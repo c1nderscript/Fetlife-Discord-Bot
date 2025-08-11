@@ -356,7 +356,7 @@ One feature per PR; include tests and docs updates.
 
 No secrets in code or logs.
 
-Run make check (lint, tests, schema) before PR.
+Run `make fmt` for Black formatting and `make check` (formatting check, lint, tests, schema) before PR.
 
 Follow semantic commits and Conventional Changelog.
 

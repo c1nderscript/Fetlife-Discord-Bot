@@ -29,6 +29,7 @@ Base = declarative_base()
 def hash_credentials(username: str, password: str) -> str:
     return hashlib.sha256(f"{username}:{password}".encode()).hexdigest()
 
+
 def init_db(url: str | None = None):
     global engine, SessionLocal
     if url:

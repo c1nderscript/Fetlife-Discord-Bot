@@ -18,11 +18,13 @@ async def run_poll(
     if channel is None:
         channel = AsyncMock()
         channel.send = AsyncMock()
-    with patch(f"bot.main.adapter_client.{fetch_fn}", fetch_mock), patch.object(
-        main.bot, "get_channel", return_value=channel
-    ), patch.object(main.bot.scheduler, "add_job"), patch(
-        "bot.main.bot_bucket.acquire", AsyncMock()
-    ), patch("bot.main.bot_tokens.set"):
+    with (
+        patch(f"bot.main.adapter_client.{fetch_fn}", fetch_mock),
+        patch.object(main.bot, "get_channel", return_value=channel),
+        patch.object(main.bot.scheduler, "add_job"),
+        patch("bot.main.bot_bucket.acquire", AsyncMock()),
+        patch("bot.main.bot_tokens.set"),
+    ):
         await main.poll_adapter(db, sub_id, data)
     return channel
 
@@ -58,15 +60,18 @@ def test_poll_adapter_backoff_on_http_error():
     db = storage.init_db("sqlite:///:memory:")
     sub_id = storage.add_subscription(db, 1, "events", "cities/1")
     data = {"interval": 60}
-    with patch(
-        "bot.main.adapter_client.fetch_events",
-        AsyncMock(side_effect=aiohttp.ClientError()),
-    ), patch.object(
-        main.bot.scheduler,
-        "add_job",
-    ) as add_job, patch(
-        "bot.main.bot_bucket.acquire", AsyncMock()
-    ), patch("bot.main.bot_tokens.set"):
+    with (
+        patch(
+            "bot.main.adapter_client.fetch_events",
+            AsyncMock(side_effect=aiohttp.ClientError()),
+        ),
+        patch.object(
+            main.bot.scheduler,
+            "add_job",
+        ) as add_job,
+        patch("bot.main.bot_bucket.acquire", AsyncMock()),
+        patch("bot.main.bot_tokens.set"),
+    ):
         asyncio.run(main.poll_adapter(db, sub_id, data))
     assert data["backoff"] == 120
     add_job.assert_called_once()

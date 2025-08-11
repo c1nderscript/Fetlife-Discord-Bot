@@ -71,4 +71,3 @@ def test_login_mocked():
     with patch("aiohttp.ClientSession", return_value=DummySession()):
         resp = asyncio.run(login("http://adapter", "u", "p", account_id=1))
     assert resp == [{"id": 1}]
-

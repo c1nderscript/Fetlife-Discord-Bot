@@ -1,6 +1,7 @@
 import asyncio
 import time
 
+
 class TokenBucket:
     """Asynchronous token bucket rate limiter."""
 

@@ -1,6 +1,6 @@
 [project]
 name = "fetlife-discord-bot"
-version = "0.8.1"
+version = "0.8.2"
 license = { file = "LICENSE" }
 requires-python = ">=3.11"
 classifiers = [
@@ -10,3 +10,7 @@ classifiers = [
 [build-system]
 requires = ["setuptools>=61.0"]
 build-backend = "setuptools.build_meta"
+
+[tool.black]
+line-length = 88
+target-version = ["py311"]

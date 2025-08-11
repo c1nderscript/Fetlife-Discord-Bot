@@ -4,27 +4,29 @@
 - Languages: Python, PHP.
 - Build tools: setuptools via `pyproject.toml`, Composer for PHP.
 - Package managers: pip (requirements.txt), Composer.
-- Test commands: `make check` (lint, unit tests, integration tests) and `bash scripts/agents-verify.sh`.
+- Test commands: `make check` (lint, formatting, unit tests, integration tests) and `bash scripts/agents-verify.sh`.
 - Entry points: `python -m bot.main` for the bot, adapter service via PHP.
 - CI jobs: `release-hygiene.yml` (make check, version/changelog verification, agents drift check) and `release.yml` (tags and notes).
 - Release process: bump version in `pyproject.toml`, update `CHANGELOG.md`, tag `vX.Y.Z` on main.
 
 ## Goal
-Switch bot execution to module invocation and update all references from `python bot/main.py` to `python -m bot.main`.
+Add Black code formatting and flake8 configuration, provide a fmt target, and ensure check runs Black.
 
 ## Constraints
-- Update `docker-compose.yml`, `bot/Dockerfile`, `scripts/setup.sh`, and documentation.
-- Preserve commit conventions and run repository checks.
+- Configure flake8 to align with Black.
+- Add Black dependency to requirements files.
+- Update Makefile and developer docs (Agents.md).
+- Run formatters and tests via Docker.
 - Bump patch version and changelog.
 
 ## Risks
-- Missing environment variables may cause startup failure when verifying.
-- Potential overlooked references to old command.
+- Black reformatting could introduce merge conflicts or stylistic adjustments.
+- Requirements lock might drift if not regenerated.
 
 ## Test Plan
+- `docker compose build` & `make fmt`
 - `bash scripts/agents-verify.sh`
 - `make check`
-- `python -m bot.main` (expect failure without token but confirms entry point)
 
 ## Semver
-Patch: command and documentation adjustments only.
+Patch: tooling and configuration only.
