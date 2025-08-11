@@ -356,7 +356,7 @@ One feature per PR; include tests and docs updates.
 
 No secrets in code or logs.
 
-Run `make fmt` for Black formatting and `make check` (formatting check, lint, type checking, tests, schema) before PR.
+Run `make fmt` for Black formatting and `make check` (formatting check, lint, type checking, static analysis, tests, schema) before PR.
 
 Follow semantic commits and Conventional Changelog.
 
@@ -386,6 +386,6 @@ Contact: Open an issue with logs (redacted), guild/channel IDs, subscription con
 
 
 19) CI & Release
-release-hygiene GitHub workflow runs `make check`, ensures version in `pyproject.toml` matches `CHANGELOG.md`, and executes `scripts/agents-verify.sh`.
-`scripts/agents-verify.sh` verifies that tools referenced in this spec (e.g., `docker`, `make check`, `flake8`, `phpunit`) are installed and fails if any are missing.
+release-hygiene GitHub workflow runs `make check`, executes `vendor/bin/phpstan analyse`, ensures version in `pyproject.toml` matches `CHANGELOG.md`, and executes `scripts/agents-verify.sh`.
+`scripts/agents-verify.sh` verifies that tools referenced in this spec (e.g., `docker`, `make check`, `flake8`, `phpunit`, `phpstan`) are installed and fails if any are missing.
 Releases are tagged from `main` and publish notes from `.github/RELEASE_NOTES.md`.

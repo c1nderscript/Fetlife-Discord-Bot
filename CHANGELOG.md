@@ -3,6 +3,10 @@ All notable changes to this project will be documented here.
 
 ## [Unreleased]
 
+## [1.0.1] - 2025-08-17
+### Added
+- PHPStan static analysis with `vendor/bin/phpstan analyse`.
+
 ## [1.0.0] - 2025-08-11
 ### Added
 - Token-based adapter authentication via `ADAPTER_AUTH_TOKEN`.

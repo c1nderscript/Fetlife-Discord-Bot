@@ -48,4 +48,13 @@ if grep -qi "phpunit" Agents.md; then
   fi
 fi
 
+if grep -qi "phpstan" Agents.md; then
+  if command -v phpstan >/dev/null 2>&1 || [ -f vendor/bin/phpstan ]; then
+    :
+  else
+    echo "Agents.md references phpstan but phpstan is not installed." >&2
+    exit 1
+  fi
+fi
+
 echo "Agents.md passes basic drift check."
