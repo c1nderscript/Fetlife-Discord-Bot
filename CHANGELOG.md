@@ -3,6 +3,10 @@ All notable changes to this project will be documented here.
 
 ## [Unreleased]
 
+## [0.2.0] - 2025-08-11
+### Added
+- Adapter client helpers for fetching user writings and group posts.
+
 ## [0.1.8] - 2025-08-11
 ### Fixed
 - Clean up temporary cookie files after login and during tests.
