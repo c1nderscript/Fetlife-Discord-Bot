@@ -205,6 +205,7 @@ Returns JSON to stdout.
 Both should normalize output (UTC timestamps, stable IDs, minimal PII, direct permalink).
 
 9) Configuration
+Run `scripts/setup.sh` to interactively create `.env`, optionally scaffold `config.yaml`, run `alembic upgrade head`, and start the bot (Ctrl-C to stop).
 .env
 
 makefile

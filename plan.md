@@ -1,19 +1,20 @@
 # Plan
 
 ## Goal
-Implement adapter authentication verification via `/fl login` command using a new helper.
+Provide an interactive setup script that writes required environment variables, applies database migrations, and launches the bot. Update documentation to reference the new script.
 
 ## Constraints
-- Use aiohttp for HTTP requests.
-- Follow existing command structure and metrics rate limiting.
-- Maintain documentation and tests in sync with behavior.
+- Bash script must skip existing `.env` entries.
+- Support optional creation of `config.yaml`.
+- Adhere to repository release and documentation conventions.
 
 ## Risks
-- Network errors during adapter login could produce unclear user feedback.
-- Misreported status if adapter returns unexpected codes.
+- Script may fail if dependencies like Alembic or Docker are missing.
+- Writing to existing files could overwrite user configuration.
 
 ## Test Plan
+- `bash scripts/agents-verify.sh`
 - `make check`
 
 ## Semver
-Patch: fixes `/fl login` to verify adapter authentication.
+Minor: adds a new setup feature.
