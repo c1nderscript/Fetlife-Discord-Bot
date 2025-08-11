@@ -5,6 +5,13 @@ from typing import Any
 import aiohttp
 
 
+async def login_adapter(base_url: str) -> bool:
+    """Log into the adapter using its configured credentials."""
+    async with aiohttp.ClientSession() as session:
+        async with session.post(f"{base_url}/login") as resp:
+            return resp.status == 200
+
+
 async def login(
     base_url: str, username: str, password: str, account_id: int
 ) -> dict[str, Any]:
