@@ -15,6 +15,23 @@ class Connection implements ConnectionInterface
     public function __construct(?string $cookieFile = null)
     {
         $this->cookieFile = $cookieFile ?? tempnam(sys_get_temp_dir(), 'fl');
+        register_shutdown_function(static function (string $file): void {
+            if (file_exists($file)) {
+                @unlink($file);
+            }
+        }, $this->cookieFile);
+    }
+
+    public function __destruct()
+    {
+        if (file_exists($this->cookieFile)) {
+            @unlink($this->cookieFile);
+        }
+    }
+
+    public function getCookieFile(): string
+    {
+        return $this->cookieFile;
     }
 
     public function logIn(string $nickname, string $password): string

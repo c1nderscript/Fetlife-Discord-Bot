@@ -1,18 +1,18 @@
 # Plan
 
 ## Goal
-Handle invalid JSON in filter parsing within the `/fl subscribe` command and cover it with tests.
+Ensure temporary cookie files are cleaned up and verify removal with PHPUnit.
 
 ## Constraints
-- Follow existing logging and rate limit patterns in `fl_subscribe`.
-- Maintain repository conventions including changelog and version updates.
+- Follow repository conventions including changelog, version bump, and tests.
+- Maintain existing login flow without external network dependencies in tests.
 
 ## Risks
-- Misplaced error handling could still raise uncaught exceptions.
-- Additional test may require event loop setup and mocking scheduler.
+- Improper cleanup could leave lingering files.
+- Test may need to mock network interactions.
 
 ## Test Plan
 - `make check`
 
 ## Semver
-Patch: backwards compatible bug fix.
+Patch: backward-compatible bug fix.

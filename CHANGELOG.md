@@ -3,6 +3,12 @@ All notable changes to this project will be documented here.
 
 ## [Unreleased]
 
+## [0.1.8] - 2025-08-11
+### Fixed
+- Clean up temporary cookie files after login and during tests.
+### Added
+- PHPUnit test ensuring cookie file removal.
+
 ## [0.1.7] - 2025-08-10
 ### Added
 - commit-msg git hook enforcing Conventional Commits with installation instructions.
