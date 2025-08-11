@@ -45,6 +45,7 @@ function getUser()
     }
     $data = $_SESSION['fetlife'];
     $cookieFile = tempnam(sys_get_temp_dir(), 'fl');
+    register_shutdown_function('unlink', $cookieFile);
     if (isset($data['cookie'])) {
         file_put_contents($cookieFile, $data['cookie']);
     }
@@ -64,6 +65,7 @@ $app->post('/login', function ($request, $response) {
         return $response->withStatus(400)->withHeader('Content-Type', 'application/json');
     }
     $cookieFile = tempnam(sys_get_temp_dir(), 'fl');
+    register_shutdown_function('unlink', $cookieFile);
     $user = new FetLifeUser($username, $password, new Connection($cookieFile));
     if (!empty($_ENV['FETLIFE_PROXY'])) {
         $type = $_ENV['FETLIFE_PROXY_TYPE'] ?? CURLPROXY_HTTP;
