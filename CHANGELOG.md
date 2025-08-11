@@ -3,6 +3,9 @@ All notable changes to this project will be documented here.
 
 ## [Unreleased]
 
+### Added
+- Instructions for running the bot 24/7 on a remote server using Docker Compose or systemd.
+
 ## [0.8.0] - 2025-08-11
 ### Added
 - Interactive setup script for environment configuration, migrations, and bot startup.

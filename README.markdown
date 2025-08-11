@@ -80,6 +80,59 @@ cd bot
 python main.py
 ```
 
+### Running 24/7 on a Remote Server
+
+For unattended deployments run [`scripts/setup.sh`](scripts/setup.sh) once to generate the `.env`, apply migrations, and perform initial configuration.
+
+#### Docker Compose
+
+Ensure `restart: unless-stopped` is set in `docker-compose.yml` and launch the stack in the background:
+
+```bash
+docker compose up -d
+```
+
+Docker stores logs per container; view them with:
+
+```bash
+docker compose logs -f bot
+```
+
+#### systemd service
+
+Create `/etc/systemd/system/fetlife-bot.service`:
+
+```ini
+[Unit]
+Description=FetLife Discord Bot
+After=network.target
+
+[Service]
+Type=simple
+WorkingDirectory=/opt/fetlife-discord-bot
+ExecStart=/usr/bin/python /opt/fetlife-discord-bot/bot/main.py
+Restart=on-failure
+EnvironmentFile=/opt/fetlife-discord-bot/.env
+StandardOutput=append:/var/log/fetlife-bot.log
+StandardError=append:/var/log/fetlife-bot.log
+
+[Install]
+WantedBy=multi-user.target
+```
+
+Enable and start the service:
+
+```bash
+sudo systemctl enable --now fetlife-bot.service
+```
+
+View status and logs:
+
+```bash
+systemctl status fetlife-bot.service
+journalctl -u fetlife-bot.service -f
+```
+
 ## System requirements
 
 To run `libFetLife`, you need PHP version 5.3.6 or greater (with [PHP's cURL extension](https://php.net/manual/book.curl.php) installed).
