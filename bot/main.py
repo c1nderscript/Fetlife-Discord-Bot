@@ -23,12 +23,15 @@ from prometheus_client import (
 )
 
 from . import storage, adapter_client, models
-from .config import get_channel_config, load_config
+from .config import get_channel_config, load_config, save_config
 from .rate_limit import TokenBucket
+from .telegram_bridge import TelegramBridge
 
 load_dotenv()
 TOKEN = os.getenv("DISCORD_TOKEN")
 ADAPTER_BASE_URL = os.getenv("ADAPTER_BASE_URL", "http://adapter:8080")
+TELEGRAM_API_ID = int(os.getenv("TELEGRAM_API_ID", "0"))
+TELEGRAM_API_HASH = os.getenv("TELEGRAM_API_HASH")
 
 
 class JsonFormatter(logging.Formatter):
@@ -65,6 +68,9 @@ bot_bucket = TokenBucket(5, 1)
 fl_group = app_commands.Group(name="fl", description="FetLife commands")
 account_group = app_commands.Group(
     name="account", description="Manage FetLife accounts", parent=fl_group
+)
+telegram_group = app_commands.Group(
+    name="telegram", description="Manage Telegram relays", parent=fl_group
 )
 
 
@@ -169,6 +175,12 @@ class FLBot(commands.Bot):
         self.db = storage.init_db()
         self.scheduler = AsyncIOScheduler()
         self.config = load_config()
+        self.bridge = TelegramBridge(
+            self,
+            api_id=TELEGRAM_API_ID if TELEGRAM_API_ID else None,
+            api_hash=TELEGRAM_API_HASH,
+            config=self.config,
+        )
         self.last_poll = 0.0
 
     async def setup_hook(self) -> None:
@@ -227,6 +239,32 @@ async def fl_account_remove(interaction: discord.Interaction, account_id: int) -
     await bot_bucket.acquire()
     bot_tokens.set(bot_bucket.get_tokens())
     await interaction.response.send_message(f"Removed account {account_id}")
+
+
+@telegram_group.command(name="add", description="Relay a Telegram chat to a channel")
+async def fl_telegram_add(
+    interaction: discord.Interaction, chat_id: str, channel: discord.TextChannel
+) -> None:
+    bot.bridge.add_mapping(int(chat_id), channel.id)
+    bot.config.setdefault("telegram_bridge", {}).setdefault("mappings", {})[
+        str(chat_id)
+    ] = str(channel.id)
+    save_config(bot.config)
+    await bot_bucket.acquire()
+    bot_tokens.set(bot_bucket.get_tokens())
+    await interaction.response.send_message("Added Telegram relay")
+
+
+@telegram_group.command(name="remove", description="Stop relaying a Telegram chat")
+async def fl_telegram_remove(
+    interaction: discord.Interaction, chat_id: str
+) -> None:
+    bot.bridge.remove_mapping(int(chat_id))
+    bot.config.get("telegram_bridge", {}).get("mappings", {}).pop(str(chat_id), None)
+    save_config(bot.config)
+    await bot_bucket.acquire()
+    bot_tokens.set(bot_bucket.get_tokens())
+    await interaction.response.send_message("Removed Telegram relay")
 
 
 @fl_group.command(name="subscribe", description="Create a new subscription")
@@ -398,7 +436,12 @@ async def main() -> None:
     await runner.setup()
     site = web.TCPSite(runner, "0.0.0.0", 8000)
     await site.start()
-    await bot.start(TOKEN)
+    await bot.bridge.start()
+    try:
+        await bot.start(TOKEN)
+    finally:
+        await bot.bridge.stop()
+        await runner.cleanup()
 
 
 if __name__ == "__main__":

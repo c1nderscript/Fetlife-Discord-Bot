@@ -56,6 +56,8 @@ Config: .env + config.yaml per-guild/per-channel overrides.
 
 Observability: Prometheus-style metrics endpoint + structured logs.
 
+Telegram Bridge: Telethon-based process relaying specified Telegram chats into Discord channels.
+
 3) Data Model (minimal)
 Tables
 guilds(id, name, created_at)

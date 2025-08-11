@@ -20,6 +20,7 @@ The `.env` file supports these keys:
 - `FETLIFE_USERNAME` – FetLife account username.
 - `FETLIFE_PASSWORD` – FetLife account password.
 - `DISCORD_TOKEN` – Discord bot token.
+- `TELEGRAM_API_ID`, `TELEGRAM_API_HASH` – Telegram API credentials for the bridge.
 - `DB_HOST`, `DB_PORT`, `DB_NAME`, `DB_USER`, `DB_PASSWORD` – database connection settings.
 - `DATABASE_URL` – optional full connection URL that overrides the above.
 - `FETLIFE_PROXY`, `FETLIFE_PROXY_TYPE`, `FETLIFE_PROXY_USERNAME`, `FETLIFE_PROXY_PASSWORD` – optional proxy configuration.
@@ -64,9 +65,13 @@ docker compose run --rm bot alembic upgrade head
        channels:
          "234567890123456789":
            attendee_sample: 5
-   ```
+   telegram_bridge:
+     mappings:
+       "-1001234567890": "234567890123456789"
+    ```
 
    This file is loaded at runtime; avoid storing credentials in it.
+   Manage Telegram relays at runtime with `/fl telegram add` and `/fl telegram remove`.
 
 Run the bot with:
 
