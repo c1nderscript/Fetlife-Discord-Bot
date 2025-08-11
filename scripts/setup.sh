@@ -73,6 +73,6 @@ alembic upgrade head
 trap 'echo "Interrupt received, shutting down..."; kill $BOT_PID 2>/dev/null; wait $BOT_PID 2>/dev/null; exit 0' INT
 
 echo "Starting bot. Press Ctrl-C to stop."
-python bot/main.py &
+python -m bot.main &
 BOT_PID=$!
 wait $BOT_PID
