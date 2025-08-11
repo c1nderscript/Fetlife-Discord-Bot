@@ -3,6 +3,11 @@ All notable changes to this project will be documented here.
 
 ## [Unreleased]
 
+## [1.0.1] - 2025-08-11
+### Changed
+- Convert adapter and bot Dockerfiles to multi-stage builds with pinned base image digests.
+
+
 ## [1.0.0] - 2025-08-11
 ### Added
 - Token-based adapter authentication via `ADAPTER_AUTH_TOKEN`.

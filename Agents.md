@@ -389,3 +389,9 @@ Contact: Open an issue with logs (redacted), guild/channel IDs, subscription con
 release-hygiene GitHub workflow runs `make check`, ensures version in `pyproject.toml` matches `CHANGELOG.md`, and executes `scripts/agents-verify.sh`.
 `scripts/agents-verify.sh` verifies that tools referenced in this spec (e.g., `docker`, `make check`, `flake8`, `phpunit`) are installed and fails if any are missing.
 Releases are tagged from `main` and publish notes from `.github/RELEASE_NOTES.md`.
+
+20) Docker Images
+Adapter and bot Dockerfiles use multi-stage builds with base images pinned to immutable digests for reproducible builds and smaller attack surfaces:
+- `php:8.2-cli@sha256:304cfb487bbe9b2ce5a933f6e5848e0248bff1fbb0d5ee36cec845f4a34f4fb1`
+- `python:3.11-slim@sha256:0ce77749ac83174a31d5e107ce0cfa6b28a2fd6b0615e029d9d84b39c48976ee`
+Builder stages install toolchains and dependencies; runtime stages contain only application code and installed packages. Update digests alongside security releases.
