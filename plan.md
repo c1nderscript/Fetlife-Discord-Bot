@@ -1,19 +1,20 @@
 # Plan
 
 ## Goal
-Add a unit test covering writings subscriptions to ensure `poll_adapter` sends Discord messages and updates the cursor.
+Support multiple FetLife accounts with per-subscription selection and session isolation.
 
 ## Constraints
-- Mock `adapter_client.fetch_writings` to avoid network calls.
-- Reuse existing `bot/tests/fixtures/writing.json` for sample payload.
-- Patch Discord and scheduler interactions to keep the test self-contained.
+- Preserve existing command structure; add `/fl account` subcommands and optional account selection for `/fl subscribe`.
+- Avoid storing plaintext credentials; persist only SHA-256 hashes.
+- Maintain backward compatibility for adapter requests without an explicit account ID.
 
 ## Risks
-- Incorrect patching could leave background jobs running or unawaited coroutines.
-- Cursor assertions may fail if IDs are not coerced to strings.
+- Incorrect session handling in the adapter could mix account cookies.
+- Added account_id parameter may break existing tests if not patched.
+- Hashing approach may not satisfy future security expectations.
 
 ## Test Plan
 - `make check`
 
 ## Semver
-Patch: tests only.
+Minor: new backwards-compatible feature set.

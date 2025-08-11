@@ -1,6 +1,3 @@
-from pathlib import Path
-
-import os
 import sys
 from pathlib import Path
 
@@ -18,7 +15,7 @@ def test_add_and_list_subscription():
     db = setup_db()
     sub_id = storage.add_subscription(db, 1, "events", "target")
     subs = storage.list_subscriptions(db, 1)
-    assert subs == [(sub_id, "events", "target")]
+    assert subs == [(sub_id, "events", "target", None)]
 
 
 def test_remove_subscription():

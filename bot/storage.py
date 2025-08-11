@@ -4,7 +4,7 @@ from typing import Any, Dict, Iterable, Tuple
 
 from sqlalchemy.orm import Session
 
-from .db import init_db as _init_db
+from .db import init_db as _init_db, hash_credentials
 from . import models
 
 
@@ -18,6 +18,7 @@ def add_subscription(
     sub_type: str,
     target: str,
     filters: Dict[str, Any] | None = None,
+    account_id: int | None = None,
 ) -> int:
     if ":" in target:
         target_kind, target_id = target.split(":", 1)
@@ -33,6 +34,7 @@ def add_subscription(
         target_id=target_id,
         target_kind=target_kind,
         filters_json=filters or {},
+        account_id=account_id,
     )
     db.add(sub)
     db.commit()
@@ -40,9 +42,38 @@ def add_subscription(
     return sub.id
 
 
-def list_subscriptions(db: Session, channel_id: int) -> Iterable[Tuple[int, str, str]]:
+def add_account(db: Session, username: str, password: str) -> int:
+    cred_hash = hash_credentials(username, password)
+    acct = models.Account(username=username, credential_hash=cred_hash)
+    db.add(acct)
+    db.commit()
+    db.refresh(acct)
+    return acct.id
+
+
+def list_accounts(db: Session) -> Iterable[Tuple[int, str]]:
+    return (
+        db.query(models.Account.id, models.Account.username)
+        .order_by(models.Account.id)
+        .all()
+    )
+
+
+def remove_account(db: Session, account_id: int) -> None:
+    db.query(models.Account).filter(models.Account.id == account_id).delete()
+    db.commit()
+
+
+def list_subscriptions(
+    db: Session, channel_id: int
+) -> Iterable[Tuple[int, str, str, int | None]]:
     subs = (
-        db.query(models.Subscription.id, models.Subscription.type, models.Subscription.target_id)
+        db.query(
+            models.Subscription.id,
+            models.Subscription.type,
+            models.Subscription.target_id,
+            models.Subscription.account_id,
+        )
         .filter(models.Subscription.channel_id == channel_id)
         .order_by(models.Subscription.id)
         .all()

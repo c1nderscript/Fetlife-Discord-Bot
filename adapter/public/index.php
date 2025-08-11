@@ -7,6 +7,9 @@ use FetLife\User as FetLifeUser;
 use FetLife\Connection;
 
 session_start();
+if (!isset($_SESSION['accounts'])) {
+    $_SESSION['accounts'] = [];
+}
 
 $dotenv = Dotenv::createImmutable(__DIR__ . '/..');
 $dotenv->safeLoad();
@@ -38,12 +41,19 @@ function log_json($level, $message, $context = [])
     error_log(json_encode($data));
 }
 
-function getUser()
+function getAccountId($request)
 {
-    if (!isset($_SESSION['fetlife'])) {
+    $hdr = $request->getHeaderLine('X-Account-ID');
+    $params = $request->getQueryParams();
+    return $hdr ?: ($params['account'] ?? 'default');
+}
+
+function getUser($accountId)
+{
+    if (!isset($_SESSION['accounts'][$accountId])) {
         return null;
     }
-    $data = $_SESSION['fetlife'];
+    $data = $_SESSION['accounts'][$accountId];
     $cookieFile = tempnam(sys_get_temp_dir(), 'fl');
     register_shutdown_function('unlink', $cookieFile);
     if (isset($data['cookie'])) {
@@ -57,6 +67,7 @@ function getUser()
 
 $app->post('/login', function ($request, $response) {
     log_json('info', 'login');
+    $acct = getAccountId($request);
     $params = (array) $request->getParsedBody();
     $username = $params['username'] ?? ($_ENV['FETLIFE_USERNAME'] ?? null);
     $password = $params['password'] ?? ($_ENV['FETLIFE_PASSWORD'] ?? null);
@@ -76,7 +87,7 @@ $app->post('/login', function ($request, $response) {
     }
     metric_inc('fetlife_requests_total');
     if ($user->logIn()) {
-        $_SESSION['fetlife'] = [
+        $_SESSION['accounts'][$acct] = [
             'id' => $user->id,
             'nickname' => $username,
             'cookie' => file_get_contents($cookieFile) ?: '',
@@ -90,7 +101,8 @@ $app->post('/login', function ($request, $response) {
 });
 
 $app->get('/events', function ($request, $response) {
-    $user = getUser();
+    $acct = getAccountId($request);
+    $user = getUser($acct);
     if (!$user) {
         $response->getBody()->write(json_encode(['error' => 'not authenticated']));
         return $response->withStatus(401)->withHeader('Content-Type', 'application/json');
@@ -120,7 +132,8 @@ $app->get('/events', function ($request, $response) {
 });
 
 $app->get('/events/{id}', function ($request, $response, $args) {
-    $user = getUser();
+    $acct = getAccountId($request);
+    $user = getUser($acct);
     if (!$user) {
         $response->getBody()->write(json_encode(['error' => 'not authenticated']));
         return $response->withStatus(401)->withHeader('Content-Type', 'application/json');
@@ -140,7 +153,8 @@ $app->get('/events/{id}', function ($request, $response, $args) {
 });
 
 $app->get('/users/{id}/writings', function ($request, $response, $args) {
-    $user = getUser();
+    $acct = getAccountId($request);
+    $user = getUser($acct);
     if (!$user) {
         $response->getBody()->write(json_encode(['error' => 'not authenticated']));
         return $response->withStatus(401)->withHeader('Content-Type', 'application/json');
@@ -162,7 +176,8 @@ $app->get('/users/{id}/writings', function ($request, $response, $args) {
 });
 
 $app->get('/groups/{id}/posts', function ($request, $response, $args) {
-    $user = getUser();
+    $acct = getAccountId($request);
+    $user = getUser($acct);
     if (!$user) {
         $response->getBody()->write(json_encode(['error' => 'not authenticated']));
         return $response->withStatus(401)->withHeader('Content-Type', 'application/json');

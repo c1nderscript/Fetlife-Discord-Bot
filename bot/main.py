@@ -62,6 +62,9 @@ adapter_bucket = TokenBucket(5, 1)
 bot_bucket = TokenBucket(5, 1)
 
 fl_group = app_commands.Group(name="fl", description="FetLife commands")
+account_group = app_commands.Group(
+    name="account", description="Manage FetLife accounts", parent=fl_group
+)
 
 
 
@@ -80,11 +83,11 @@ async def poll_adapter(db, sub_id: int, data: Dict[str, Any]):
         items: list[dict[str, Any]] = []
         if sub.type == "events":
             items = await adapter_client.fetch_events(
-                ADAPTER_BASE_URL, sub.target_id
+                ADAPTER_BASE_URL, sub.target_id, account_id=sub.account_id
             )
         elif sub.type == "writings":
             items = await adapter_client.fetch_writings(
-                ADAPTER_BASE_URL, sub.target_id
+                ADAPTER_BASE_URL, sub.target_id, account_id=sub.account_id
             )
         fetlife_requests.inc()
         channel = bot.get_channel(sub.channel_id)
@@ -173,11 +176,48 @@ async def fl_login(interaction: discord.Interaction) -> None:
     await interaction.response.send_message("Adapter login successful")
 
 
+@account_group.command(name="add", description="Add a FetLife account")
+async def fl_account_add(
+    interaction: discord.Interaction, username: str, password: str
+) -> None:
+    acct_id = storage.add_account(bot.db, username, password)
+    await adapter_client.login(
+        ADAPTER_BASE_URL, username, password, account_id=acct_id
+    )
+    await bot_bucket.acquire()
+    bot_tokens.set(bot_bucket.get_tokens())
+    await interaction.response.send_message(f"Account {acct_id} added")
+
+
+@account_group.command(name="list", description="List stored accounts")
+async def fl_account_list(interaction: discord.Interaction) -> None:
+    accounts = storage.list_accounts(bot.db)
+    if not accounts:
+        await bot_bucket.acquire()
+        bot_tokens.set(bot_bucket.get_tokens())
+        await interaction.response.send_message("No accounts")
+        return
+    desc = "\n".join(f"`{aid}` {name}" for aid, name in accounts)
+    embed = discord.Embed(title="Accounts", description=desc)
+    await bot_bucket.acquire()
+    bot_tokens.set(bot_bucket.get_tokens())
+    await interaction.response.send_message(embed=embed)
+
+
+@account_group.command(name="remove", description="Remove an account")
+async def fl_account_remove(interaction: discord.Interaction, account_id: int) -> None:
+    storage.remove_account(bot.db, account_id)
+    await bot_bucket.acquire()
+    bot_tokens.set(bot_bucket.get_tokens())
+    await interaction.response.send_message(f"Removed account {account_id}")
+
+
 @fl_group.command(name="subscribe", description="Create a new subscription")
 @app_commands.describe(
     sub_type="Type of content to subscribe to",
     target="Target identifier: user:<nickname> for writings, location:<...> for events",
     filters="Optional JSON filters",
+    account="ID of stored account to use",
 )
 @app_commands.choices(
     sub_type=[
@@ -190,6 +230,7 @@ async def fl_subscribe(
     sub_type: str,
     target: str,
     filters: str | None = None,
+    account: int | None = None,
 ) -> None:
     """Subscribe channel to FetLife events or writings.
 
@@ -208,7 +249,12 @@ async def fl_subscribe(
     else:
         filters_json = {}
     sub_id = storage.add_subscription(
-        bot.db, interaction.channel_id, sub_type, target, filters_json
+        bot.db,
+        interaction.channel_id,
+        sub_type,
+        target,
+        filters_json,
+        account_id=account,
     )
     sub = bot.db.get(models.Subscription, sub_id)
     bot.scheduler.add_job(
@@ -229,7 +275,9 @@ async def fl_list(interaction: discord.Interaction) -> None:
         bot_tokens.set(bot_bucket.get_tokens())
         await interaction.response.send_message("No subscriptions")
         return
-    desc = "\n".join(f"`{sid}` {typ} {tgt}" for sid, typ, tgt in subs)
+    desc = "\n".join(
+        f"`{sid}` {typ} {tgt} (acct {aid})" for sid, typ, tgt, aid in subs
+    )
     embed = discord.Embed(title="Subscriptions", description=desc)
     await bot_bucket.acquire()
     bot_tokens.set(bot_bucket.get_tokens())

@@ -3,6 +3,13 @@ All notable changes to this project will be documented here.
 
 ## [Unreleased]
 
+## [0.4.0] - 2025-08-11
+### Added
+- Manage multiple FetLife accounts with `/fl account` subcommands and optional per-subscription selection.
+- Adapter and bot polling now isolate sessions per account via `X-Account-ID` header.
+- Database models and storage helpers for accounts with hashed credentials.
+- Tests covering account creation, selection, and multi-account polling.
+
 ## [0.3.2] - 2025-08-11
 ### Added
 - Test verifying writings subscription updates the cursor and sends a message.
