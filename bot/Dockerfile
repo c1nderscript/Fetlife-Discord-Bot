@@ -15,4 +15,4 @@ RUN pip3 install --no-cache-dir -r requirements.txt \
 COPY bot/ bot/
 
 EXPOSE 3000
-CMD ["python3", "bot/main.py"]
+CMD ["python3", "-m", "bot.main"]

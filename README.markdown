@@ -76,8 +76,7 @@ docker compose run --rm bot alembic upgrade head
 Run the bot with:
 
 ```bash
-cd bot
-python main.py
+python -m bot.main
 ```
 
 ### Running 24/7 on a Remote Server
@@ -110,7 +109,7 @@ After=network.target
 [Service]
 Type=simple
 WorkingDirectory=/opt/fetlife-discord-bot
-ExecStart=/usr/bin/python /opt/fetlife-discord-bot/bot/main.py
+ExecStart=/usr/bin/python -m bot.main
 Restart=on-failure
 EnvironmentFile=/opt/fetlife-discord-bot/.env
 StandardOutput=append:/var/log/fetlife-bot.log

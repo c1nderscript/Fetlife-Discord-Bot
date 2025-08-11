@@ -33,7 +33,7 @@ services:
     depends_on:
       - adapter
       - db
-    command: ["python3", "bot/main.py"]
+    command: ["python3", "-m", "bot.main"]
     restart: unless-stopped
 
 volumes:
