@@ -387,4 +387,5 @@ Contact: Open an issue with logs (redacted), guild/channel IDs, subscription con
 
 19) CI & Release
 release-hygiene GitHub workflow runs `make check`, ensures version in `pyproject.toml` matches `CHANGELOG.md`, and executes `scripts/agents-verify.sh`.
+`scripts/agents-verify.sh` verifies that tools referenced in this spec (e.g., `docker`, `make check`, `flake8`, `phpunit`) are installed and fails if any are missing.
 Releases are tagged from `main` and publish notes from `.github/RELEASE_NOTES.md`.
