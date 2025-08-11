@@ -128,12 +128,19 @@ def update_cursor(
 def has_relayed(db: Session, sub_id: int, item_id: str) -> bool:
     return (
         db.query(models.RelayLog)
-        .filter(models.RelayLog.subscription_id == sub_id, models.RelayLog.item_id == item_id)
+        .filter(
+            models.RelayLog.subscription_id == sub_id,
+            models.RelayLog.item_id == item_id,
+        )
         .first()
         is not None
     )
 
 
-def record_relay(db: Session, sub_id: int, item_id: str, item_hash: str | None = None) -> None:
-    db.add(models.RelayLog(subscription_id=sub_id, item_id=item_id, item_hash=item_hash))
+def record_relay(
+    db: Session, sub_id: int, item_id: str, item_hash: str | None = None
+) -> None:
+    db.add(
+        models.RelayLog(subscription_id=sub_id, item_id=item_id, item_hash=item_hash)
+    )
     db.commit()

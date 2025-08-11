@@ -3,6 +3,12 @@ All notable changes to this project will be documented here.
 
 ## [Unreleased]
 
+## [0.8.2] - 2025-08-11
+### Added
+- Black code formatting configuration and `make fmt` target.
+### Changed
+- `make check` now runs `black --check`.
+
 ## [0.8.1] - 2025-08-11
 ### Added
 - Instructions for running the bot 24/7 on a remote server using Docker Compose or systemd.

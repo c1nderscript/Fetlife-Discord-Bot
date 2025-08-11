@@ -43,17 +43,14 @@ def matches_filters(item: Dict[str, Any], filters: Dict[str, Any]) -> bool:
     if city and item.get("city", "").lower() != str(city).lower():
         return False
     min_attendees = filters.get("min_attendees")
-    if (
-        isinstance(min_attendees, int)
-        and int(item.get("attendees", 0)) < min_attendees
-    ):
+    if isinstance(min_attendees, int) and int(item.get("attendees", 0)) < min_attendees:
         return False
     return True
 
 
 def format_event_embed(event: Dict[str, Any]) -> discord.Embed:
     """Return a Discord embed for *event*."""
-    title = f"\U0001F4C5 {event.get('title', '')}"
+    title = f"\U0001f4c5 {event.get('title', '')}"
     description = event.get("link", "")
     embed = discord.Embed(title=title, description=description)
     if "time" in event:

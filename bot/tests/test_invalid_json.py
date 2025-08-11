@@ -24,7 +24,9 @@ def test_fl_subscribe_invalid_json():
         main.bot.db = storage.init_db("sqlite:///:memory:")
         interaction = DummyInteraction()
         with patch.object(main.bot.scheduler, "add_job") as add_job:
-            await main.fl_subscribe.callback(interaction, "events", "cities/1", filters="{bad")
+            await main.fl_subscribe.callback(
+                interaction, "events", "cities/1", filters="{bad"
+            )
             add_job.assert_not_called()
         return interaction
 

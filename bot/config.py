@@ -27,7 +27,9 @@ def save_config(config: Dict[str, Any], path: str = "config.yaml") -> None:
         yaml.safe_dump(config, f)
 
 
-def get_channel_config(config: Dict[str, Any], guild_id: int | None, channel_id: int) -> Dict[str, Any]:
+def get_channel_config(
+    config: Dict[str, Any], guild_id: int | None, channel_id: int
+) -> Dict[str, Any]:
     settings: Dict[str, Any] = {}
     if not config:
         return settings

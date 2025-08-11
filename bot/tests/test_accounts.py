@@ -41,11 +41,13 @@ def test_poll_adapter_uses_correct_account():
     channel.send = AsyncMock()
 
     fetch_mock = AsyncMock(return_value=[])
-    with patch("bot.main.adapter_client.fetch_events", fetch_mock), patch.object(
-        main.bot, "get_channel", return_value=channel
-    ), patch.object(main.bot.scheduler, "add_job"), patch(
-        "bot.main.bot_bucket.acquire", AsyncMock()
-    ), patch("bot.main.bot_tokens.set"):
+    with (
+        patch("bot.main.adapter_client.fetch_events", fetch_mock),
+        patch.object(main.bot, "get_channel", return_value=channel),
+        patch.object(main.bot.scheduler, "add_job"),
+        patch("bot.main.bot_bucket.acquire", AsyncMock()),
+        patch("bot.main.bot_tokens.set"),
+    ):
         asyncio.run(main.poll_adapter(db, s1, {"interval": 60}))
         asyncio.run(main.poll_adapter(db, s2, {"interval": 60}))
 

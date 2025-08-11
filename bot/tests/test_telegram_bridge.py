@@ -61,7 +61,9 @@ def test_bridge_forwards_messages():
 def test_add_remove_mapping(save_cfg):
     bot = FakeBot(2)
     tg_client = FakeTelegramClient()
-    bridge = TelegramBridge(bot, client=tg_client, config={"telegram_bridge": {"mappings": {}}})
+    bridge = TelegramBridge(
+        bot, client=tg_client, config={"telegram_bridge": {"mappings": {}}}
+    )
     asyncio.run(bridge.start())
     bridge.add_mapping(20, 2)
     event = SimpleNamespace(chat_id=20, raw_text="hi")

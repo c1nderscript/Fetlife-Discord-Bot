@@ -24,8 +24,8 @@ class TelegramBridge:
         if config is None:
             config = load_config(config_path)
         self.config = config
-        self.mappings: Dict[str, str] = (
-            config.get("telegram_bridge", {}).get("mappings", {})
+        self.mappings: Dict[str, str] = config.get("telegram_bridge", {}).get(
+            "mappings", {}
         )
 
     async def start(self) -> None:

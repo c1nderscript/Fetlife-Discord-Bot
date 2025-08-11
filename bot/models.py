@@ -56,7 +56,9 @@ class Cursor(Base):
     subscription_id = Column(Integer, ForeignKey("subscriptions.id"), primary_key=True)
     last_seen_at = Column(DateTime, nullable=True)
     last_item_ids_json = Column(JSON, nullable=True)
-    updated_at = Column(DateTime, server_default=func.now(), onupdate=func.now(), nullable=False)
+    updated_at = Column(
+        DateTime, server_default=func.now(), onupdate=func.now(), nullable=False
+    )
 
 
 class RelayLog(Base):

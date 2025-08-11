@@ -16,12 +16,12 @@ FIXTURES = Path(__file__).parent / "fixtures"
 async def run_poll(db, sub_id: int, items: list[dict]):
     channel = AsyncMock()
     channel.send = AsyncMock()
-    with patch(
-        "bot.main.adapter_client.fetch_writings", AsyncMock(return_value=items)
-    ), patch.object(main.bot, "get_channel", return_value=channel), patch.object(
-        main.bot.scheduler, "add_job"
-    ), patch("bot.main.bot_bucket.acquire", AsyncMock()), patch(
-        "bot.main.bot_tokens.set"
+    with (
+        patch("bot.main.adapter_client.fetch_writings", AsyncMock(return_value=items)),
+        patch.object(main.bot, "get_channel", return_value=channel),
+        patch.object(main.bot.scheduler, "add_job"),
+        patch("bot.main.bot_bucket.acquire", AsyncMock()),
+        patch("bot.main.bot_tokens.set"),
     ):
         await main.poll_adapter(db, sub_id, {"interval": 60})
     return channel

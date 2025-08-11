@@ -7,6 +7,7 @@ from pathlib import Path
 from unittest.mock import AsyncMock, patch
 
 import sys
+
 sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 
 from bot import main, storage  # noqa: E402
@@ -31,12 +32,14 @@ class DummyInteraction:
 async def run_poll(db, sub_id: int, items: list[dict]):
     channel = AsyncMock()
     channel.send = AsyncMock()
-    with patch(
-        "bot.main.adapter_client.fetch_group_posts", AsyncMock(return_value=items)
-    ), patch.object(main.bot, "get_channel", return_value=channel), patch.object(
-        main.bot.scheduler, "add_job"
-    ), patch("bot.main.bot_bucket.acquire", AsyncMock()), patch(
-        "bot.main.bot_tokens.set"
+    with (
+        patch(
+            "bot.main.adapter_client.fetch_group_posts", AsyncMock(return_value=items)
+        ),
+        patch.object(main.bot, "get_channel", return_value=channel),
+        patch.object(main.bot.scheduler, "add_job"),
+        patch("bot.main.bot_bucket.acquire", AsyncMock()),
+        patch("bot.main.bot_tokens.set"),
     ):
         await main.poll_adapter(db, sub_id, {"interval": 60})
     return channel
@@ -46,20 +49,19 @@ def test_fl_subscribe_group_posts_validates_target():
     main.bot.db = storage.init_db("sqlite:///:memory:")
     interaction = DummyInteraction()
     # invalid target
-    with patch("bot.main.bot_bucket.acquire", AsyncMock()), patch(
-        "bot.main.bot_tokens.set"
+    with (
+        patch("bot.main.bot_bucket.acquire", AsyncMock()),
+        patch("bot.main.bot_tokens.set"),
     ):
-        asyncio.run(
-            main.fl_subscribe.callback(interaction, "group_posts", "user:1")
-        )
+        asyncio.run(main.fl_subscribe.callback(interaction, "group_posts", "user:1"))
     assert interaction.response.message == "Target must be group:<id>"
     interaction.response.message = None
-    with patch.object(main.bot.scheduler, "add_job") as add_job, patch(
-        "bot.main.bot_bucket.acquire", AsyncMock()
-    ), patch("bot.main.bot_tokens.set"):
-        asyncio.run(
-            main.fl_subscribe.callback(interaction, "group_posts", "group:1")
-        )
+    with (
+        patch.object(main.bot.scheduler, "add_job") as add_job,
+        patch("bot.main.bot_bucket.acquire", AsyncMock()),
+        patch("bot.main.bot_tokens.set"),
+    ):
+        asyncio.run(main.fl_subscribe.callback(interaction, "group_posts", "group:1"))
         add_job.assert_called_once()
 
 
