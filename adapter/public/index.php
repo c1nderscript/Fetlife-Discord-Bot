@@ -152,6 +152,37 @@ $app->get('/events/{id}', function ($request, $response, $args) {
     return $response->withHeader('Content-Type', 'application/json');
 });
 
+$app->get('/events/{id}/attendees', function ($request, $response, $args) {
+    $acct = getAccountId($request);
+    $user = getUser($acct);
+    if (!$user) {
+        $response->getBody()->write(json_encode(['error' => 'not authenticated']));
+        return $response->withStatus(401)->withHeader('Content-Type', 'application/json');
+    }
+    $params = $request->getQueryParams();
+    $pages = $params['pages'] ?? 1;
+    log_json('info', 'event_attendees', ['id' => $args['id'], 'pages' => $pages]);
+    metric_inc('fetlife_requests_total');
+    $event = $user->getEventById($args['id']);
+    $event->populate($pages);
+    $list = [];
+    $sets = ['going' => 'going', 'maybegoing' => 'maybe', 'notgoing' => 'not_going'];
+    foreach ($sets as $prop => $status) {
+        if (!empty($event->$prop) && is_array($event->$prop)) {
+            foreach ($event->$prop as $profile) {
+                $list[] = [
+                    'id' => $profile->id,
+                    'nickname' => $profile->nickname,
+                    'status' => $status,
+                    'comment' => $profile->rsvp_comment ?? null,
+                ];
+            }
+        }
+    }
+    $response->getBody()->write(json_encode($list));
+    return $response->withHeader('Content-Type', 'application/json');
+});
+
 $app->get('/users/{id}/writings', function ($request, $response, $args) {
     $acct = getAccountId($request);
     $user = getUser($acct);

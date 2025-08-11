@@ -44,6 +44,19 @@ async def fetch_writings(
             return await resp.json()
 
 
+async def fetch_attendees(
+    base_url: str, event_id: str, account_id: int | None = None
+) -> list[dict[str, Any]]:
+    """Fetch attendees for an event from the adapter service."""
+    headers = {"X-Account-ID": str(account_id)} if account_id is not None else {}
+    async with aiohttp.ClientSession() as session:
+        async with session.get(
+            f"{base_url}/events/{event_id}/attendees", headers=headers
+        ) as resp:
+            resp.raise_for_status()
+            return await resp.json()
+
+
 async def fetch_group_posts(
     base_url: str, group_id: str, account_id: int | None = None
 ) -> list[dict[str, Any]]:

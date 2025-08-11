@@ -1,20 +1,19 @@
 # Plan
 
 ## Goal
-Support multiple FetLife accounts with per-subscription selection and session isolation.
+Support attendee subscriptions by adding adapter endpoint `/events/{id}/attendees` and bot polling that relays attendee RSVP statuses and comments into Discord.
 
 ## Constraints
-- Preserve existing command structure; add `/fl account` subcommands and optional account selection for `/fl subscribe`.
-- Avoid storing plaintext credentials; persist only SHA-256 hashes.
-- Maintain backward compatibility for adapter requests without an explicit account ID.
+- Keep existing adapter service patterns and reuse session/account handling.
+- Responses must include attendee `id`, `nickname`, `status`, and optional `comment`.
+- Maintain backward compatibility for existing event and writing subscriptions.
 
 ## Risks
-- Incorrect session handling in the adapter could mix account cookies.
-- Added account_id parameter may break existing tests if not patched.
-- Hashing approach may not satisfy future security expectations.
+- Parsing attendee lists may be slow and fail if HTML structure changes.
+- Schema or embed formatting errors could break polling.
 
 ## Test Plan
 - `make check`
 
 ## Semver
-Minor: new backwards-compatible feature set.
+Minor: new backwards-compatible feature.
