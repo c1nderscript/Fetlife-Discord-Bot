@@ -8,25 +8,23 @@
 - Release process: bump version in `pyproject.toml`, update `CHANGELOG.md`, tag `vX.Y.Z`
 
 ## Goal
-Add `messages` subscription relaying direct messages to Discord and Telegram via a new adapter `/messages` endpoint.
+Add Alembic migration `0002_add_accounts` creating the `accounts` table and linking it to `subscriptions` via `account_id`.
 
 ## Constraints
-- Adapter must reuse existing authenticated session.
-- Store cursors per subscription to avoid duplicate DMs.
-- Forward DMs to mapped Telegram chats when configured.
-- Update docs, schemas, and configuration to reflect new subscription type.
+- Preserve existing subscription data; new `account_id` column must be nullable.
 
 ## Risks
-- Parsing FetLife messages may break if page layout changes.
-- Telegram send failures could drop DMs silently.
+- Migration may fail if schemas drift from models.
+- Inconsistent foreign key constraints could break subscription queries.
 
 ## Test Plan
 - `bash scripts/agents-verify.sh`
 - `make fmt`
 - `make check`
+- `alembic upgrade head`
 
 ## Semver
-Minor: new functionality without breaking existing API (bump to 1.3.0).
+Patch: adds missing database structures without altering external APIs (bump to 1.3.1).
 
 ## Rollback
-Revert the commit and remove `messages` subscription and adapter endpoint.
+Revert the commit and downgrade the database via Alembic to drop the new table and column.

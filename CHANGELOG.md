@@ -3,6 +3,10 @@ All notable changes to this project will be documented here.
 
 ## [Unreleased]
 
+## [1.3.1] - 2025-08-12
+### Added
+- Alembic migration adding `accounts` table and `account_id` foreign key to `subscriptions`.
+
 ## [1.3.0] - 2025-08-12
 ### Added
 - `/messages` adapter endpoint and `messages` subscription forwarding DMs to Discord and Telegram.
