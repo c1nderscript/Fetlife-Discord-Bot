@@ -3,6 +3,10 @@ All notable changes to this project will be documented here.
 
 ## [Unreleased]
 
+## [1.3.3] - 2025-08-12
+### Fixed
+- Expose correct bot HTTP port 8000 in Dockerfile.
+
 ## [1.3.2] - 2025-08-12
 ### Changed
 - Standardize adapter port to 8000 and document `ADAPTER_BASE_URL`.
