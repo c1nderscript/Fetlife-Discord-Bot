@@ -355,6 +355,8 @@ One feature per PR; include tests and docs updates.
 
 No secrets in code or logs.
 
+Use `.venv/` for the Python virtual environment; it is the standard path and is ignored by Git.
+
 Run `make fmt` for Black formatting and `make check` (formatting check, lint, type checking, tests, schema) before PR.
 
 Follow semantic commits and Conventional Changelog.

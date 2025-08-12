@@ -45,6 +45,13 @@ docker compose run --rm bot alembic upgrade head
 
 ### Manual Setup
 
+Create a Python virtual environment in `.venv/` and activate it:
+
+```bash
+python -m venv .venv
+source .venv/bin/activate
+```
+
 1. `bash scripts/install.sh` and provide credentials when prompted. This writes `.env`, installs dependencies, and applies migrations. The `.env` file contains secrets and **must not** be committed to version control.
 2. Customize `config.yaml` for per-guild or per-channel defaults. A minimal example:
 

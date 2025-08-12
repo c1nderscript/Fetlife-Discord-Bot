@@ -3,23 +3,21 @@
 - Build tools: setuptools via `pyproject.toml`, Composer for PHP
 - Package managers: pip (requirements.txt), Composer
 - Test commands: `make fmt`, `make check`, `bash scripts/agents-verify.sh`
-- Entry points: `python -m bot.main` for the bot, adapter service via PHP
+- Entry points: `python -m bot.main`, adapter service via PHP
 - CI jobs: `release-hygiene.yml`, `release.yml`
 - Release process: bump version in `pyproject.toml`, update `CHANGELOG.md`, tag `vX.Y.Z`
 
 ## Goal
-Restrict admin-level commands to administrators, add error handling, and test unauthorized access.
+Ignore local virtual environment and document its location.
 
 ## Constraints
-- Apply `@app_commands.default_permissions(administrator=True)` to admin commands
-- Wrap command bodies with try/except and respond `ephemeral=True` on errors
-- Add unit tests for unauthorized access attempts
-- Update version metadata and changelog
-- Follow Conventional Commits
+- Append `.venv/` to `.gitignore`
+- Document `.venv/` as standard virtual environment path in `Agents.md` and `README.markdown`
+- Bump version metadata and changelog
+- Follow semantic commits
 
 ## Risks
-- Permission checks may bypass tests
-- Error handling might hide underlying issues
+- Developers using different virtual environment paths may create inconsistencies
 
 ## Test Plan
 - `bash scripts/agents-verify.sh`
@@ -27,4 +25,10 @@ Restrict admin-level commands to administrators, add error handling, and test un
 - `make check`
 
 ## Semver
-Patch: backward-compatible permission enforcement and tests
+Patch: documentation and gitignore update
+
+## Affected Packages
+- root package
+
+## Rollback
+- Revert commit and restore previous version and changelog entry
