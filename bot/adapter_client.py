@@ -86,3 +86,16 @@ async def fetch_group_posts(
         ) as resp:
             resp.raise_for_status()
             return await resp.json()
+
+
+async def fetch_messages(
+    base_url: str, account_id: int | None = None
+) -> list[dict[str, Any]]:
+    """Fetch direct messages from the adapter service."""
+    extra = {"X-Account-ID": str(account_id)} if account_id is not None else {}
+    async with aiohttp.ClientSession() as session:
+        async with session.get(
+            f"{base_url}/messages", headers=_headers(extra)
+        ) as resp:
+            resp.raise_for_status()
+            return await resp.json()

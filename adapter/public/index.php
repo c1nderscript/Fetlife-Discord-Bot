@@ -253,6 +253,38 @@ $app->get('/groups/{id}/posts', function ($request, $response, $args) {
     return $response->withHeader('Content-Type', 'application/json');
 });
 
+$app->get('/messages', function ($request, $response) {
+    $acct = getAccountId($request);
+    $user = getUser($acct);
+    if (!$user) {
+        $response->getBody()->write(json_encode(['error' => 'not authenticated']));
+        return $response->withStatus(401)->withHeader('Content-Type', 'application/json');
+    }
+    log_json('info', 'messages');
+    metric_inc('fetlife_requests_total');
+    $res = $user->connection->doHttpGet('/conversations');
+    $doc = new DOMDocument();
+    @$doc->loadHTML($res['body']);
+    $nodes = $user->doXPathQuery('//*[contains(@class, "conversation__message")]', $doc);
+    $messages = [];
+    foreach ($nodes as $node) {
+        $a = $node->getElementsByTagName('a')->item(0);
+        $link = $a ? $a->getAttribute('href') : '';
+        $id = $user->parseIdFromUrl($link);
+        $senderEl = $node->getElementsByTagName('span')->item(0);
+        $sender = trim($senderEl ? $senderEl->textContent : '');
+        $timeEl = $node->getElementsByTagName('time')->item(0);
+        $messages[] = [
+            'id' => $id,
+            'sender' => $sender,
+            'text' => trim($node->textContent),
+            'sent' => $timeEl ? $timeEl->getAttribute('datetime') : null,
+        ];
+    }
+    $response->getBody()->write(json_encode($messages));
+    return $response->withHeader('Content-Type', 'application/json');
+});
+
 $app->get('/healthz', function ($request, $response) {
     $response->getBody()->write(json_encode(['status' => 'ok']));
     return $response->withHeader('Content-Type', 'application/json');

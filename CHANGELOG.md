@@ -3,6 +3,11 @@ All notable changes to this project will be documented here.
 
 ## [Unreleased]
 
+## [1.3.0] - 2025-08-12
+### Added
+- `/messages` adapter endpoint and `messages` subscription forwarding DMs to Discord and Telegram.
+- Schema, tests, and documentation for message relays.
+
 ## [1.2.0] - 2025-08-12
 ### Added
 - Automatic reconnection, attachment forwarding, and `/fl telegram list` command for the Telegram bridge.
