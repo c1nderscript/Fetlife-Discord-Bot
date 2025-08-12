@@ -20,5 +20,5 @@ COPY --from=builder /venv /venv
 COPY bot/ bot/
 RUN rm -rf bot/tests
 
-EXPOSE 3000
+EXPOSE 8000
 CMD ["python", "-m", "bot.main"]
