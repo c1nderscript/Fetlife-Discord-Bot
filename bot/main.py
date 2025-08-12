@@ -313,6 +313,19 @@ async def fl_telegram_remove(interaction: discord.Interaction, chat_id: str) -> 
         await interaction.response.send_message(str(exc), ephemeral=True)
 
 
+@telegram_group.command(name="list", description="Show active Telegram relays")
+async def fl_telegram_list(interaction: discord.Interaction) -> None:
+    mappings = bot.bridge.mappings
+    if mappings:
+        desc = "\n".join(f"{cid} -> <#{chan}>" for cid, chan in mappings.items())
+    else:
+        desc = "No Telegram relays configured"
+    embed = discord.Embed(title="Telegram Relays", description=desc)
+    await bot_bucket.acquire()
+    bot_tokens.set(bot_bucket.get_tokens())
+    await interaction.response.send_message(embed=embed)
+
+
 @fl_group.command(name="subscribe", description="Create a new subscription")
 @app_commands.describe(
     sub_type="Type of content to subscribe to",

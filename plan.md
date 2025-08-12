@@ -8,17 +8,17 @@
 - Release process: bump version in `pyproject.toml`, update `CHANGELOG.md`, tag `vX.Y.Z`
 
 ## Goal
-Add interactive installer menu for managing the Python virtual environment.
+Enhance Telegram relay with automatic reconnection, attachment forwarding, and an `/fl telegram list` command.
 
 ## Constraints
-- Provide Install, Reinstall, Uninstall, and Exit options
-- Warn before deleting an existing `.venv`
-- Ensure `.venv/` is ignored by git
-- Update documentation, version metadata, and changelog
+- Wrap Telegram client startup and Discord sends in `try/except` with logging.
+- Detect Telegram photos/documents and forward as Discord attachments.
+- Expose `/fl telegram list` showing active mappings.
+- Document the new behavior and bump version metadata.
 
 ## Risks
-- Accidental removal of a developer's environment
-- Documentation drift if references are missed
+- Media types may not download correctly.
+- Reconnection loop could stall tests if misconfigured.
 
 ## Test Plan
 - `bash scripts/agents-verify.sh`
@@ -26,7 +26,7 @@ Add interactive installer menu for managing the Python virtual environment.
 - `make check`
 
 ## Semver
-Patch: tooling enhancement without API changes
+Minor: new functionality without breaking existing API (bump to 1.2.0).
 
 ## Rollback
-Revert the commit and restore previous `scripts/install.sh`
+Revert the commit and restore previous `TelegramBridge` and command definitions.

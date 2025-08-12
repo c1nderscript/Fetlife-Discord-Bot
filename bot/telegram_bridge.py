@@ -1,10 +1,16 @@
 from __future__ import annotations
 
+import asyncio
+import logging
+from io import BytesIO
 from typing import Dict, Optional
 
+import discord
 from telethon import TelegramClient, events  # type: ignore[import-untyped]
 
 from .config import load_config, save_config
+
+logger = logging.getLogger("flbot")
 
 
 class TelegramBridge:
@@ -30,7 +36,13 @@ class TelegramBridge:
 
     async def start(self) -> None:
         self.client.add_event_handler(self._handle_message, events.NewMessage)
-        await self.client.start()
+        while True:
+            try:
+                await self.client.start()
+                break
+            except Exception as exc:  # pragma: no cover - network errors
+                logger.exception("telegram start failed: %s", exc)
+                await asyncio.sleep(5)
 
     async def stop(self) -> None:
         await self.client.disconnect()
@@ -43,8 +55,23 @@ class TelegramBridge:
         channel = self.bot.get_channel(int(channel_id))
         if channel:
             text = getattr(event, "raw_text", "")
-            if text:
-                await channel.send(text)
+            files = []
+            if getattr(event, "photo", None) or getattr(event, "document", None):
+                try:
+                    buf = BytesIO()
+                    await event.download_media(file=buf)
+                    buf.seek(0)
+                    filename = (
+                        getattr(getattr(event, "file", None), "name", None)
+                        or "attachment"
+                    )
+                    files = [discord.File(buf, filename)]
+                except Exception as exc:  # pragma: no cover - simple error path
+                    logger.exception("telegram media download failed: %s", exc)
+            try:
+                await channel.send(text if text else None, files=files or None)
+            except Exception as exc:  # pragma: no cover - simple error path
+                logger.exception("telegram relay failed: %s", exc)
 
     def add_mapping(self, chat_id: int, channel_id: int) -> None:
         self.mappings[str(chat_id)] = str(channel_id)

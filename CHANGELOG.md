@@ -3,6 +3,12 @@ All notable changes to this project will be documented here.
 
 ## [Unreleased]
 
+## [1.2.0] - 2025-08-12
+### Added
+- Automatic reconnection, attachment forwarding, and `/fl telegram list` command for the Telegram bridge.
+### Changed
+- Documentation updated to describe enhanced relay behavior.
+
 ## [1.1.2] - 2025-08-12
 ### Added
 - Interactive `scripts/install.sh` menu for managing the Python virtual environment.

@@ -26,9 +26,12 @@ class FakeTelegramClient:
 class FakeChannel:
     def __init__(self):
         self.messages = []
+        self.files = []
 
-    async def send(self, content):
+    async def send(self, content=None, files=None):
         self.messages.append(content)
+        if files:
+            self.files.extend(files)
 
 
 class FakeBot:
@@ -54,6 +57,31 @@ def test_bridge_forwards_messages():
     event = SimpleNamespace(chat_id=10, raw_text="hello")
     asyncio.run(tg_client.handler(event))
     assert bot.channel.messages == ["hello"]
+    asyncio.run(bridge.stop())
+
+
+def test_bridge_forwards_media():
+    bot = FakeBot(1)
+    tg_client = FakeTelegramClient()
+    bridge = TelegramBridge(
+        bot,
+        client=tg_client,
+        config={"telegram_bridge": {"mappings": {"10": "1"}}},
+    )
+    asyncio.run(bridge.start())
+    event = SimpleNamespace(
+        chat_id=10,
+        raw_text="",
+        photo=True,
+        file=SimpleNamespace(name="photo.jpg"),
+    )
+
+    async def dl(file):
+        file.write(b"x")
+
+    event.download_media = dl  # type: ignore[attr-defined]
+    asyncio.run(tg_client.handler(event))
+    assert len(bot.channel.files) == 1
     asyncio.run(bridge.stop())
 
 
