@@ -103,6 +103,10 @@ async def poll_adapter(db, sub_id: int, data: Dict[str, Any]):
             items = await adapter_client.fetch_attendees(
                 ADAPTER_BASE_URL, sub.target_id, account_id=sub.account_id
             )
+        elif sub.type == "messages":
+            items = await adapter_client.fetch_messages(
+                ADAPTER_BASE_URL, account_id=sub.account_id
+            )
         fetlife_requests.inc()
         channel = bot.get_channel(sub.channel_id)
         new_ids: list[str] = []
@@ -124,19 +128,33 @@ async def poll_adapter(db, sub_id: int, data: Dict[str, Any]):
                     if item.get("status"):
                         embed.add_field(name="Status", value=item["status"])
                 else:
-                    embed = discord.Embed(
-                        title=item.get("title", ""), url=item.get("link")
-                    )
-                    if sub.type == "events" and item.get("time"):
-                        embed.add_field(name="Start", value=item["time"])
-                    if sub.type in ("writings", "group_posts") and item.get(
-                        "published"
-                    ):
-                        embed.add_field(name="Published", value=item["published"])
+                    if sub.type == "messages":
+                        embed = discord.Embed(description=item.get("text", ""))
+                        if item.get("sender"):
+                            embed.set_author(name=item["sender"])
+                        if item.get("sent"):
+                            embed.add_field(name="Sent", value=item["sent"])
+                    else:
+                        embed = discord.Embed(
+                            title=item.get("title", ""), url=item.get("link")
+                        )
+                        if sub.type == "events" and item.get("time"):
+                            embed.add_field(name="Start", value=item["time"])
+                        if sub.type in ("writings", "group_posts") and item.get(
+                            "published"
+                        ):
+                            embed.add_field(name="Published", value=item["published"])
                 await bot_bucket.acquire()
                 bot_tokens.set(bot_bucket.get_tokens())
                 await channel.send(embed=embed)
                 messages_sent.inc()
+                if sub.type == "messages":
+                    try:
+                        await bot.bridge.send_to_telegram(
+                            sub.channel_id, item.get("text", "")
+                        )
+                    except Exception:  # pragma: no cover - bridge errors
+                        logger.exception("telegram forward failed")
             new_ids.append(item_id)
         if new_ids:
             storage.update_cursor(db, sub_id, datetime.utcnow(), new_ids)
@@ -329,7 +347,7 @@ async def fl_telegram_list(interaction: discord.Interaction) -> None:
 @fl_group.command(name="subscribe", description="Create a new subscription")
 @app_commands.describe(
     sub_type="Type of content to subscribe to",
-    target="Target identifier: user:<nickname> for writings, location:<...> for events, group:<id> for group posts, event:<id> for attendees",
+    target="Target identifier: user:<nickname> for writings, location:<...> for events, group:<id> for group posts, event:<id> for attendees, inbox for messages",
     filters="Optional JSON filters",
     account="ID of stored account to use",
 )
@@ -339,6 +357,7 @@ async def fl_telegram_list(interaction: discord.Interaction) -> None:
         app_commands.Choice(name="writings", value="writings"),
         app_commands.Choice(name="group_posts", value="group_posts"),
         app_commands.Choice(name="attendees", value="attendees"),
+        app_commands.Choice(name="messages", value="messages"),
     ]
 )
 async def fl_subscribe(
@@ -348,10 +367,10 @@ async def fl_subscribe(
     filters: str | None = None,
     account: int | None = None,
 ) -> None:
-    """Subscribe channel to FetLife events, writings, group posts, or attendees.
+    """Subscribe channel to FetLife events, writings, group posts, attendees, or messages.
 
     target formats: `user:<nickname>` for writings, `location:<...>` for events,
-    `group:<id>` for group posts, `event:<id>` for attendees.
+    `group:<id>` for group posts, `event:<id>` for attendees, `inbox` for messages.
     """
     if filters:
         try:

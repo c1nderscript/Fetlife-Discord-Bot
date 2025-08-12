@@ -10,7 +10,7 @@ The `bot/` directory contains a Python application using `discord.py` that relay
 
 1. `bash scripts/install.sh` and select **Install**. This creates `.venv` and installs dependencies.
 2. `docker compose up -d` to launch the adapter, bot, and database.
-3. Generate an invite link from the [Discord Developer Portal](https://discord.com/developers/applications), invite the bot to your server, then run `/fl login` to verify adapter authentication, `/fl subscribe events location:cities/5898 min_attendees:10`, `/fl subscribe group_posts group:1`, `/fl list`, and `/fl test <id>` in Discord.
+3. Generate an invite link from the [Discord Developer Portal](https://discord.com/developers/applications), invite the bot to your server, then run `/fl login` to verify adapter authentication, `/fl subscribe events location:cities/5898 min_attendees:10`, `/fl subscribe group_posts group:1`, `/fl subscribe messages inbox`, `/fl list`, and `/fl test <id>` in Discord.
 
 ### Environment Variables
 
@@ -66,7 +66,7 @@ docker compose run --rm bot alembic upgrade head
    This file is loaded at runtime; avoid storing credentials in it.
    Manage Telegram relays at runtime with `/fl telegram add`, `/fl telegram remove`, and `/fl telegram list`.
 
-   The Telegram bridge automatically reconnects and forwards photos and documents as Discord attachments.
+   The Telegram bridge automatically reconnects and forwards photos and documents as Discord attachments. For `messages` subscriptions, relayed DMs are also sent to the mapped Telegram chat.
 
 Run the bot with:
 

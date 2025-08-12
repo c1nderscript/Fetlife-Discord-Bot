@@ -14,3 +14,5 @@ defaults:
 telegram_bridge:
   mappings:
     "-1001234567890": "234567890123456789"
+    # For messages subscriptions, DMs from FetLife will also be sent to the
+    # Telegram chat mapped to the Discord channel.

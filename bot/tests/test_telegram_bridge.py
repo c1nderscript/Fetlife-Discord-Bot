@@ -7,6 +7,7 @@ from unittest.mock import patch
 sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 
 from bot.telegram_bridge import TelegramBridge
+from unittest.mock import AsyncMock
 
 
 class FakeTelegramClient:
@@ -83,6 +84,17 @@ def test_bridge_forwards_media():
     asyncio.run(tg_client.handler(event))
     assert len(bot.channel.files) == 1
     asyncio.run(bridge.stop())
+
+
+def test_bridge_send_to_telegram():
+    bot = FakeBot(1)
+    tg_client = FakeTelegramClient()
+    tg_client.send_message = AsyncMock()  # type: ignore[attr-defined]
+    bridge = TelegramBridge(
+        bot, client=tg_client, config={"telegram_bridge": {"mappings": {"10": "1"}}}
+    )
+    asyncio.run(bridge.send_to_telegram(1, "hi"))
+    tg_client.send_message.assert_awaited_once_with(10, "hi")
 
 
 @patch("bot.telegram_bridge.save_config")

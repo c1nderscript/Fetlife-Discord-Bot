@@ -37,3 +37,9 @@ def test_event_attendees_contract():
     data = load("event_attendees.json", FIXTURES)
     schema = load("event_attendees.json", SCHEMAS)
     validate(instance=data, schema=schema)
+
+
+def test_message_contract():
+    data = load("message.json", FIXTURES)
+    schema = load("message.json", SCHEMAS)
+    validate(instance=data, schema=schema)

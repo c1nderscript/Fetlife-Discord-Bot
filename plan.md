@@ -8,17 +8,17 @@
 - Release process: bump version in `pyproject.toml`, update `CHANGELOG.md`, tag `vX.Y.Z`
 
 ## Goal
-Enhance Telegram relay with automatic reconnection, attachment forwarding, and an `/fl telegram list` command.
+Add `messages` subscription relaying direct messages to Discord and Telegram via a new adapter `/messages` endpoint.
 
 ## Constraints
-- Wrap Telegram client startup and Discord sends in `try/except` with logging.
-- Detect Telegram photos/documents and forward as Discord attachments.
-- Expose `/fl telegram list` showing active mappings.
-- Document the new behavior and bump version metadata.
+- Adapter must reuse existing authenticated session.
+- Store cursors per subscription to avoid duplicate DMs.
+- Forward DMs to mapped Telegram chats when configured.
+- Update docs, schemas, and configuration to reflect new subscription type.
 
 ## Risks
-- Media types may not download correctly.
-- Reconnection loop could stall tests if misconfigured.
+- Parsing FetLife messages may break if page layout changes.
+- Telegram send failures could drop DMs silently.
 
 ## Test Plan
 - `bash scripts/agents-verify.sh`
@@ -26,7 +26,7 @@ Enhance Telegram relay with automatic reconnection, attachment forwarding, and a
 - `make check`
 
 ## Semver
-Minor: new functionality without breaking existing API (bump to 1.2.0).
+Minor: new functionality without breaking existing API (bump to 1.3.0).
 
 ## Rollback
-Revert the commit and restore previous `TelegramBridge` and command definitions.
+Revert the commit and remove `messages` subscription and adapter endpoint.

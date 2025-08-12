@@ -86,3 +86,11 @@ class TelegramBridge:
         bridge_cfg = cfg.setdefault("telegram_bridge", {})
         bridge_cfg["mappings"] = self.mappings
         save_config(cfg, self.config_path)
+
+    async def send_to_telegram(self, channel_id: int, text: str) -> None:
+        for chat_id, mapped in self.mappings.items():
+            if mapped == str(channel_id):
+                try:
+                    await self.client.send_message(int(chat_id), text)
+                except Exception as exc:  # pragma: no cover - simple error path
+                    logger.exception("telegram send failed: %s", exc)
