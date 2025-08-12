@@ -64,7 +64,9 @@ docker compose run --rm bot alembic upgrade head
     ```
 
    This file is loaded at runtime; avoid storing credentials in it.
-   Manage Telegram relays at runtime with `/fl telegram add` and `/fl telegram remove`.
+   Manage Telegram relays at runtime with `/fl telegram add`, `/fl telegram remove`, and `/fl telegram list`.
+
+   The Telegram bridge automatically reconnects and forwards photos and documents as Discord attachments.
 
 Run the bot with:
 
