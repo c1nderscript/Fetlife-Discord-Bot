@@ -7,7 +7,7 @@ services:
       context: .
       dockerfile: bot/Dockerfile
     environment:
-      ADAPTER_BASE_URL: http://mock-adapter:8080
+      ADAPTER_BASE_URL: http://mock-adapter:8000
     depends_on:
       - mock-adapter
     command: ["pytest", "bot/tests/test_integration_subscribe.py"]

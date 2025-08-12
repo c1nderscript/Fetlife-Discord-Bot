@@ -33,6 +33,7 @@ services:
       TELEGRAM_API_ID: ${TELEGRAM_API_ID}
       TELEGRAM_API_HASH: ${TELEGRAM_API_HASH}
       ADAPTER_AUTH_TOKEN: ${ADAPTER_AUTH_TOKEN}
+      ADAPTER_BASE_URL: ${ADAPTER_BASE_URL}
     depends_on:
       - adapter
       - db

@@ -21,6 +21,7 @@ The `.env` file supports these keys:
 - `DISCORD_TOKEN` – Discord bot token.
 - `TELEGRAM_API_ID`, `TELEGRAM_API_HASH` – Telegram API credentials for the bridge.
 - `ADAPTER_AUTH_TOKEN` – shared token clients must send via `Authorization: Bearer` to the adapter.
+- `ADAPTER_BASE_URL` – base URL for the adapter service (default `http://adapter:8000`).
 - `DB_HOST`, `DB_PORT`, `DB_NAME`, `DB_USER`, `DB_PASSWORD` – database connection settings.
 - `DATABASE_URL` – optional full connection URL that overrides the above.
 - `FETLIFE_PROXY`, `FETLIFE_PROXY_TYPE`, `FETLIFE_PROXY_USERNAME`, `FETLIFE_PROXY_PASSWORD` – optional proxy configuration.
@@ -41,7 +42,7 @@ docker compose run --rm bot alembic upgrade head
 
 ### Health Checks
 
-- Adapter: `GET http://localhost:8080/healthz` for liveness and `GET http://localhost:8080/metrics` for Prometheus metrics.
+- Adapter: `GET http://localhost:8000/healthz` for liveness and `GET http://localhost:8000/metrics` for Prometheus metrics.
 - Bot: `GET http://localhost:8000/ready` for readiness and `GET http://localhost:8000/metrics` for Prometheus metrics.
 
 ### Manual Setup

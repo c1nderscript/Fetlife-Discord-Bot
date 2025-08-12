@@ -19,4 +19,4 @@ class Handler(BaseHTTPRequestHandler):
         return
 
 if __name__ == '__main__':
-    HTTPServer(('', 8080), Handler).serve_forever()
+    HTTPServer(('', 8000), Handler).serve_forever()

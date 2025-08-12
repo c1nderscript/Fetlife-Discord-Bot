@@ -3,6 +3,10 @@ All notable changes to this project will be documented here.
 
 ## [Unreleased]
 
+## [1.3.2] - 2025-08-12
+### Changed
+- Standardize adapter port to 8000 and document `ADAPTER_BASE_URL`.
+
 ## [1.3.1] - 2025-08-12
 ### Added
 - Alembic migration adding `accounts` table and `account_id` foreign key to `subscriptions`.
