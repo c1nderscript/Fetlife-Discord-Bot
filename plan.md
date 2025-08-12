@@ -7,15 +7,15 @@
 - Release process: bump versions in `pyproject.toml` and `composer.json`, update `CHANGELOG.md`, tag `vX.Y.Z`, publish notes from `.github/RELEASE_NOTES.md`
 
 ## Goal
-Expose PHP package version and document bumping Python and PHP versions together.
+Introduce `CREDENTIAL_SALT` environment variable and use it when hashing credentials.
 
 ## Constraints
-- Keep release docs consistent with CI release checks.
-- No project version change.
+- Keep hashing backward compatible when salt unset.
+- Update docs and examples.
 
 ## Risks
-- Version drift between Python and PHP packages.
-- Incomplete release documentation.
+- Missing salt could weaken security.
+- Incorrect hashing could break account lookups.
 
 ## Test Plan
 - `bash scripts/agents-verify.sh`
@@ -23,7 +23,7 @@ Expose PHP package version and document bumping Python and PHP versions together
 - `make check`
 
 ## Semver
-No version change (documentation/metadata only) – patch.
+Patch release (security enhancement, no API change).
 
 ## Rollback
 Revert this commit.

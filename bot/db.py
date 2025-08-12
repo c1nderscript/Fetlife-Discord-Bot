@@ -27,7 +27,8 @@ Base = declarative_base()
 
 
 def hash_credentials(username: str, password: str) -> str:
-    return hashlib.sha256(f"{username}:{password}".encode()).hexdigest()
+    salt = os.getenv("CREDENTIAL_SALT", "")
+    return hashlib.sha256(f"{salt}:{username}:{password}".encode()).hexdigest()
 
 
 def init_db(url: str | None = None):
