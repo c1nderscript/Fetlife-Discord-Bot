@@ -3,6 +3,12 @@ All notable changes to this project will be documented here.
 
 ## [Unreleased]
 
+## [1.1.0] - 2025-08-12
+### Added
+- `scripts/install.sh` to configure environment, install dependencies, run migrations, and optionally start Docker Compose.
+### Changed
+- README instructions now reference `scripts/install.sh`.
+
 ## [1.0.1] - 2025-08-11
 ### Changed
 - Convert adapter and bot Dockerfiles to multi-stage builds with pinned base image digests.

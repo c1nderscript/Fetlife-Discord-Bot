@@ -336,8 +336,7 @@ bash
 Copy
 Edit
 # 1) Launch adapter + bot (docker compose)
-cp .env.example .env && edit .env
-docker compose up -d
+bash scripts/install.sh --compose
 
 # 2) In Discord: invite the bot; run:
 # /fl login   (admin channel)
