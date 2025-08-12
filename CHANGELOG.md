@@ -3,6 +3,10 @@ All notable changes to this project will be documented here.
 
 ## [Unreleased]
 
+## [1.3.5] - 2025-08-12
+### Fixed
+- Pin `flake8` dependency and rebuild bot Docker image.
+
 ## [1.3.4] - 2025-08-12
 ### Added
 - Declare PHP package version in `composer.json` and document bumping Python and PHP versions together during releases.
