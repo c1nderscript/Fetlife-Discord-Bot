@@ -4,17 +4,18 @@
 - Package managers: pip, Composer
 - Tests: `bash scripts/agents-verify.sh`, `make fmt`, `make check`
 - CI jobs: `release-hygiene.yml`, `release.yml`
-- Release process: bump version in `pyproject.toml`, update `CHANGELOG.md`, tag `vX.Y.Z`
+- Release process: bump versions in `pyproject.toml` and `composer.json`, update `CHANGELOG.md`, tag `vX.Y.Z`, publish notes from `.github/RELEASE_NOTES.md`
 
 ## Goal
-Append release notes for v0.9.0–v1.3.0 and confirm release workflow references them.
+Expose PHP package version and document bumping Python and PHP versions together.
 
 ## Constraints
-- Follow existing release note style.
-- No version bump or changelog updates.
+- Keep release docs consistent with CI release checks.
+- No project version change.
 
 ## Risks
-- Misaligned release summaries.
+- Version drift between Python and PHP packages.
+- Incomplete release documentation.
 
 ## Test Plan
 - `bash scripts/agents-verify.sh`
@@ -22,7 +23,7 @@ Append release notes for v0.9.0–v1.3.0 and confirm release workflow references
 - `make check`
 
 ## Semver
-No version change (documentation only).
+No version change (documentation/metadata only) – patch.
 
 ## Rollback
 Revert this commit.

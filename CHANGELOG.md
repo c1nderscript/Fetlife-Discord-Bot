@@ -3,6 +3,9 @@ All notable changes to this project will be documented here.
 
 ## [Unreleased]
 
+### Added
+- Declare PHP package version in `composer.json` and document bumping Python and PHP versions together during releases.
+
 ## [1.3.3] - 2025-08-12
 ### Fixed
 - Expose correct bot HTTP port 8000 in Dockerfile.
