@@ -8,23 +8,21 @@
 - Release process: bump version in `pyproject.toml`, update `CHANGELOG.md`, tag `vX.Y.Z`
 
 ## Goal
-Add Alembic migration `0002_add_accounts` creating the `accounts` table and linking it to `subscriptions` via `account_id`.
+Unify the adapter and documentation on port 8000 and surface `ADAPTER_BASE_URL` in configuration templates.
 
 ## Constraints
-- Preserve existing subscription data; new `account_id` column must be nullable.
+- Preserve existing service wiring and avoid conflicting with bot port usage.
 
 ## Risks
-- Migration may fail if schemas drift from models.
-- Inconsistent foreign key constraints could break subscription queries.
+- Overlooked references to the old port could break connectivity.
 
 ## Test Plan
 - `bash scripts/agents-verify.sh`
 - `make fmt`
 - `make check`
-- `alembic upgrade head`
 
 ## Semver
-Patch: adds missing database structures without altering external APIs (bump to 1.3.1).
+Patch: documentation and configuration fixes without API changes (bump to 1.3.2).
 
 ## Rollback
-Revert the commit and downgrade the database via Alembic to drop the new table and column.
+Revert the commit and restore previous port references.

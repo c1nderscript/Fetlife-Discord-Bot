@@ -30,7 +30,7 @@ from .telegram_bridge import TelegramBridge
 
 load_dotenv()
 TOKEN = os.getenv("DISCORD_TOKEN")
-ADAPTER_BASE_URL = os.getenv("ADAPTER_BASE_URL", "http://adapter:8080")
+ADAPTER_BASE_URL = os.getenv("ADAPTER_BASE_URL", "http://adapter:8000")
 TELEGRAM_API_ID = int(os.getenv("TELEGRAM_API_ID", "0"))
 TELEGRAM_API_HASH = os.getenv("TELEGRAM_API_HASH")
 
