@@ -212,14 +212,26 @@ async def fl_login(interaction: discord.Interaction) -> None:
 
 
 @account_group.command(name="add", description="Add a FetLife account")
+@app_commands.default_permissions(administrator=True)
 async def fl_account_add(
     interaction: discord.Interaction, username: str, password: str
 ) -> None:
-    acct_id = storage.add_account(bot.db, username, password)
-    await adapter_client.login(ADAPTER_BASE_URL, username, password, account_id=acct_id)
-    await bot_bucket.acquire()
-    bot_tokens.set(bot_bucket.get_tokens())
-    await interaction.response.send_message(f"Account {acct_id} added")
+    try:
+        if not getattr(
+            getattr(interaction.user, "guild_permissions", None), "administrator", False
+        ):
+            raise PermissionError("Administrator permissions required")
+        acct_id = storage.add_account(bot.db, username, password)
+        await adapter_client.login(
+            ADAPTER_BASE_URL, username, password, account_id=acct_id
+        )
+        await bot_bucket.acquire()
+        bot_tokens.set(bot_bucket.get_tokens())
+        await interaction.response.send_message(f"Account {acct_id} added")
+    except Exception as exc:  # pragma: no cover - simple error path
+        await bot_bucket.acquire()
+        bot_tokens.set(bot_bucket.get_tokens())
+        await interaction.response.send_message(str(exc), ephemeral=True)
 
 
 @account_group.command(name="list", description="List stored accounts")
@@ -238,35 +250,67 @@ async def fl_account_list(interaction: discord.Interaction) -> None:
 
 
 @account_group.command(name="remove", description="Remove an account")
+@app_commands.default_permissions(administrator=True)
 async def fl_account_remove(interaction: discord.Interaction, account_id: int) -> None:
-    storage.remove_account(bot.db, account_id)
-    await bot_bucket.acquire()
-    bot_tokens.set(bot_bucket.get_tokens())
-    await interaction.response.send_message(f"Removed account {account_id}")
+    try:
+        if not getattr(
+            getattr(interaction.user, "guild_permissions", None), "administrator", False
+        ):
+            raise PermissionError("Administrator permissions required")
+        storage.remove_account(bot.db, account_id)
+        await bot_bucket.acquire()
+        bot_tokens.set(bot_bucket.get_tokens())
+        await interaction.response.send_message(f"Removed account {account_id}")
+    except Exception as exc:  # pragma: no cover - simple error path
+        await bot_bucket.acquire()
+        bot_tokens.set(bot_bucket.get_tokens())
+        await interaction.response.send_message(str(exc), ephemeral=True)
 
 
 @telegram_group.command(name="add", description="Relay a Telegram chat to a channel")
+@app_commands.default_permissions(administrator=True)
 async def fl_telegram_add(
     interaction: discord.Interaction, chat_id: str, channel: discord.TextChannel
 ) -> None:
-    bot.bridge.add_mapping(int(chat_id), channel.id)
-    bot.config.setdefault("telegram_bridge", {}).setdefault("mappings", {})[
-        str(chat_id)
-    ] = str(channel.id)
-    save_config(bot.config)
-    await bot_bucket.acquire()
-    bot_tokens.set(bot_bucket.get_tokens())
-    await interaction.response.send_message("Added Telegram relay")
+    try:
+        if not getattr(
+            getattr(interaction.user, "guild_permissions", None), "administrator", False
+        ):
+            raise PermissionError("Administrator permissions required")
+        bot.bridge.add_mapping(int(chat_id), channel.id)
+        bot.config.setdefault("telegram_bridge", {}).setdefault("mappings", {})[
+            str(chat_id)
+        ] = str(channel.id)
+        save_config(bot.config)
+        await bot_bucket.acquire()
+        bot_tokens.set(bot_bucket.get_tokens())
+        await interaction.response.send_message("Added Telegram relay")
+    except Exception as exc:  # pragma: no cover - simple error path
+        await bot_bucket.acquire()
+        bot_tokens.set(bot_bucket.get_tokens())
+        await interaction.response.send_message(str(exc), ephemeral=True)
 
 
 @telegram_group.command(name="remove", description="Stop relaying a Telegram chat")
+@app_commands.default_permissions(administrator=True)
 async def fl_telegram_remove(interaction: discord.Interaction, chat_id: str) -> None:
-    bot.bridge.remove_mapping(int(chat_id))
-    bot.config.get("telegram_bridge", {}).get("mappings", {}).pop(str(chat_id), None)
-    save_config(bot.config)
-    await bot_bucket.acquire()
-    bot_tokens.set(bot_bucket.get_tokens())
-    await interaction.response.send_message("Removed Telegram relay")
+    try:
+        if not getattr(
+            getattr(interaction.user, "guild_permissions", None), "administrator", False
+        ):
+            raise PermissionError("Administrator permissions required")
+        bot.bridge.remove_mapping(int(chat_id))
+        bot.config.get("telegram_bridge", {}).get("mappings", {}).pop(
+            str(chat_id), None
+        )
+        save_config(bot.config)
+        await bot_bucket.acquire()
+        bot_tokens.set(bot_bucket.get_tokens())
+        await interaction.response.send_message("Removed Telegram relay")
+    except Exception as exc:  # pragma: no cover - simple error path
+        await bot_bucket.acquire()
+        bot_tokens.set(bot_bucket.get_tokens())
+        await interaction.response.send_message(str(exc), ephemeral=True)
 
 
 @fl_group.command(name="subscribe", description="Create a new subscription")
@@ -424,10 +468,20 @@ async def fl_health(interaction: discord.Interaction) -> None:
 
 
 @fl_group.command(name="purge", description="Purge local caches")
+@app_commands.default_permissions(administrator=True)
 async def fl_purge(interaction: discord.Interaction) -> None:
-    await bot_bucket.acquire()
-    bot_tokens.set(bot_bucket.get_tokens())
-    await interaction.response.send_message("Purged")
+    try:
+        if not getattr(
+            getattr(interaction.user, "guild_permissions", None), "administrator", False
+        ):
+            raise PermissionError("Administrator permissions required")
+        await bot_bucket.acquire()
+        bot_tokens.set(bot_bucket.get_tokens())
+        await interaction.response.send_message("Purged")
+    except Exception as exc:  # pragma: no cover - simple error path
+        await bot_bucket.acquire()
+        bot_tokens.set(bot_bucket.get_tokens())
+        await interaction.response.send_message(str(exc), ephemeral=True)
 
 
 async def metrics_handler(request: web.Request) -> web.Response:

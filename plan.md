@@ -1,34 +1,30 @@
-# Plan
-
 ## Repo Intake
-- Languages: Python, PHP.
-- Build tools: setuptools via `pyproject.toml`, Composer for PHP.
-- Package managers: pip (requirements.txt), Composer.
-- Test commands: `make check` and `bash scripts/agents-verify.sh`.
-- Entry points: `python -m bot.main` for the bot, adapter service via PHP.
-- CI jobs: `release-hygiene.yml` and `release.yml`.
-- Release process: bump version in `pyproject.toml`, update `CHANGELOG.md`, tag `vX.Y.Z` on main.
+- Languages: Python, PHP
+- Build tools: setuptools via `pyproject.toml`, Composer for PHP
+- Package managers: pip (requirements.txt), Composer
+- Test commands: `make fmt`, `make check`, `bash scripts/agents-verify.sh`
+- Entry points: `python -m bot.main` for the bot, adapter service via PHP
+- CI jobs: `release-hygiene.yml`, `release.yml`
+- Release process: bump version in `pyproject.toml`, update `CHANGELOG.md`, tag `vX.Y.Z`
 
 ## Goal
-Create `scripts/install.sh` that collects credentials, writes `.env`, installs dependencies, runs `alembic upgrade head`, and optionally launches Docker Compose. Update documentation to reference the new script.
+Restrict admin-level commands to administrators, add error handling, and test unauthorized access.
 
 ## Constraints
-- Script accepts flags or interactive prompts for required credentials.
-- Writes `.env` without overwriting existing keys.
-- Installs Python (`pip install -r requirements.txt`) and PHP (`composer install`) dependencies.
-- Runs database migrations via `alembic upgrade head`.
-- Optional `docker compose up -d` invocation.
-- Update `README.markdown` and `Agents.md` to reference the script.
-- Bump minor version and changelog entry.
+- Apply `@app_commands.default_permissions(administrator=True)` to admin commands
+- Wrap command bodies with try/except and respond `ephemeral=True` on errors
+- Add unit tests for unauthorized access attempts
+- Update version metadata and changelog
+- Follow Conventional Commits
 
 ## Risks
-- Dependency installation or migrations may fail if tools are missing.
-- Docker Compose may not be installed; script must handle absence gracefully.
+- Permission checks may bypass tests
+- Error handling might hide underlying issues
 
 ## Test Plan
 - `bash scripts/agents-verify.sh`
-- `make fmt` (may fail: docker compose plugin missing)
-- `make check` (may fail: docker compose plugin missing)
+- `make fmt`
+- `make check`
 
 ## Semver
-Minor: adds backwards-compatible installation helper.
+Patch: backward-compatible permission enforcement and tests
