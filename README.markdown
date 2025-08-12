@@ -18,6 +18,7 @@ The `.env` file supports these keys:
 
 - `FETLIFE_USERNAME` – FetLife account username.
 - `FETLIFE_PASSWORD` – FetLife account password.
+- `CREDENTIAL_SALT` – optional string combined with credentials before hashing.
 - `DISCORD_TOKEN` – Discord bot token.
 - `TELEGRAM_API_ID`, `TELEGRAM_API_HASH` – Telegram API credentials for the bridge.
 - `ADAPTER_AUTH_TOKEN` – shared token clients must send via `Authorization: Bearer` to the adapter.

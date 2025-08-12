@@ -3,9 +3,10 @@ All notable changes to this project will be documented here.
 
 ## [Unreleased]
 
+## [1.3.4] - 2025-08-12
 ### Added
 - Declare PHP package version in `composer.json` and document bumping Python and PHP versions together during releases.
-
+- Salt credential hashes using `CREDENTIAL_SALT` environment variable.
 ## [1.3.3] - 2025-08-12
 ### Fixed
 - Expose correct bot HTTP port 8000 in Dockerfile.
