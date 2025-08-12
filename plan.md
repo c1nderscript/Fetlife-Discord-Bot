@@ -8,18 +8,17 @@
 - Release process: bump version in `pyproject.toml`, update `CHANGELOG.md`, tag `vX.Y.Z`
 
 ## Goal
-Restrict admin-level commands to administrators, add error handling, and test unauthorized access.
+Add interactive installer menu for managing the Python virtual environment.
 
 ## Constraints
-- Apply `@app_commands.default_permissions(administrator=True)` to admin commands
-- Wrap command bodies with try/except and respond `ephemeral=True` on errors
-- Add unit tests for unauthorized access attempts
-- Update version metadata and changelog
-- Follow Conventional Commits
+- Provide Install, Reinstall, Uninstall, and Exit options
+- Warn before deleting an existing `.venv`
+- Ensure `.venv/` is ignored by git
+- Update documentation, version metadata, and changelog
 
 ## Risks
-- Permission checks may bypass tests
-- Error handling might hide underlying issues
+- Accidental removal of a developer's environment
+- Documentation drift if references are missed
 
 ## Test Plan
 - `bash scripts/agents-verify.sh`
@@ -27,4 +26,7 @@ Restrict admin-level commands to administrators, add error handling, and test un
 - `make check`
 
 ## Semver
-Patch: backward-compatible permission enforcement and tests
+Patch: tooling enhancement without API changes
+
+## Rollback
+Revert the commit and restore previous `scripts/install.sh`

@@ -335,8 +335,9 @@ Multi-account adapter support, per-subscription credentials.
 bash
 Copy
 Edit
-# 1) Launch adapter + bot (docker compose)
-bash scripts/install.sh --compose
+# 1) Run the installer and choose 'Install'
+bash scripts/install.sh
+docker compose up -d
 
 # 2) In Discord: invite the bot; run:
 # /fl login   (admin channel)

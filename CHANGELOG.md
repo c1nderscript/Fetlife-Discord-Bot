@@ -3,6 +3,12 @@ All notable changes to this project will be documented here.
 
 ## [Unreleased]
 
+## [1.1.2] - 2025-08-12
+### Added
+- Interactive `scripts/install.sh` menu for managing the Python virtual environment.
+### Changed
+- Documentation updated to reference the new installation workflow.
+
 ## [1.1.1] - 2025-08-12
 ### Changed
 - Restrict admin-level commands to administrators with error handling.
