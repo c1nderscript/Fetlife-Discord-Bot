@@ -24,8 +24,13 @@ write_env() {
 
 # Ensure .env exists
 if [[ ! -f "$ENV_FILE" ]]; then
-  touch "$ENV_FILE"
-  echo "Created $ENV_FILE"
+  if [[ -f ".env.example" ]]; then
+    cp .env.example "$ENV_FILE"
+    echo "Copied .env.example to $ENV_FILE"
+  else
+    touch "$ENV_FILE"
+    echo "Created $ENV_FILE"
+  fi
 fi
 
 # Gather credentials and DB parameters

@@ -1,20 +1,20 @@
 ## Goal
-Allow the Discord bot to run when Telegram credentials are absent.
+Provide `.env.example` template and reference it in docs and setup script.
 
 ## Constraints
 - Follow existing code style and repository guidelines.
 - Bump Python and PHP versions together.
 
 ## Risks
-- Conditional bridge creation may introduce attribute errors if not handled everywhere.
-- Tests might require environment isolation to simulate missing credentials.
+- Sample values may mislead users if defaults change.
+- Setup script copy might overwrite existing config unintentionally.
 
 ## Test Plan
 - `make fmt`
 - `make check`
 
 ## Semver
-Patch release: fix optional Telegram bridge handling.
+Patch release: documentation and setup improvements.
 
 ## Affected Packages
 - Python package `fetlife-discord-bot`
