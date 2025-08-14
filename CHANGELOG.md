@@ -3,6 +3,10 @@ All notable changes to this project will be documented here.
 
 ## [Unreleased]
 
+## [1.3.8] - 2025-08-14
+### Fixed
+- Allow bot to run without Telegram credentials.
+
 ## [1.3.7] - 2025-08-14
 ### Changed
 - Split development dependencies into `requirements-dev.txt` and update Dockerfile, Makefile, and docs.

@@ -26,7 +26,10 @@ class TelegramBridge:
     ) -> None:
         self.bot = bot
         self.config_path = config_path
-        self.client = client or TelegramClient("tg_bridge", api_id, api_hash)
+        if api_id is not None and api_hash is not None:
+            self.client = client or TelegramClient("tg_bridge", api_id, api_hash)
+        else:
+            self.client = client
         if config is None:
             config = load_config(config_path)
         self.config = config
@@ -35,6 +38,8 @@ class TelegramBridge:
         )
 
     async def start(self) -> None:
+        if not self.client:
+            return
         self.client.add_event_handler(self._handle_message, events.NewMessage)
         while True:
             try:
@@ -45,7 +50,8 @@ class TelegramBridge:
                 await asyncio.sleep(5)
 
     async def stop(self) -> None:
-        await self.client.disconnect()
+        if self.client:
+            await self.client.disconnect()
 
     async def _handle_message(self, event) -> None:
         chat_id = str(event.chat_id)
@@ -88,6 +94,8 @@ class TelegramBridge:
         save_config(cfg, self.config_path)
 
     async def send_to_telegram(self, channel_id: int, text: str) -> None:
+        if not self.client:
+            return
         for chat_id, mapped in self.mappings.items():
             if mapped == str(channel_id):
                 try:

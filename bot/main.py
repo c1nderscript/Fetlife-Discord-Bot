@@ -6,7 +6,7 @@ import logging
 import random
 import re
 from datetime import datetime, timedelta
-from typing import Any, Dict
+from typing import Any, Dict, Optional
 
 import discord
 import discord.abc
@@ -31,7 +31,7 @@ from .telegram_bridge import TelegramBridge
 load_dotenv()
 TOKEN = os.getenv("DISCORD_TOKEN")
 ADAPTER_BASE_URL = os.getenv("ADAPTER_BASE_URL", "http://adapter:8000")
-TELEGRAM_API_ID = int(os.getenv("TELEGRAM_API_ID", "0"))
+TELEGRAM_API_ID = os.getenv("TELEGRAM_API_ID")
 TELEGRAM_API_HASH = os.getenv("TELEGRAM_API_HASH")
 
 
@@ -148,7 +148,7 @@ async def poll_adapter(db, sub_id: int, data: Dict[str, Any]):
                 bot_tokens.set(bot_bucket.get_tokens())
                 await channel.send(embed=embed)
                 messages_sent.inc()
-                if sub.type == "messages":
+                if sub.type == "messages" and bot.bridge:
                     try:
                         await bot.bridge.send_to_telegram(
                             sub.channel_id, item.get("text", "")
@@ -194,12 +194,14 @@ class FLBot(commands.Bot):
         self.db = storage.init_db()
         self.scheduler = AsyncIOScheduler()
         self.config = load_config()
-        self.bridge = TelegramBridge(
-            self,
-            api_id=TELEGRAM_API_ID if TELEGRAM_API_ID else None,
-            api_hash=TELEGRAM_API_HASH,
-            config=self.config,
-        )
+        self.bridge: Optional[TelegramBridge] = None
+        if TELEGRAM_API_ID and TELEGRAM_API_HASH:
+            self.bridge = TelegramBridge(
+                self,
+                api_id=int(TELEGRAM_API_ID),
+                api_hash=TELEGRAM_API_HASH,
+                config=self.config,
+            )
         self.last_poll = 0.0
 
     async def setup_hook(self) -> None:
@@ -295,6 +297,8 @@ async def fl_telegram_add(
             getattr(interaction.user, "guild_permissions", None), "administrator", False
         ):
             raise PermissionError("Administrator permissions required")
+        if not bot.bridge:
+            raise RuntimeError("Telegram bridge not configured")
         bot.bridge.add_mapping(int(chat_id), channel.id)
         bot.config.setdefault("telegram_bridge", {}).setdefault("mappings", {})[
             str(chat_id)
@@ -317,6 +321,8 @@ async def fl_telegram_remove(interaction: discord.Interaction, chat_id: str) -> 
             getattr(interaction.user, "guild_permissions", None), "administrator", False
         ):
             raise PermissionError("Administrator permissions required")
+        if not bot.bridge:
+            raise RuntimeError("Telegram bridge not configured")
         bot.bridge.remove_mapping(int(chat_id))
         bot.config.get("telegram_bridge", {}).get("mappings", {}).pop(
             str(chat_id), None
@@ -333,7 +339,7 @@ async def fl_telegram_remove(interaction: discord.Interaction, chat_id: str) -> 
 
 @telegram_group.command(name="list", description="Show active Telegram relays")
 async def fl_telegram_list(interaction: discord.Interaction) -> None:
-    mappings = bot.bridge.mappings
+    mappings = bot.bridge.mappings if bot.bridge else {}
     if mappings:
         desc = "\n".join(f"{cid} -> <#{chan}>" for cid, chan in mappings.items())
     else:
@@ -537,11 +543,13 @@ async def main() -> None:
     await runner.setup()
     site = web.TCPSite(runner, "0.0.0.0", 8000)
     await site.start()
-    await bot.bridge.start()
+    if bot.bridge:
+        await bot.bridge.start()
     try:
         await bot.start(TOKEN)
     finally:
-        await bot.bridge.stop()
+        if bot.bridge:
+            await bot.bridge.stop()
         await runner.cleanup()
 
 
