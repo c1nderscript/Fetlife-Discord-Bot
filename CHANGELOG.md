@@ -3,6 +3,10 @@ All notable changes to this project will be documented here.
 
 ## [Unreleased]
 
+## [1.3.6] - 2025-08-12
+### Fixed
+- Ensure adapter service restarts automatically in Docker Compose.
+
 ## [1.3.5] - 2025-08-12
 ### Fixed
 - Pin `flake8` dependency and rebuild bot Docker image.
