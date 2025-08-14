@@ -14,7 +14,7 @@ The `bot/` directory contains a Python application using `discord.py` that relay
 
 ### Environment Variables
 
-The `.env` file supports these keys:
+Copy `.env.example` to `.env` and fill in your values. The `.env` file supports these keys:
 
 - `FETLIFE_USERNAME` – FetLife account username.
 - `FETLIFE_PASSWORD` – FetLife account password.

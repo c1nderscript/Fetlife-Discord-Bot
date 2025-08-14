@@ -3,6 +3,10 @@ All notable changes to this project will be documented here.
 
 ## [Unreleased]
 
+## [1.3.9] - 2025-08-14
+### Changed
+- Provide `.env.example` template with placeholder values and reference it in README and setup script.
+
 ## [1.3.8] - 2025-08-14
 ### Fixed
 - Allow bot to run without Telegram credentials.
