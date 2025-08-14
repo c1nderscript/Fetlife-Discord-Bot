@@ -8,26 +8,25 @@
 - Release process: bump versions in `pyproject.toml` and `composer.json`, update `CHANGELOG.md`, tag `vX.Y.Z`, publish notes from `.github/RELEASE_NOTES.md`
 
 ## Goal
-Ensure adapter service restarts automatically in Docker Compose.
+Split development dependencies from runtime and ensure tooling installs dev extras only when needed.
 
 ## Constraints
-- Follow existing YAML style.
+- Follow existing file styles.
 - Bump Python and PHP package versions together.
 
 ## Risks
-- Docker builds may fail.
-- Version bump might drift from other release artifacts.
+- Missing dev dependencies could break formatting or tests.
+- Documentation may drift from new dependency layout.
 
 ## Test Plan
 - `bash scripts/agents-verify.sh`
 - `make fmt`
-- `docker compose build`
-- `pip-audit`
+- `pip-audit -r requirements.txt -r requirements-dev.txt`
 - `composer audit`
 - `make check`
 
 ## Semver
-Patch release (deployment fix).
+Patch release (build workflow change).
 
 ## Rollback
 Revert this commit.
