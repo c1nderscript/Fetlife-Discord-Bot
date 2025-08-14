@@ -46,6 +46,13 @@ class FakeBot:
         return None
 
 
+def test_bridge_skips_client_creation_when_missing_credentials():
+    bot = FakeBot(1)
+    bridge = TelegramBridge(bot)
+    assert bridge.client is None
+    asyncio.run(bridge.start())  # should no-op without error
+
+
 def test_bridge_forwards_messages():
     bot = FakeBot(1)
     tg_client = FakeTelegramClient()
