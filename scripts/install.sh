@@ -15,7 +15,7 @@ install() {
   fi
   # shellcheck source=/dev/null
   source .venv/bin/activate
-  pip install -r requirements.txt
+  pip install -r requirements.txt -r requirements-dev.txt
 }
 
 reinstall() {

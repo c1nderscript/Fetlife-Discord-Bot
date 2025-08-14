@@ -8,7 +8,7 @@ The `bot/` directory contains a Python application using `discord.py` that relay
 
 ### Docker Compose Quick Start
 
-1. `bash scripts/install.sh` and select **Install**. This creates `.venv` and installs dependencies.
+1. `bash scripts/install.sh` and select **Install**. This creates `.venv` and installs runtime and development dependencies.
 2. `docker compose up -d` to launch the adapter, bot, and database.
 3. Generate an invite link from the [Discord Developer Portal](https://discord.com/developers/applications), invite the bot to your server, then run `/fl login` to verify adapter authentication, `/fl subscribe events location:cities/5898 min_attendees:10`, `/fl subscribe group_posts group:1`, `/fl subscribe messages inbox`, `/fl list`, and `/fl test <id>` in Discord.
 
@@ -48,7 +48,7 @@ docker compose run --rm bot alembic upgrade head
 
 ### Manual Setup
 
-1. `bash scripts/install.sh` and select **Install** to create `.venv` and install dependencies. The `.env` file contains secrets and **must not** be committed to version control.
+1. `bash scripts/install.sh` and select **Install** to create `.venv` and install dependencies from `requirements.txt` and `requirements-dev.txt`. The `.env` file contains secrets and **must not** be committed to version control.
 2. Customize `config.yaml` for per-guild or per-channel defaults. A minimal example:
 
    ```yaml

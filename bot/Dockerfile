@@ -7,6 +7,7 @@ RUN apt-get update \
     && apt-get install -y --no-install-recommends build-essential \
     && rm -rf /var/lib/apt/lists/*
 
+# Install runtime requirements only
 COPY requirements.txt .
 RUN python -m venv /venv \
     && /venv/bin/pip install --no-cache-dir -r requirements.txt
