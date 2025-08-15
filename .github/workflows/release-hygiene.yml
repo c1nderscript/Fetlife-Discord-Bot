@@ -21,5 +21,18 @@ jobs:
           if ! echo "$VERSION" | grep -Eq '^[0-9]+\.[0-9]+\.[0-9]+(-[A-Za-z0-9.-]+)?$'; then
             echo "Version is not SemVer: $VERSION"; exit 1
           fi
+      - name: Ensure composer version matches pyproject
+        run: |
+          set -euo pipefail
+          PY_VERSION=$(grep -E '^version = ' pyproject.toml | head -1 | cut -d'"' -f2)
+          PHP_VERSION=$(jq -r '.version' composer.json)
+          echo "pyproject.toml version: $PY_VERSION"
+          echo "composer.json version: $PHP_VERSION"
+          if ! echo "$PHP_VERSION" | grep -Eq '^[0-9]+\.[0-9]+\.[0-9]+(-[A-Za-z0-9.-]+)?$'; then
+            echo "composer.json version is not SemVer: $PHP_VERSION"; exit 1
+          fi
+          if [ "$PY_VERSION" != "$PHP_VERSION" ]; then
+            echo "composer.json version ($PHP_VERSION) does not match pyproject.toml version ($PY_VERSION)"; exit 1
+          fi
       - name: AGENTS drift check
         run: bash scripts/agents-verify.sh
