@@ -1,27 +1,21 @@
 ## Goal
-Prompt for adapter and Telegram credentials during setup and persist them to `.env`.
+Rename `Agents.md` to `AGENTS.md` and update all references.
 
 ## Constraints
-- Default to existing `.env` values when present.
-- Use `write_env` for persistence.
-- Update documentation, version files, and changelog.
-- Follow existing code style and repository guidelines.
+- Keep scripts, CI configs, and docs in sync with the new filename.
+- Preserve existing drift-check behaviour.
 
 ## Risks
-- Misreading `.env` could capture incorrect values.
-- Added prompts may confuse operators.
+- Missing a reference could break verification or documentation links.
 
 ## Test Plan
-- `make fmt`
-- `make check`
 - `bash scripts/agents-verify.sh`
 
 ## Semver
-Patch release: setup improvements only.
+Patch release: documentation and tooling reference update.
 
 ## Affected Packages
-- Python package `fetlife-discord-bot`
-- PHP package `project/fetlife-discord-bot`
+- None
 
 ## Rollback
 Revert the commit.
