@@ -3,6 +3,9 @@ All notable changes to this project will be documented here.
 
 ## [Unreleased]
 
+### Added
+- Check that `composer.json` version matches `pyproject.toml` in release-hygiene workflow.
+
 ## [1.3.9] - 2025-08-14
 ### Changed
 - Provide `.env.example` template with placeholder values and reference it in README and setup script.
