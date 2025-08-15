@@ -2,6 +2,8 @@
 All notable changes to this project will be documented here.
 
 ## [Unreleased]
+### Changed
+- Rename `Agents.md` to `AGENTS.md` and update references.
 
 ## [1.3.10] - 2025-08-15
 ### Added
@@ -83,7 +85,7 @@ All notable changes to this project will be documented here.
 
 ## [0.8.4] - 2025-08-11
 ### Added
-- agents-verify script validates presence of tools referenced in Agents.md (docker, make check, flake8, phpunit).
+- agents-verify script validates presence of tools referenced in AGENTS.md (docker, make check, flake8, phpunit).
 
 
 ## [0.8.3] - 2025-08-11
