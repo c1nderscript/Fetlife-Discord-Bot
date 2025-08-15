@@ -1,5 +1,33 @@
 <!-- Release notes will be compiled here for each tagged version. -->
 
+## v1.3.9
+- Provide `.env.example` template with placeholder values and reference it in README and setup script.
+
+## v1.3.8
+- Allow bot to run without Telegram credentials.
+
+## v1.3.7
+- Split development dependencies into `requirements-dev.txt` and update Dockerfile, Makefile, and docs.
+
+## v1.3.6
+- Ensure adapter service restarts automatically in Docker Compose.
+
+## v1.3.5
+- Pin `flake8` dependency and rebuild bot Docker image.
+
+## v1.3.4
+- Declare PHP package version in `composer.json` and document bumping Python and PHP versions together during releases.
+- Salt credential hashes using `CREDENTIAL_SALT` environment variable.
+
+## v1.3.3
+- Expose correct bot HTTP port 8000 in Dockerfile.
+
+## v1.3.2
+- Standardize adapter port to 8000 and document `ADAPTER_BASE_URL`.
+
+## v1.3.1
+- Alembic migration adding `accounts` table and `account_id` foreign key to `subscriptions`.
+
 ## v1.3.0
 - `/messages` adapter endpoint with DM forwarding to Discord and Telegram.
 - Schema, tests, and docs for message relays.
