@@ -3,8 +3,10 @@ All notable changes to this project will be documented here.
 
 ## [Unreleased]
 
+## [1.3.10] - 2025-08-15
 ### Added
 - Check that `composer.json` version matches `pyproject.toml` in release-hygiene workflow.
+- Prompt for adapter token, base URL, and Telegram API credentials during setup.
 
 ## [1.3.9] - 2025-08-14
 ### Changed

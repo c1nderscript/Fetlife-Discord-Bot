@@ -78,7 +78,7 @@ python -m bot.main
 
 ### Running 24/7 on a Remote Server
 
-For unattended deployments run [`scripts/setup.sh`](scripts/setup.sh) once to generate the `.env`, apply migrations, and perform initial configuration.
+For unattended deployments run [`scripts/setup.sh`](scripts/setup.sh) once to generate the `.env`, apply migrations, and perform initial configuration. It prompts for `ADAPTER_AUTH_TOKEN`, `ADAPTER_BASE_URL`, `TELEGRAM_API_ID`, and `TELEGRAM_API_HASH`, using existing `.env` values as defaults.
 
 #### Docker Compose
 

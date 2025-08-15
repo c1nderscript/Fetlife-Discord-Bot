@@ -1,14 +1,15 @@
 ## Goal
-Ensure release-hygiene workflow fails when the `composer.json` version diverges from `pyproject.toml` or is not SemVer.
+Prompt for adapter and Telegram credentials during setup and persist them to `.env`.
 
 ## Constraints
+- Default to existing `.env` values when present.
+- Use `write_env` for persistence.
+- Update documentation, version files, and changelog.
 - Follow existing code style and repository guidelines.
-- Bump Python and PHP versions together.
-- Insert the check after the current Python version guard.
 
 ## Risks
-- Extra CI step slightly increases runtime.
-- Misformatted version fields could cause false failures.
+- Misreading `.env` could capture incorrect values.
+- Added prompts may confuse operators.
 
 ## Test Plan
 - `make fmt`
@@ -16,7 +17,7 @@ Ensure release-hygiene workflow fails when the `composer.json` version diverges 
 - `bash scripts/agents-verify.sh`
 
 ## Semver
-Patch release: CI enforcement only.
+Patch release: setup improvements only.
 
 ## Affected Packages
 - Python package `fetlife-discord-bot`

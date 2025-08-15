@@ -22,6 +22,13 @@ write_env() {
   fi
 }
 
+current_env() {
+  local key="$1"
+  if [[ -f "$ENV_FILE" ]] && grep -q "^${key}=" "$ENV_FILE"; then
+    grep "^${key}=" "$ENV_FILE" | cut -d'=' -f2-
+  fi
+}
+
 # Ensure .env exists
 if [[ ! -f "$ENV_FILE" ]]; then
   if [[ -f ".env.example" ]]; then
@@ -43,6 +50,15 @@ DB_NAME=$(prompt "DB_NAME [bot]: " "bot")
 DB_USER=$(prompt "DB_USER [bot]: " "bot")
 DB_PASSWORD=$(prompt "DB_PASSWORD: ")
 
+ADAPTER_AUTH_TOKEN_DEFAULT=$(current_env ADAPTER_AUTH_TOKEN)
+ADAPTER_AUTH_TOKEN=$(prompt "ADAPTER_AUTH_TOKEN [${ADAPTER_AUTH_TOKEN_DEFAULT}]: " "$ADAPTER_AUTH_TOKEN_DEFAULT")
+ADAPTER_BASE_URL_DEFAULT=$(current_env ADAPTER_BASE_URL)
+ADAPTER_BASE_URL=$(prompt "ADAPTER_BASE_URL [${ADAPTER_BASE_URL_DEFAULT}]: " "$ADAPTER_BASE_URL_DEFAULT")
+TELEGRAM_API_ID_DEFAULT=$(current_env TELEGRAM_API_ID)
+TELEGRAM_API_ID=$(prompt "TELEGRAM_API_ID [${TELEGRAM_API_ID_DEFAULT}]: " "$TELEGRAM_API_ID_DEFAULT")
+TELEGRAM_API_HASH_DEFAULT=$(current_env TELEGRAM_API_HASH)
+TELEGRAM_API_HASH=$(prompt "TELEGRAM_API_HASH [${TELEGRAM_API_HASH_DEFAULT}]: " "$TELEGRAM_API_HASH_DEFAULT")
+
 write_env FETLIFE_USERNAME "$FETLIFE_USERNAME"
 write_env FETLIFE_PASSWORD "$FETLIFE_PASSWORD"
 write_env DISCORD_TOKEN "$DISCORD_TOKEN"
@@ -51,6 +67,10 @@ write_env DB_PORT "$DB_PORT"
 write_env DB_NAME "$DB_NAME"
 write_env DB_USER "$DB_USER"
 write_env DB_PASSWORD "$DB_PASSWORD"
+write_env ADAPTER_AUTH_TOKEN "$ADAPTER_AUTH_TOKEN"
+write_env ADAPTER_BASE_URL "$ADAPTER_BASE_URL"
+write_env TELEGRAM_API_ID "$TELEGRAM_API_ID"
+write_env TELEGRAM_API_HASH "$TELEGRAM_API_HASH"
 
 # Optionally create config.yaml
 read -r -p "Create config.yaml? (y/N): " cfg
