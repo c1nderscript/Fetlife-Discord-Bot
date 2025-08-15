@@ -2,8 +2,11 @@
 All notable changes to this project will be documented here.
 
 ## [Unreleased]
+
+## [1.3.11] - 2025-08-15
 ### Changed
 - Rename `Agents.md` to `AGENTS.md` and update references.
+- Clarify deployment steps for Docker Compose and systemd.
 
 ## [1.3.10] - 2025-08-15
 ### Added

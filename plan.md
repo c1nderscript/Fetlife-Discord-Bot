@@ -1,18 +1,19 @@
 ## Goal
-Rename `Agents.md` to `AGENTS.md` and update all references.
+Clarify deployment instructions for running the bot continuously.
 
 ## Constraints
-- Keep scripts, CI configs, and docs in sync with the new filename.
-- Preserve existing drift-check behaviour.
+- Keep documentation consistent with scripts and docker-compose configuration.
 
 ## Risks
-- Missing a reference could break verification or documentation links.
+- Inaccurate guidance could lead to failed deployments.
 
 ## Test Plan
+- `make fmt`
+- `make check`
 - `bash scripts/agents-verify.sh`
 
 ## Semver
-Patch release: documentation and tooling reference update.
+Patch release: documentation update.
 
 ## Affected Packages
 - None
