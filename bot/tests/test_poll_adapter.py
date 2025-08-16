@@ -4,6 +4,9 @@ import sys
 from unittest.mock import AsyncMock, patch
 
 import aiohttp
+import discord
+from aiohttp.client_reqrep import RequestInfo
+from yarl import URL
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 from bot import main, storage, models  # noqa: E402
@@ -16,7 +19,7 @@ async def run_poll(
     if error:
         fetch_mock = AsyncMock(side_effect=aiohttp.ClientError())
     if channel is None:
-        channel = AsyncMock()
+        channel = AsyncMock(spec=discord.abc.Messageable)
         channel.send = AsyncMock()
     with (
         patch(f"bot.main.adapter_client.{fetch_fn}", fetch_mock),
@@ -38,7 +41,7 @@ def test_poll_adapter_dedupes_and_updates_cursor():
             sub_id,
             [{"id": "1", "title": "t", "link": "l", "time": "now"}],
             {"interval": 60},
-            channel=AsyncMock(send=AsyncMock()),
+            channel=AsyncMock(spec=discord.abc.Messageable, send=AsyncMock()),
         )
     )
     asyncio.run(
@@ -98,3 +101,67 @@ def test_poll_adapter_writings():
     )
     assert db.query(models.RelayLog).count() == 1
     channel.send.assert_called_once()
+
+
+def _client_response_error(status: int) -> aiohttp.ClientResponseError:
+    req = RequestInfo(
+        URL("http://test"), "GET", headers={}, real_url=URL("http://test")
+    )
+    return aiohttp.ClientResponseError(req, (), status=status)
+
+
+def test_poll_adapter_relogin_on_401():
+    db = storage.init_db("sqlite:///:memory:")
+    acct = storage.add_account(db, "u", "p")
+    sub_id = storage.add_subscription(db, 1, "events", "cities/1", account_id=acct)
+    channel = AsyncMock(spec=discord.abc.Messageable)
+    channel.send = AsyncMock()
+    fetch_mock = AsyncMock(
+        side_effect=[
+            _client_response_error(401),
+            [{"id": "1", "title": "t", "link": "l", "time": "now"}],
+        ]
+    )
+    login_mock = AsyncMock()
+    with (
+        patch("bot.main.adapter_client.fetch_events", fetch_mock),
+        patch("bot.main.adapter_client.login", login_mock),
+        patch.object(main.bot, "get_channel", return_value=channel),
+        patch.object(main.bot.scheduler, "add_job"),
+        patch("bot.main.bot_bucket.acquire", AsyncMock()),
+        patch("bot.main.bot_tokens.set"),
+    ):
+        asyncio.run(main.poll_adapter(db, sub_id, {"interval": 60}))
+    assert fetch_mock.call_count == 2
+    login_mock.assert_called_once()
+    channel.send.assert_called_once()
+
+
+def test_poll_adapter_relogin_failure_alerts_admin():
+    db = storage.init_db("sqlite:///:memory:")
+    acct = storage.add_account(db, "u", "p")
+    sub_id = storage.add_subscription(db, 1, "events", "cities/1", account_id=acct)
+    sub_channel = AsyncMock(spec=discord.abc.Messageable)
+    sub_channel.send = AsyncMock()
+    admin_channel = AsyncMock(spec=discord.abc.Messageable)
+    admin_channel.send = AsyncMock()
+
+    def get_channel(cid):
+        return sub_channel if cid == 1 else admin_channel
+
+    fetch_mock = AsyncMock(side_effect=_client_response_error(401))
+    login_mock = AsyncMock(side_effect=aiohttp.ClientError())
+    main.bot.config["admin_channel"] = 99
+    with (
+        patch("bot.main.adapter_client.fetch_events", fetch_mock),
+        patch("bot.main.adapter_client.login", login_mock),
+        patch.object(main.bot, "get_channel", side_effect=get_channel),
+        patch.object(main.bot.scheduler, "add_job"),
+        patch("bot.main.bot_bucket.acquire", AsyncMock()),
+        patch("bot.main.bot_tokens.set"),
+    ):
+        asyncio.run(main.poll_adapter(db, sub_id, {"interval": 60}))
+    login_mock.assert_called_once()
+    admin_channel.send.assert_called_once()
+    assert not sub_channel.send.called
+    main.bot.config.pop("admin_channel", None)

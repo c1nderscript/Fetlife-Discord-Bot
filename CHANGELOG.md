@@ -3,11 +3,14 @@ All notable changes to this project will be documented here.
 
 ## [Unreleased]
 
+## [1.3.15] - 2025-08-16
+
 ### Security
 - Run `pip-audit` and `composer audit` in `make check` and release-hygiene workflow.
 
 ### Fixed
 - Validate adapter responses against JSON schemas and relay minimal links on mismatch.
+- Retry adapter login after 401 responses and alert admin on failure.
 
 ## [1.3.14] - 2025-08-16
 ### Security

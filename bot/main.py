@@ -10,7 +10,7 @@ from typing import Any, Dict, Optional
 
 import discord
 import discord.abc
-from aiohttp import web, ClientError
+from aiohttp import web, ClientError, ClientResponseError
 from apscheduler.schedulers.asyncio import AsyncIOScheduler  # type: ignore[import-untyped]
 from discord import app_commands
 from discord.ext import commands
@@ -75,6 +75,17 @@ telegram_group = app_commands.Group(
 )
 
 
+async def alert_admin(message: str) -> None:
+    channel_id = bot.config.get("admin_channel")  # type: ignore[name-defined]
+    if not channel_id:
+        return
+    channel = bot.get_channel(int(channel_id))  # type: ignore[name-defined]
+    if isinstance(channel, discord.abc.Messageable):
+        await bot_bucket.acquire()  # type: ignore[name-defined]
+        bot_tokens.set(bot_bucket.get_tokens())  # type: ignore[name-defined]
+        await channel.send(message)
+
+
 async def poll_adapter(db, sub_id: int, data: Dict[str, Any]):
     """Poll adapter with jitter and backoff, caching cursor and deduping."""
     start = time.perf_counter()
@@ -87,26 +98,63 @@ async def poll_adapter(db, sub_id: int, data: Dict[str, Any]):
             raise RuntimeError("subscription missing")
         last_seen, last_ids = storage.get_cursor(db, sub_id)
         items: list[dict[str, Any]] = []
-        if sub.type == "events":
-            items = await adapter_client.fetch_events(
-                ADAPTER_BASE_URL, sub.target_id, account_id=sub.account_id
-            )
-        elif sub.type == "writings":
-            items = await adapter_client.fetch_writings(
-                ADAPTER_BASE_URL, sub.target_id, account_id=sub.account_id
-            )
-        elif sub.type == "group_posts":
-            items = await adapter_client.fetch_group_posts(
-                ADAPTER_BASE_URL, sub.target_id, account_id=sub.account_id
-            )
-        elif sub.type == "attendees":
-            items = await adapter_client.fetch_attendees(
-                ADAPTER_BASE_URL, sub.target_id, account_id=sub.account_id
-            )
-        elif sub.type == "messages":
-            items = await adapter_client.fetch_messages(
+
+        async def fetch_items() -> list[dict[str, Any]]:
+            if sub.type == "events":
+                return await adapter_client.fetch_events(
+                    ADAPTER_BASE_URL, sub.target_id, account_id=sub.account_id
+                )
+            if sub.type == "writings":
+                return await adapter_client.fetch_writings(
+                    ADAPTER_BASE_URL, sub.target_id, account_id=sub.account_id
+                )
+            if sub.type == "group_posts":
+                return await adapter_client.fetch_group_posts(
+                    ADAPTER_BASE_URL, sub.target_id, account_id=sub.account_id
+                )
+            if sub.type == "attendees":
+                return await adapter_client.fetch_attendees(
+                    ADAPTER_BASE_URL, sub.target_id, account_id=sub.account_id
+                )
+            return await adapter_client.fetch_messages(
                 ADAPTER_BASE_URL, account_id=sub.account_id
             )
+
+        try:
+            items = await fetch_items()
+        except ClientResponseError as exc:
+            if exc.status == 401 and sub.account_id is not None:
+                account = db.get(models.Account, sub.account_id)
+                if account:
+                    try:
+                        await adapter_client.login(
+                            ADAPTER_BASE_URL,
+                            account.username,
+                            account.credential_hash,
+                            account_id=sub.account_id,
+                        )
+                        items = await fetch_items()
+                    except ClientError as login_exc:
+                        logger.error(
+                            "poll_relogin_failed",
+                            extra={"sub_id": sub_id, "error": str(login_exc)},
+                        )
+                        await alert_admin(
+                            f"Adapter re-login failed for account {sub.account_id}"
+                        )
+                        success = False
+                        items = []
+                else:
+                    logger.error(
+                        "poll_relogin_failed",
+                        extra={"sub_id": sub_id, "error": "account_missing"},
+                    )
+                    await alert_admin(
+                        f"Adapter re-login failed for account {sub.account_id}"
+                    )
+                    success = False
+            else:
+                raise
         fetlife_requests.inc()
         channel = bot.get_channel(sub.channel_id)
         new_ids: list[str] = []

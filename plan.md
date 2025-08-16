@@ -1,28 +1,25 @@
 ## Goal
-Adopt Argon2 hashing for account credentials and migrate existing SHA-256 hashes.
+Handle adapter 401 errors by re-authenticating affected accounts and retrying polls.
 
 ## Constraints
 - Follow AGENTS.md: run make fmt and make check before committing.
-- Run pip-audit -r requirements.txt and bash scripts/agents-verify.sh.
-- Update requirements, Dockerfile, migrations, and docs consistently.
+- Include tests for 401 re-login logic.
 
 ## Risks
-- Existing accounts hashed with SHA-256 remain until users log in again.
-- Argon2 build dependencies may increase image size.
+- Stored credentials may be invalid or unavailable, causing repeated failures.
+- Additional login attempts could trigger rate limits.
 
 ## Test Plan
 - `make fmt`
 - `make check`
-- `pip-audit -r requirements.txt`
 - `bash scripts/agents-verify.sh`
 
 ## Semver
-Patch release: security hardening.
+Patch release: bug fix for adapter login recovery.
 
 ## Affected Packages
-- Python bot (hashing logic and dependencies)
-- Alembic migrations
-- Documentation
+- Python bot
+- Tests
 
 ## Rollback
-Revert commit and migration; restore SHA-256 hashing.
+Revert commit to remove 401 handling and tests.
