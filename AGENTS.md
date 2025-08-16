@@ -87,6 +87,8 @@ rsvps(event_id, profile_fl_id, status, seen_at) (optional cache)
 4) Security, Privacy & Compliance
 Credentials: Store FETLIFE_USERNAME, FETLIFE_PASSWORD, and DISCORD_TOKEN in .env/secrets manager. Never commit.
 
+Credential hashes use Argon2id with a per-user salt derived from `CREDENTIAL_SALT`. Existing SHA-256 hashes are prefixed with `sha256$` and rehashed on next login.
+
 Auth Model: Use a dedicated FetLife account with explicit consent; keep session/cookies isolated.
 
 ToS/Robots: Respect FetLife ToS. Implement conservative polling intervals and user-agent identification.

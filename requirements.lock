@@ -3,6 +3,7 @@ aiohttp==3.12.15
 aiosignal==1.4.0
 alembic==1.16.4
 APScheduler==3.11.0
+argon2-cffi==25.1.0
 attrs==25.3.0
 black==25.1.0
 click==8.2.1
