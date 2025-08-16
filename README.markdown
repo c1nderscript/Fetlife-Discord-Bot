@@ -323,6 +323,42 @@ The adapter's HTTP API is documented in
 [adapter/openapi.yaml](adapter/openapi.yaml), served at
 `/openapi.yaml` when the service is running.
 
+### HTTPS Reverse Proxy
+
+The adapter only serves HTTP on port `8000`. For public access, place it
+behind a TLS-terminating reverse proxy such as Caddy or Nginx. Forward the
+`Host`, `X-Forwarded-For`, and `X-Forwarded-Proto` headers so the service can
+generate correct URLs and logs. The bot should then set
+`ADAPTER_BASE_URL` to the external HTTPS address, for example:
+
+```
+ADAPTER_BASE_URL=https://adapter.example.com
+```
+
+**Caddy**
+
+```Caddyfile
+adapter.example.com {
+    reverse_proxy 127.0.0.1:8000
+}
+```
+
+**Nginx**
+
+```nginx
+server {
+    listen 443 ssl;
+    server_name adapter.example.com;
+
+    location / {
+        proxy_pass http://127.0.0.1:8000;
+        proxy_set_header Host $host;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+}
+```
+
 ## Contributing
 
 Pull requests are welcome. Please:

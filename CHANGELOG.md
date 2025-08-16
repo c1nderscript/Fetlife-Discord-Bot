@@ -8,6 +8,7 @@ All notable changes to this project will be documented here.
 - Cache events, profiles, and RSVP records during polling.
 - Docker healthchecks for bot and adapter services with `make health` helper.
 - OpenAPI specification and `/openapi.yaml` route for the adapter.
+- Document running the adapter behind an HTTPS reverse proxy and note TLS expectations.
 
 ### Changed
 - Install Python dependencies from `requirements.lock` for reproducible builds.
