@@ -5,6 +5,7 @@ import json
 import sys
 from pathlib import Path
 from unittest.mock import AsyncMock, patch
+import discord
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 
@@ -14,7 +15,7 @@ FIXTURES = Path(__file__).parent / "fixtures"
 
 
 async def run_poll(db, sub_id: int, items: list[dict]):
-    channel = AsyncMock()
+    channel = AsyncMock(spec=discord.abc.Messageable)
     channel.send = AsyncMock()
     with (
         patch("bot.main.adapter_client.fetch_writings", AsyncMock(return_value=items)),

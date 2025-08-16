@@ -3,10 +3,16 @@ import json
 import sys
 from pathlib import Path
 from unittest.mock import AsyncMock, patch
+from types import SimpleNamespace
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 
 from bot import main, storage  # noqa: E402
+
+if main.bot.bridge is None:
+    main.bot.bridge = SimpleNamespace()
+if not hasattr(main.bot.bridge, "send_to_telegram"):
+    main.bot.bridge.send_to_telegram = AsyncMock()
 
 FIXTURES = Path(__file__).parent / "fixtures"
 

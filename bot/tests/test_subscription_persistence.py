@@ -7,6 +7,8 @@ from prometheus_client import REGISTRY
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 
+asyncio.set_event_loop(asyncio.new_event_loop())
+
 from bot import storage
 
 
