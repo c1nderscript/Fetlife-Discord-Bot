@@ -10,6 +10,7 @@ All notable changes to this project will be documented here.
 - OpenAPI specification and `/openapi.yaml` route for the adapter.
 - Document running the adapter behind an HTTPS reverse proxy and note TLS expectations.
 - Index frequent lookup columns for faster database queries.
+- Docker-based tests for group posts, messages, and Telegram bridge flows.
 
 ### Changed
 - Install Python dependencies from `requirements.lock` for reproducible builds.
