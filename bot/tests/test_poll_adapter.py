@@ -42,7 +42,15 @@ def test_poll_adapter_dedupes_and_updates_cursor():
         run_poll(
             db,
             sub_id,
-            [{"id": "1", "title": "t", "link": "l", "time": "now"}],
+            [
+                {
+                    "id": "1",
+                    "title": "t",
+                    "link": "l",
+                    "time": "2024-01-01T00:00:00Z",
+                    "city": "X",
+                }
+            ],
             {"interval": 60},
             channel=AsyncMock(send=AsyncMock()),
         )
@@ -51,7 +59,15 @@ def test_poll_adapter_dedupes_and_updates_cursor():
         run_poll(
             db,
             sub_id,
-            [{"id": "1", "title": "t", "link": "l", "time": "now"}],
+            [
+                {
+                    "id": "1",
+                    "title": "t",
+                    "link": "l",
+                    "time": "2024-01-01T00:00:00Z",
+                    "city": "X",
+                }
+            ],
             {"interval": 60},
             channel=channel,
         )
@@ -60,6 +76,8 @@ def test_poll_adapter_dedupes_and_updates_cursor():
     _, ids = storage.get_cursor(db, sub_id)
     assert ids == ["1"]
     assert channel.send.call_count == 1
+    event = db.query(models.Event).filter_by(fl_id="1").one()
+    assert event.title == "t"
 
 
 def test_poll_adapter_backoff_on_http_error():

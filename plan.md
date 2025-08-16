@@ -1,25 +1,24 @@
 ## Goal
-Pause polling after consecutive adapter failures, notify channels, and expose subscription status via `/fl health`.
+Cache events, profiles, and RSVP records before relaying to Discord.
 
 ## Constraints
 - Follow AGENTS.md: run `make fmt` and `make check` before committing.
-- Update tests under `bot/tests/test_poll_adapter.py`.
-- Bump versions and CHANGELOG consistently.
+- Update tests under `bot/tests` for new cache behavior.
+- Keep documentation and changelog in sync.
 
 ## Risks
-- Paused subscriptions may miss updates.
-- Failure counts reset on bot restart.
+- Parsing event timestamps may fail.
+- Cache tables may grow without pruning.
 
 ## Test Plan
 - `make fmt`
 - `make check`
 
 ## Semver
-Minor release: adds new feature.
+Patch release: internal reliability improvement.
 
 ## Affected Packages
 - Python bot
-- PHP adapter metadata
 
 ## Rollback
 Revert commit to restore previous polling behavior.

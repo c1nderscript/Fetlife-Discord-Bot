@@ -118,6 +118,19 @@ async def poll_adapter(db, sub_id: int, data: Dict[str, Any]):
             item_id = str(item.get("id"))
             if not item_id:
                 continue
+            if sub.type == "events":
+                storage.upsert_event(
+                    db,
+                    item_id,
+                    item.get("title", ""),
+                    city=item.get("city"),
+                    region=item.get("region"),
+                    start_at=item.get("time"),
+                    permalink=item.get("link"),
+                )
+            elif sub.type == "attendees":
+                storage.upsert_profile(db, item_id, item.get("nickname", ""))
+                storage.upsert_rsvp(db, sub.target_id, item_id, item.get("status", ""))
             if storage.has_relayed(db, sub_id, item_id):
                 duplicates_suppressed.inc()
                 logger.info("duplicate", extra={"sub_id": sub_id, "item": item_id})

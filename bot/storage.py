@@ -2,6 +2,7 @@ from __future__ import annotations
 
 # mypy: ignore-errors
 
+from datetime import datetime
 from typing import Any, Dict, Iterable, Tuple
 
 from sqlalchemy.orm import Session
@@ -145,4 +146,79 @@ def record_relay(
     db.add(
         models.RelayLog(subscription_id=sub_id, item_id=item_id, item_hash=item_hash)
     )
+    db.commit()
+
+
+def upsert_event(
+    db: Session,
+    fl_id: str,
+    title: str,
+    city: str | None = None,
+    region: str | None = None,
+    start_at: str | datetime | None = None,
+    permalink: str | None = None,
+) -> int:
+    ev = db.query(models.Event).filter_by(fl_id=fl_id).one_or_none()
+    if not ev:
+        ev = models.Event(fl_id=fl_id)
+        db.add(ev)
+    ev.title = title
+    ev.city = city
+    ev.region = region
+    if isinstance(start_at, str):
+        try:
+            start_at_dt = datetime.fromisoformat(start_at.replace("Z", "+00:00"))
+        except ValueError:
+            start_at_dt = None
+    else:
+        start_at_dt = start_at
+    if start_at_dt:
+        ev.start_at = start_at_dt
+    ev.permalink = permalink
+    ev.last_populated_at = datetime.utcnow()
+    db.commit()
+    db.refresh(ev)
+    return ev.id
+
+
+def upsert_profile(
+    db: Session,
+    fl_id: str,
+    nickname: str,
+    last_seen_at: datetime | None = None,
+) -> int:
+    prof = db.query(models.Profile).filter_by(fl_id=fl_id).one_or_none()
+    if not prof:
+        prof = models.Profile(fl_id=fl_id)
+        db.add(prof)
+    prof.nickname = nickname
+    if last_seen_at:
+        prof.last_seen_at = last_seen_at
+    db.commit()
+    db.refresh(prof)
+    return prof.id
+
+
+def upsert_rsvp(
+    db: Session,
+    event_fl_id: str,
+    profile_fl_id: str,
+    status: str,
+) -> None:
+    event = db.query(models.Event).filter_by(fl_id=event_fl_id).one_or_none()
+    if not event:
+        event = models.Event(fl_id=event_fl_id, title="")
+        db.add(event)
+        db.commit()
+        db.refresh(event)
+    key = (event.id, profile_fl_id)
+    rsvp = db.get(models.RSVP, key)
+    if not rsvp:
+        rsvp = models.RSVP(
+            event_id=event.id, profile_fl_id=profile_fl_id, status=status
+        )
+        db.add(rsvp)
+    else:
+        rsvp.status = status
+        rsvp.seen_at = datetime.utcnow()
     db.commit()

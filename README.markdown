@@ -42,6 +42,13 @@ When using Docker Compose:
 docker compose run --rm bot alembic upgrade head
 ```
 
+### Caching
+
+The bot maintains lightweight caches of events, FetLife profiles, and RSVP
+statuses in the database. Each poll updates these records before any messages
+are relayed to Discord, enabling deduplication and future lookups without extra
+adapter requests.
+
 ### Health Checks
 
 - Adapter: `GET http://localhost:8000/healthz` for liveness and `GET http://localhost:8000/metrics` for Prometheus metrics.
