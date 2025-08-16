@@ -1,22 +1,25 @@
 ## Goal
-Clarify deployment instructions for running the bot continuously.
+Load stored subscriptions on bot startup so they persist across restarts and add a regression test.
 
 ## Constraints
-- Keep documentation consistent with scripts and docker-compose configuration.
+- Follow AGENTS.md: run make fmt and make check before committing.
+- Keep versioning and changelog consistent.
 
 ## Risks
-- Inaccurate guidance could lead to failed deployments.
+- Scheduler jobs may execute during tests and call external services.
 
 ## Test Plan
 - `make fmt`
 - `make check`
+- `pip-audit -r requirements.txt`
 - `bash scripts/agents-verify.sh`
 
 ## Semver
-Patch release: documentation update.
+Patch release: internal bug fix.
 
 ## Affected Packages
-- None
+- Python bot
+- PHP adapter (version bump only)
 
 ## Rollback
-Revert the commit.
+Revert the commit and reset versions.
