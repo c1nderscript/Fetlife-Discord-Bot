@@ -6,6 +6,9 @@ All notable changes to this project will be documented here.
 ### Security
 - Run `pip-audit` and `composer audit` in `make check` and release-hygiene workflow.
 
+### Fixed
+- Validate adapter responses against JSON schemas and relay minimal links on mismatch.
+
 ## [1.3.14] - 2025-08-16
 ### Security
 - Hash account credentials with Argon2id and migrate existing SHA-256 hashes.

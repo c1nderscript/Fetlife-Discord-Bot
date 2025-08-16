@@ -1,9 +1,40 @@
 from __future__ import annotations
 
 from typing import Any
-
+import json
 import os
+import logging
+from functools import lru_cache
+from pathlib import Path
+
 import aiohttp
+from jsonschema import ValidationError, validate
+
+
+logger = logging.getLogger(__name__)
+
+SCHEMAS = Path(__file__).resolve().parents[1] / "schemas"
+
+
+@lru_cache
+def _load_schema(name: str) -> dict[str, Any]:
+    with (SCHEMAS / name).open() as f:
+        return json.load(f)
+
+
+def _validate_list(
+    data: list[dict[str, Any]], schema_name: str, fallback_key: str
+) -> list[dict[str, Any]]:
+    schema = _load_schema(schema_name)
+    array_schema = (
+        schema if schema.get("type") == "array" else {"type": "array", "items": schema}
+    )
+    try:
+        validate(data, array_schema)
+        return data
+    except ValidationError:
+        logger.warning("adapter_schema_mismatch", extra={"schema": schema_name})
+        return [{fallback_key: item.get(fallback_key)} for item in data]
 
 
 def _headers(extra: dict[str, str] | None = None) -> dict[str, str]:
@@ -46,7 +77,8 @@ async def fetch_events(
             f"{base_url}/events", params={"location": location}, headers=_headers(extra)
         ) as resp:
             resp.raise_for_status()
-            return await resp.json()
+            data = await resp.json()
+            return _validate_list(data, "event.json", "link")
 
 
 async def fetch_writings(
@@ -59,7 +91,8 @@ async def fetch_writings(
             f"{base_url}/users/{user_id}/writings", headers=_headers(extra)
         ) as resp:
             resp.raise_for_status()
-            return await resp.json()
+            data = await resp.json()
+            return _validate_list(data, "writing.json", "link")
 
 
 async def fetch_attendees(
@@ -72,7 +105,8 @@ async def fetch_attendees(
             f"{base_url}/events/{event_id}/attendees", headers=_headers(extra)
         ) as resp:
             resp.raise_for_status()
-            return await resp.json()
+            data = await resp.json()
+            return _validate_list(data, "event_attendees.json", "id")
 
 
 async def fetch_group_posts(
@@ -85,7 +119,8 @@ async def fetch_group_posts(
             f"{base_url}/groups/{group_id}/posts", headers=_headers(extra)
         ) as resp:
             resp.raise_for_status()
-            return await resp.json()
+            data = await resp.json()
+            return _validate_list(data, "group_post.json", "link")
 
 
 async def fetch_messages(
@@ -94,8 +129,7 @@ async def fetch_messages(
     """Fetch direct messages from the adapter service."""
     extra = {"X-Account-ID": str(account_id)} if account_id is not None else {}
     async with aiohttp.ClientSession() as session:
-        async with session.get(
-            f"{base_url}/messages", headers=_headers(extra)
-        ) as resp:
+        async with session.get(f"{base_url}/messages", headers=_headers(extra)) as resp:
             resp.raise_for_status()
-            return await resp.json()
+            data = await resp.json()
+            return _validate_list(data, "message.json", "id")
