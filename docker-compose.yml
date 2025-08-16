@@ -24,6 +24,11 @@ services:
     ports:
       - "8000:8000"
     restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/healthz"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
 
   bot:
     build:
@@ -40,6 +45,11 @@ services:
       - db
     command: ["python3", "-m", "bot.main"]
     restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/ready"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
 
 volumes:
   db_data:

@@ -6,6 +6,7 @@ All notable changes to this project will be documented here.
 ### Added
 - Pause polling after repeated adapter failures with `/fl health` status and manual resume.
 - Cache events, profiles, and RSVP records during polling.
+- Docker healthchecks for bot and adapter services with `make health` helper.
 
 ### Changed
 - Install Python dependencies from `requirements.lock` for reproducible builds.
