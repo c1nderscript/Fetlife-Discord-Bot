@@ -1,0 +1,266 @@
+openapi: 3.0.3
+info:
+  title: FetLife Adapter API
+  version: 0.1.0
+  description: |
+    HTTP API for the FetLife adapter service wrapping libFetLife.
+servers:
+  - url: /
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+security:
+  - bearerAuth: []
+paths:
+  /login:
+    post:
+      summary: Authenticate to FetLife and store a session
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                username:
+                  type: string
+                password:
+                  type: string
+      responses:
+        '200':
+          description: Login succeeded
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: ok
+        '400':
+          description: Missing credentials
+        '401':
+          description: Login failed
+  /events:
+    get:
+      summary: List upcoming events for a location
+      parameters:
+        - in: query
+          name: location
+          schema:
+            type: string
+          required: true
+        - in: query
+          name: account
+          schema:
+            type: string
+          required: false
+      responses:
+        '200':
+          description: Array of events
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    id:
+                      type: integer
+                    title:
+                      type: string
+                    link:
+                      type: string
+                      format: uri
+                    time:
+                      type: string
+                      format: date-time
+        '401':
+          description: Not authenticated
+  /events/{id}:
+    get:
+      summary: Fetch event details
+      parameters:
+        - in: path
+          name: id
+          schema:
+            type: integer
+          required: true
+        - in: query
+          name: account
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Event details
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id: {type: integer}
+                  title: {type: string}
+                  link: {type: string, format: uri}
+                  start: {type: string, format: date-time}
+                  end: {type: string, format: date-time}
+        '401':
+          description: Not authenticated
+  /events/{id}/attendees:
+    get:
+      summary: List attendees for an event
+      parameters:
+        - in: path
+          name: id
+          schema:
+            type: integer
+          required: true
+        - in: query
+          name: pages
+          schema:
+            type: integer
+          required: false
+        - in: query
+          name: account
+          schema:
+            type: string
+          required: false
+      responses:
+        '200':
+          description: Array of attendees
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    id: {type: integer}
+                    nickname: {type: string}
+                    status: {type: string}
+                    comment: {type: string, nullable: true}
+        '401':
+          description: Not authenticated
+  /users/{id}/writings:
+    get:
+      summary: List writings for a user
+      parameters:
+        - in: path
+          name: id
+          schema:
+            type: integer
+          required: true
+        - in: query
+          name: account
+          schema:
+            type: string
+          required: false
+      responses:
+        '200':
+          description: Array of writings
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    id: {type: integer}
+                    title: {type: string}
+                    link: {type: string, format: uri}
+                    published: {type: string, format: date-time}
+        '401':
+          description: Not authenticated
+  /groups/{id}/posts:
+    get:
+      summary: List recent posts in a group
+      parameters:
+        - in: path
+          name: id
+          schema:
+            type: integer
+          required: true
+        - in: query
+          name: account
+          schema:
+            type: string
+          required: false
+      responses:
+        '200':
+          description: Array of posts
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    id: {type: integer}
+                    title: {type: string}
+                    link: {type: string, format: uri}
+                    published: {type: string, format: date-time, nullable: true}
+        '401':
+          description: Not authenticated
+  /messages:
+    get:
+      summary: List recent direct messages
+      parameters:
+        - in: query
+          name: account
+          schema:
+            type: string
+          required: false
+      responses:
+        '200':
+          description: Array of messages
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    id: {type: integer}
+                    sender: {type: string}
+                    text: {type: string}
+                    sent: {type: string, format: date-time, nullable: true}
+        '401':
+          description: Not authenticated
+  /healthz:
+    get:
+      summary: Liveness probe
+      security: []
+      responses:
+        '200':
+          description: Service is running
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+  /metrics:
+    get:
+      summary: Prometheus metrics
+      security: []
+      responses:
+        '200':
+          description: Metrics output
+          content:
+            text/plain:
+              schema:
+                type: string
+  /openapi.yaml:
+    get:
+      summary: This OpenAPI document
+      security: []
+      responses:
+        '200':
+          description: OpenAPI YAML
+          content:
+            application/yaml:
+              schema:
+                type: string
