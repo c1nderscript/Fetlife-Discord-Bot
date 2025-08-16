@@ -3,6 +3,10 @@ All notable changes to this project will be documented here.
 
 ## [Unreleased]
 
+## [1.3.14] - 2025-08-16
+### Security
+- Hash account credentials with Argon2id and migrate existing SHA-256 hashes.
+
 ## [1.3.13] - 2025-08-16
 ### Security
 - Pin Postgres image to immutable digest in Docker Compose.

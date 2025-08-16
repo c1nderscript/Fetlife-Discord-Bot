@@ -1,7 +1,8 @@
 import os
+import hashlib
 from sqlalchemy import create_engine
 from sqlalchemy.orm import declarative_base, sessionmaker
-import hashlib
+from argon2.low_level import hash_secret, Type
 
 
 def _build_url() -> str:
@@ -27,8 +28,19 @@ Base = declarative_base()
 
 
 def hash_credentials(username: str, password: str) -> str:
-    salt = os.getenv("CREDENTIAL_SALT", "")
-    return hashlib.sha256(f"{salt}:{username}:{password}".encode()).hexdigest()
+    pepper = os.getenv("CREDENTIAL_SALT", "")
+    # derive a deterministic per-user salt
+    salt = hashlib.sha256(f"{pepper}:{username}".encode()).digest()[:16]
+    data = f"{username}:{password}".encode()
+    return hash_secret(
+        data,
+        salt,
+        time_cost=2,
+        memory_cost=102400,
+        parallelism=8,
+        hash_len=32,
+        type=Type.ID,
+    ).decode()
 
 
 def init_db(url: str | None = None):
