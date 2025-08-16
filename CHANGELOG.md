@@ -3,6 +3,9 @@ All notable changes to this project will be documented here.
 
 ## [Unreleased]
 
+### Added
+- Pause polling after repeated adapter failures with `/fl health` status and manual resume.
+
 ### Security
 - Run `pip-audit` and `composer audit` in `make check` and release-hygiene workflow.
 

@@ -8,6 +8,11 @@ os.environ.setdefault("TELEGRAM_API_HASH", "hash")
 
 from bot import main
 
+if main.bot.bridge is None:
+    main.bot.bridge = SimpleNamespace(
+        add_mapping=AsyncMock(), remove_mapping=AsyncMock()
+    )
+
 
 def make_interaction():
     interaction = AsyncMock()

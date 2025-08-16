@@ -12,7 +12,7 @@ def test_fl_login_success():
         patch("bot.main.bot_bucket.acquire", AsyncMock()),
         patch("bot.main.bot_tokens.set"),
     ):
-        asyncio.run(main.fl_login(interaction))
+        asyncio.run(main.fl_login.callback(interaction))
     interaction.response.send_message.assert_called_once_with(
         "Adapter login successful"
     )
@@ -26,5 +26,5 @@ def test_fl_login_failure():
         patch("bot.main.bot_bucket.acquire", AsyncMock()),
         patch("bot.main.bot_tokens.set"),
     ):
-        asyncio.run(main.fl_login(interaction))
+        asyncio.run(main.fl_login.callback(interaction))
     interaction.response.send_message.assert_called_once_with("Adapter login failed")

@@ -1,28 +1,25 @@
 ## Goal
-Adopt Argon2 hashing for account credentials and migrate existing SHA-256 hashes.
+Pause polling after consecutive adapter failures, notify channels, and expose subscription status via `/fl health`.
 
 ## Constraints
-- Follow AGENTS.md: run make fmt and make check before committing.
-- Run pip-audit -r requirements.txt and bash scripts/agents-verify.sh.
-- Update requirements, Dockerfile, migrations, and docs consistently.
+- Follow AGENTS.md: run `make fmt` and `make check` before committing.
+- Update tests under `bot/tests/test_poll_adapter.py`.
+- Bump versions and CHANGELOG consistently.
 
 ## Risks
-- Existing accounts hashed with SHA-256 remain until users log in again.
-- Argon2 build dependencies may increase image size.
+- Paused subscriptions may miss updates.
+- Failure counts reset on bot restart.
 
 ## Test Plan
 - `make fmt`
 - `make check`
-- `pip-audit -r requirements.txt`
-- `bash scripts/agents-verify.sh`
 
 ## Semver
-Patch release: security hardening.
+Minor release: adds new feature.
 
 ## Affected Packages
-- Python bot (hashing logic and dependencies)
-- Alembic migrations
-- Documentation
+- Python bot
+- PHP adapter metadata
 
 ## Rollback
-Revert commit and migration; restore SHA-256 hashing.
+Revert commit to restore previous polling behavior.

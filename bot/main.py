@@ -66,6 +66,9 @@ bot_tokens = Gauge("bot_rate_limit_tokens", "Tokens currently available for bot"
 adapter_bucket = TokenBucket(5, 1)
 bot_bucket = TokenBucket(5, 1)
 
+MAX_FAILURES = 3
+PAUSE_COOLDOWN = 300
+
 fl_group = app_commands.Group(name="fl", description="FetLife commands")
 account_group = app_commands.Group(
     name="account", description="Manage FetLife accounts", parent=fl_group
@@ -81,10 +84,12 @@ async def poll_adapter(db, sub_id: int, data: Dict[str, Any]):
     await adapter_bucket.acquire()
     adapter_tokens.set(adapter_bucket.get_tokens())
     success = True
+    channel = None
     try:
         sub = db.get(models.Subscription, sub_id)
         if not sub:
             raise RuntimeError("subscription missing")
+        channel = bot.get_channel(sub.channel_id)
         last_seen, last_ids = storage.get_cursor(db, sub_id)
         items: list[dict[str, Any]] = []
         if sub.type == "events":
@@ -108,7 +113,6 @@ async def poll_adapter(db, sub_id: int, data: Dict[str, Any]):
                 ADAPTER_BASE_URL, account_id=sub.account_id
             )
         fetlife_requests.inc()
-        channel = bot.get_channel(sub.channel_id)
         new_ids: list[str] = []
         for item in items:
             item_id = str(item.get("id"))
@@ -119,7 +123,7 @@ async def poll_adapter(db, sub_id: int, data: Dict[str, Any]):
                 logger.info("duplicate", extra={"sub_id": sub_id, "item": item_id})
                 continue
             storage.record_relay(db, sub_id, item_id)
-            if isinstance(channel, discord.abc.Messageable):
+            if isinstance(channel, discord.abc.Messageable) or hasattr(channel, "send"):
                 if sub.type == "attendees":
                     embed = discord.Embed(
                         title=item.get("nickname", ""),
@@ -168,22 +172,60 @@ async def poll_adapter(db, sub_id: int, data: Dict[str, Any]):
         poll_cycle.observe(time.perf_counter() - start)
         adapter_tokens.set(adapter_bucket.get_tokens())
         bot.last_poll = time.time()
-
-    interval = data.get("interval", 60)
-    backoff = data.get("backoff", interval)
+    failures = data.get("failures", 0)
+    paused_until = data.get("paused_until")
+    notified = data.get("notified", False)
     if success:
-        backoff = interval
+        failures = 0
+        paused_until = None
+        notified = False
     else:
-        backoff = min(backoff * 2, interval * 60)
-    jitter = random.uniform(0, interval * 0.1)
-    run_in = backoff + jitter
-    data["backoff"] = backoff
+        failures += 1
+
+    data["failures"] = failures
+
+    if failures >= MAX_FAILURES:
+        if not paused_until:
+            paused_until = time.time() + PAUSE_COOLDOWN
+        data["paused_until"] = paused_until
+        if (
+            not notified
+            and channel
+            and (
+                isinstance(channel, discord.abc.Messageable) or hasattr(channel, "send")
+            )
+        ):
+            await bot_bucket.acquire()
+            bot_tokens.set(bot_bucket.get_tokens())
+            await channel.send("Subscription paused after repeated failures")
+            notified = True
+        data["notified"] = notified
+        bot.sub_status[sub_id] = {
+            "failures": failures,
+            "paused_until": paused_until,
+        }
+        run_date = datetime.utcfromtimestamp(paused_until)
+    else:
+        data.pop("paused_until", None)
+        data["notified"] = False
+        bot.sub_status[sub_id] = {"failures": failures}
+        interval = data.get("interval", 60)
+        backoff = data.get("backoff", interval)
+        if success:
+            backoff = interval
+        else:
+            backoff = min(backoff * 2, interval * 60)
+        jitter = random.uniform(0, interval * 0.1)
+        run_in = backoff + jitter
+        data["backoff"] = backoff
+        run_date = datetime.utcnow() + timedelta(seconds=run_in)
+
     bot.scheduler.add_job(
         poll_adapter,
         args=[db, sub_id, data],
         id=str(sub_id),
         replace_existing=True,
-        run_date=datetime.utcnow() + timedelta(seconds=run_in),
+        run_date=run_date,
     )
 
 
@@ -203,6 +245,7 @@ class FLBot(commands.Bot):
                 config=self.config,
             )
         self.last_poll = 0.0
+        self.sub_status: Dict[int, Dict[str, Any]] = {}
 
     async def setup_hook(self) -> None:
         channels = [c.id for c in self.db.query(models.Channel.id).all()]
@@ -509,16 +552,46 @@ async def fl_settings(
 
 
 @fl_group.command(name="health", description="Show adapter health")
-async def fl_health(interaction: discord.Interaction) -> None:
-    depth = len(bot.scheduler.get_jobs())
-    last = (
-        datetime.utcfromtimestamp(bot.last_poll).isoformat()
-        if bot.last_poll
-        else "never"
-    )
+async def fl_health(
+    interaction: discord.Interaction, resume: int | None = None
+) -> None:
+    if resume is not None:
+        job = bot.scheduler.get_job(str(resume))
+        if job:
+            data = job.args[2]
+            data["failures"] = 0
+            data.pop("paused_until", None)
+            data["notified"] = False
+            bot.sub_status[resume] = {"failures": 0}
+            bot.scheduler.add_job(
+                poll_adapter,
+                args=[bot.db, resume, data],
+                id=str(resume),
+                replace_existing=True,
+                run_date=datetime.utcnow() + timedelta(seconds=1),
+            )
+            msg = f"Resumed subscription {resume}"
+        else:
+            msg = f"Subscription {resume} not found"
+    else:
+        depth = len(bot.scheduler.get_jobs())
+        last = (
+            datetime.utcfromtimestamp(bot.last_poll).isoformat()
+            if bot.last_poll
+            else "never"
+        )
+        status_lines = []
+        for sid, s in bot.sub_status.items():
+            line = f"{sid}: {s['failures']} fails"
+            if s.get("paused_until"):
+                until = datetime.utcfromtimestamp(s["paused_until"]).isoformat()
+                line += f", paused until {until}"
+            status_lines.append(line)
+        status = "; ".join(status_lines) if status_lines else "ok"
+        msg = f"last_poll: {last}; queue_depth: {depth}; status: {status}"
     await bot_bucket.acquire()
     bot_tokens.set(bot_bucket.get_tokens())
-    await interaction.response.send_message(f"last_poll: {last}; queue_depth: {depth}")
+    await interaction.response.send_message(msg)
 
 
 @fl_group.command(name="purge", description="Purge local caches")
