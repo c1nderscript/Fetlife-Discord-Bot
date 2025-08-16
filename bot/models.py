@@ -40,7 +40,13 @@ class Account(Base):
 class Subscription(Base):
     __tablename__ = "subscriptions"
     id = Column(Integer, primary_key=True, autoincrement=True)
-    channel_id = Column(BigInteger, ForeignKey("channels.id"), nullable=False)
+    channel_id = Column(
+        BigInteger,
+        ForeignKey("channels.id"),
+        nullable=False,
+        index=True,
+        comment="frequent lookup",
+    )
     type = Column(String, nullable=False)
     target_id = Column(String, nullable=False)
     target_kind = Column(String, nullable=False)
@@ -64,8 +70,14 @@ class Cursor(Base):
 class RelayLog(Base):
     __tablename__ = "relay_log"
     id = Column(Integer, primary_key=True, autoincrement=True)
-    subscription_id = Column(Integer, ForeignKey("subscriptions.id"), nullable=False)
-    item_id = Column(String, nullable=False)
+    subscription_id = Column(
+        Integer,
+        ForeignKey("subscriptions.id"),
+        nullable=False,
+        index=True,
+        comment="frequent lookup",
+    )
+    item_id = Column(String, nullable=False, index=True, comment="frequent lookup")
     item_hash = Column(String, nullable=True)
     relayed_at = Column(DateTime, server_default=func.now(), nullable=False)
 
