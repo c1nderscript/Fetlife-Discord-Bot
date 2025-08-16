@@ -3,6 +3,10 @@ All notable changes to this project will be documented here.
 
 ## [Unreleased]
 
+## [1.3.12] - 2025-08-16
+### Fixed
+- Reschedule stored subscriptions on startup so they persist across restarts.
+
 ## [1.3.11] - 2025-08-15
 ### Changed
 - Rename `Agents.md` to `AGENTS.md` and update references.

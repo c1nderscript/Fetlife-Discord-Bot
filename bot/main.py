@@ -205,6 +205,22 @@ class FLBot(commands.Bot):
         self.last_poll = 0.0
 
     async def setup_hook(self) -> None:
+        channels = [c.id for c in self.db.query(models.Channel.id).all()]
+        for channel_id in channels:
+            for sub_id, sub_type, _target, _acct in storage.list_subscriptions(
+                self.db, channel_id
+            ):
+                self.scheduler.add_job(
+                    poll_adapter,
+                    args=[
+                        self.db,
+                        sub_id,
+                        {"interval": 60, "type": sub_type},
+                    ],
+                    id=str(sub_id),
+                    replace_existing=True,
+                    run_date=datetime.utcnow() + timedelta(seconds=1),
+                )
         self.scheduler.start()
 
 
