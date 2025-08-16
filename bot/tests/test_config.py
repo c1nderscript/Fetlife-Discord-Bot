@@ -1,5 +1,9 @@
+import importlib
 import pathlib
 import sys
+
+import pytest
+from prometheus_client import REGISTRY
 
 sys.path.append(str(pathlib.Path(__file__).resolve().parents[2]))
 
@@ -25,3 +29,39 @@ def test_get_channel_config():
     }
     result = get_channel_config(cfg, 1, 10)
     assert result == {"a": 1, "b": 2, "c": 3}
+
+
+def _reload_main():
+    for collector in list(REGISTRY._collector_to_names):
+        REGISTRY.unregister(collector)
+    sys.modules.pop("bot.main", None)
+    return importlib.import_module("bot.main")
+
+
+def test_missing_discord_token(monkeypatch):
+    monkeypatch.delenv("DISCORD_TOKEN", raising=False)
+    monkeypatch.setenv("ADAPTER_AUTH_TOKEN", "x")
+    monkeypatch.setenv("DATABASE_URL", "sqlite:///:memory:")
+    with pytest.raises(SystemExit) as exc:
+        _reload_main()
+    assert "DISCORD_TOKEN" in str(exc.value)
+
+
+def test_missing_adapter_auth_token(monkeypatch):
+    monkeypatch.setenv("DISCORD_TOKEN", "x")
+    monkeypatch.delenv("ADAPTER_AUTH_TOKEN", raising=False)
+    monkeypatch.setenv("DATABASE_URL", "sqlite:///:memory:")
+    with pytest.raises(SystemExit) as exc:
+        _reload_main()
+    assert "ADAPTER_AUTH_TOKEN" in str(exc.value)
+
+
+def test_missing_database_settings(monkeypatch):
+    monkeypatch.setenv("DISCORD_TOKEN", "x")
+    monkeypatch.setenv("ADAPTER_AUTH_TOKEN", "x")
+    monkeypatch.delenv("DATABASE_URL", raising=False)
+    monkeypatch.delenv("DB_HOST", raising=False)
+    monkeypatch.delenv("DB_NAME", raising=False)
+    with pytest.raises(SystemExit) as exc:
+        _reload_main()
+    assert "database settings" in str(exc.value)

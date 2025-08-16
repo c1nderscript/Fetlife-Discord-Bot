@@ -6,7 +6,7 @@ import logging
 import random
 import re
 from datetime import datetime, timedelta
-from typing import Any, Dict, Optional
+from typing import Any, Dict, Optional, cast
 
 import discord
 import discord.abc
@@ -29,7 +29,19 @@ from .rate_limit import TokenBucket
 from .telegram_bridge import TelegramBridge
 
 load_dotenv()
-TOKEN = os.getenv("DISCORD_TOKEN")
+
+missing = []
+if not os.getenv("DISCORD_TOKEN"):
+    missing.append("DISCORD_TOKEN")
+if not os.getenv("ADAPTER_AUTH_TOKEN"):
+    missing.append("ADAPTER_AUTH_TOKEN")
+if not os.getenv("DATABASE_URL"):
+    if not (os.getenv("DB_HOST") and os.getenv("DB_NAME")):
+        missing.append("database settings (DATABASE_URL or DB_HOST/DB_NAME)")
+if missing:
+    raise SystemExit(f"Missing required environment variables: {', '.join(missing)}")
+
+TOKEN = os.environ["DISCORD_TOKEN"]
 ADAPTER_BASE_URL = os.getenv("ADAPTER_BASE_URL", "http://adapter:8000")
 TELEGRAM_API_ID = os.getenv("TELEGRAM_API_ID")
 TELEGRAM_API_HASH = os.getenv("TELEGRAM_API_HASH")
@@ -172,7 +184,7 @@ async def poll_adapter(db, sub_id: int, data: Dict[str, Any]):
                             embed.add_field(name="Published", value=item["published"])
                 await bot_bucket.acquire()
                 bot_tokens.set(bot_bucket.get_tokens())
-                await channel.send(embed=embed)
+                await cast(discord.abc.Messageable, channel).send(embed=embed)
                 messages_sent.inc()
                 if sub.type == "messages" and bot.bridge:
                     try:
