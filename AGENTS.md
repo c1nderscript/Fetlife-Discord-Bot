@@ -97,6 +97,10 @@ Data Minimization: Post excerpts and links; avoid relaying sensitive profile det
 
 GDPR/UK: Treat relayed content as transient notification; provide deletion controls (purge caches, forget channel data).
 
+TLS: Terminate HTTPS at a reverse proxy (e.g., Caddy or Nginx) and forward `Host`,
+`X-Forwarded-For`, and `X-Forwarded-Proto` headers. Set `ADAPTER_BASE_URL`
+to the external `https://` URL.
+
 Rate Limiting: Token bucket at the adapter + bot layers. Exponential backoff on 4xx/5xx.
 
 5) Discord Commands (Slash)
