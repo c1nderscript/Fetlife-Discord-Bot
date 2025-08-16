@@ -363,6 +363,7 @@ One feature per PR; include tests and docs updates.
 No secrets in code or logs.
 
 Run `make fmt` for Black formatting and `make check` (formatting check, lint, type checking, tests, schema) before PR.
+Run database migrations after pulling updates: `alembic upgrade head`.
 
 Follow semantic commits and Conventional Changelog.
 

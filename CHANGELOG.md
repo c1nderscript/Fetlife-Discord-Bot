@@ -9,6 +9,7 @@ All notable changes to this project will be documented here.
 - Docker healthchecks for bot and adapter services with `make health` helper.
 - OpenAPI specification and `/openapi.yaml` route for the adapter.
 - Document running the adapter behind an HTTPS reverse proxy and note TLS expectations.
+- Index frequent lookup columns for faster database queries.
 
 ### Changed
 - Install Python dependencies from `requirements.lock` for reproducible builds.
