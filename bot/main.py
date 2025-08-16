@@ -80,7 +80,7 @@ telegram_group = app_commands.Group(
 
 async def poll_adapter(db, sub_id: int, data: Dict[str, Any]):
     """Poll adapter with jitter and backoff, caching cursor and deduping."""
-    start = time.perf_counter()
+    cycle_start = time.perf_counter()
     await adapter_bucket.acquire()
     adapter_tokens.set(adapter_bucket.get_tokens())
     success = True
@@ -122,6 +122,28 @@ async def poll_adapter(db, sub_id: int, data: Dict[str, Any]):
                 duplicates_suppressed.inc()
                 logger.info("duplicate", extra={"sub_id": sub_id, "item": item_id})
                 continue
+            if sub.type == "events":
+                start_dt = None
+                if item.get("time"):
+                    try:
+                        start_dt = datetime.fromisoformat(item["time"])
+                    except ValueError:
+                        start_dt = None
+                storage.upsert_event(
+                    db,
+                    item_id,
+                    item.get("title", ""),
+                    start_at=start_dt,
+                    permalink=item.get("link"),
+                )
+            elif sub.type == "attendees":
+                storage.upsert_profile(db, item_id, item.get("nickname", ""))
+                storage.upsert_rsvp(
+                    db,
+                    sub.target_id,
+                    item_id,
+                    item.get("status", ""),
+                )
             storage.record_relay(db, sub_id, item_id)
             if isinstance(channel, discord.abc.Messageable) or hasattr(channel, "send"):
                 if sub.type == "attendees":
@@ -169,7 +191,7 @@ async def poll_adapter(db, sub_id: int, data: Dict[str, Any]):
         logger.error("poll_error", extra={"sub_id": sub_id, "error": str(exc)})
         success = False
     finally:
-        poll_cycle.observe(time.perf_counter() - start)
+        poll_cycle.observe(time.perf_counter() - cycle_start)
         adapter_tokens.set(adapter_bucket.get_tokens())
         bot.last_poll = time.time()
     failures = data.get("failures", 0)

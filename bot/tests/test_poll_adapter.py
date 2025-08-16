@@ -62,6 +62,22 @@ def test_poll_adapter_dedupes_and_updates_cursor():
     assert channel.send.call_count == 1
 
 
+def test_poll_adapter_caches_events():
+    db = storage.init_db("sqlite:///:memory:")
+    sub_id = storage.add_subscription(db, 1, "events", "cities/1")
+    items = [
+        {
+            "id": "1",
+            "title": "t",
+            "link": "l",
+            "time": "2025-01-01T00:00:00",
+        }
+    ]
+    asyncio.run(run_poll(db, sub_id, items, {"interval": 60}))
+    event = db.query(models.Event).filter_by(fl_id="1").one()
+    assert event.title == "t"
+
+
 def test_poll_adapter_backoff_on_http_error():
     db = storage.init_db("sqlite:///:memory:")
     sub_id = storage.add_subscription(db, 1, "events", "cities/1")

@@ -42,6 +42,12 @@ When using Docker Compose:
 docker compose run --rm bot alembic upgrade head
 ```
 
+### Cache Behavior
+
+Events, profiles, and RSVP statuses are cached in the database. During polling, the bot
+upserts these records before relaying messages to Discord, enabling deduplication and
+future features. Use `/fl purge` to clear cached data when needed.
+
 ### Health Checks
 
 - Adapter: `GET http://localhost:8000/healthz` for liveness and `GET http://localhost:8000/metrics` for Prometheus metrics.
