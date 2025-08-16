@@ -146,3 +146,93 @@ def record_relay(
         models.RelayLog(subscription_id=sub_id, item_id=item_id, item_hash=item_hash)
     )
     db.commit()
+
+
+def upsert_profile(
+    db: Session,
+    fl_id: str,
+    nickname: str,
+    last_seen_at: Any | None = None,
+) -> int:
+    profile = db.query(models.Profile).filter(models.Profile.fl_id == fl_id).first()
+    if profile:
+        profile.nickname = nickname
+        if last_seen_at is not None:
+            profile.last_seen_at = last_seen_at
+    else:
+        profile = models.Profile(
+            fl_id=fl_id, nickname=nickname, last_seen_at=last_seen_at
+        )
+        db.add(profile)
+    db.commit()
+    db.refresh(profile)
+    return profile.id
+
+
+def upsert_event(
+    db: Session,
+    fl_id: str,
+    title: str,
+    city: str | None = None,
+    region: str | None = None,
+    start_at: Any | None = None,
+    permalink: str | None = None,
+    last_populated_at: Any | None = None,
+) -> int:
+    event = db.query(models.Event).filter(models.Event.fl_id == fl_id).first()
+    if event:
+        event.title = title
+        event.city = city
+        event.region = region
+        event.start_at = start_at
+        event.permalink = permalink
+        event.last_populated_at = last_populated_at
+    else:
+        event = models.Event(
+            fl_id=fl_id,
+            title=title,
+            city=city,
+            region=region,
+            start_at=start_at,
+            permalink=permalink,
+            last_populated_at=last_populated_at,
+        )
+        db.add(event)
+    db.commit()
+    db.refresh(event)
+    return event.id
+
+
+def upsert_rsvp(
+    db: Session,
+    event_fl_id: str,
+    profile_fl_id: str,
+    status: str,
+    seen_at: Any | None = None,
+) -> None:
+    event = db.query(models.Event).filter(models.Event.fl_id == event_fl_id).first()
+    if not event:
+        event = models.Event(fl_id=event_fl_id, title="")
+        db.add(event)
+        db.flush()
+    rsvp = (
+        db.query(models.RSVP)
+        .filter(
+            models.RSVP.event_id == event.id,
+            models.RSVP.profile_fl_id == profile_fl_id,
+        )
+        .first()
+    )
+    if rsvp:
+        rsvp.status = status
+        if seen_at is not None:
+            rsvp.seen_at = seen_at
+    else:
+        rsvp = models.RSVP(
+            event_id=event.id,
+            profile_fl_id=profile_fl_id,
+            status=status,
+            seen_at=seen_at,
+        )
+        db.add(rsvp)
+    db.commit()
