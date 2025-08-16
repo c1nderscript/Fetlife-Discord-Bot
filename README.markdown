@@ -9,7 +9,8 @@ The `bot/` directory contains a Python application using `discord.py` that relay
 ### Docker Compose Quick Start
 
 1. `bash scripts/install.sh` and select **Install**. This creates `.venv` and installs runtime and development dependencies.
-2. `docker compose up -d` to launch the adapter, bot, and database.
+2. `docker compose up -d` to launch the adapter, bot, and database. The `db` service pins
+   `postgres:15` to digest `sha256:0de3e43bbb424d5fb7ca1889150f8e1b525d6c9fbaf9df6d853dcbc2ed5ffa1e` for reproducible builds.
 3. Generate an invite link from the [Discord Developer Portal](https://discord.com/developers/applications), invite the bot to your server, then run `/fl login` to verify adapter authentication, `/fl subscribe events location:cities/5898 min_attendees:10`, `/fl subscribe group_posts group:1`, `/fl subscribe messages inbox`, `/fl list`, and `/fl test <id>` in Discord.
 
 ### Environment Variables
