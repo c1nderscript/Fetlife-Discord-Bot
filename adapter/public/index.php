@@ -21,7 +21,7 @@ $token = $_ENV['ADAPTER_AUTH_TOKEN'] ?? null;
 
 $app->add(function ($request, $handler) use ($token) {
     $path = $request->getUri()->getPath();
-    if (in_array($path, ['/healthz', '/metrics'])) {
+    if (in_array($path, ['/healthz', '/metrics', '/openapi.yaml'])) {
         return $handler->handle($request);
     }
     $auth = $request->getHeaderLine('Authorization');
@@ -293,6 +293,12 @@ $app->get('/healthz', function ($request, $response) {
 $app->get('/metrics', function ($request, $response) {
     $response->getBody()->write(metrics_text());
     return $response->withHeader('Content-Type', 'text/plain; version=0.0.4');
+});
+
+$app->get('/openapi.yaml', function ($request, $response) {
+    $spec = file_get_contents(__DIR__ . '/../openapi.yaml');
+    $response->getBody()->write($spec);
+    return $response->withHeader('Content-Type', 'application/yaml');
 });
 
 $app->run();

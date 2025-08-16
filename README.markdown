@@ -319,44 +319,9 @@ It reads credentials from environment variables (`FETLIFE_USERNAME`, `FETLIFE_PA
 All requests must include an `Authorization: Bearer` token matching `ADAPTER_AUTH_TOKEN`.
 
 ### OpenAPI
-
-```yaml
-openapi: 3.0.0
-info:
-  title: FetLife Adapter API
-  version: 1.0.0
-paths:
-  /login:
-    post:
-      summary: Authenticate and store session
-      responses:
-        '200': { description: Logged in }
-  /events:
-    get:
-      summary: List upcoming events for a location
-      parameters:
-        - in: query
-          name: location
-          required: true
-          schema: { type: string }
-      responses:
-        '200': { description: Array of events }
-  /events/{id}:
-    get:
-      summary: Fetch event details
-      responses:
-        '200': { description: Event }
-  /users/{id}/writings:
-    get:
-      summary: List writings for a user
-      responses:
-        '200': { description: Writings }
-  /groups/{id}/posts:
-    get:
-      summary: List posts in a group
-      responses:
-        '200': { description: Posts }
-```
+The adapter's HTTP API is documented in
+[adapter/openapi.yaml](adapter/openapi.yaml), served at
+`/openapi.yaml` when the service is running.
 
 ## Contributing
 

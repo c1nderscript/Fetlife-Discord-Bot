@@ -46,7 +46,7 @@ Edit
                                    \-> [Metrics/Logs]
 Discord Bot: Handles commands, subscriptions, formatting, and dispatch.
 
-FetLife Adapter: Thin PHP service wrapping libFetLife (CLI or HTTP). Encapsulates login, pagination, and standardized JSON responses. Requires an `Authorization: Bearer` token matching `ADAPTER_AUTH_TOKEN`.
+FetLife Adapter: Thin PHP service wrapping libFetLife (CLI or HTTP). Encapsulates login, pagination, and standardized JSON responses. Requires an `Authorization: Bearer` token matching `ADAPTER_AUTH_TOKEN`. HTTP endpoints are documented in [`adapter/openapi.yaml`](adapter/openapi.yaml) and served from `/openapi.yaml`.
 
 Storage: SQLite/Postgres (prod) for subscriptions, seen items, cursors, and audit logs.
 
