@@ -1,25 +1,24 @@
 ## Goal
-Pause polling after consecutive adapter failures, notify channels, and expose subscription status via `/fl health`.
+Install Python dependencies from requirements.lock in Docker build and install script, and document lock usage.
 
 ## Constraints
 - Follow AGENTS.md: run `make fmt` and `make check` before committing.
-- Update tests under `bot/tests/test_poll_adapter.py`.
-- Bump versions and CHANGELOG consistently.
+- Update `bot/Dockerfile` and `scripts/install.sh` to use `requirements.lock`.
+- Document lock file usage in `AGENTS.md` and `CHANGELOG.md`.
 
 ## Risks
-- Paused subscriptions may miss updates.
-- Failure counts reset on bot restart.
+- Outdated lock file may cause installation failures.
+- Divergence between `requirements.lock` and requirements files could break builds.
 
 ## Test Plan
 - `make fmt`
 - `make check`
 
 ## Semver
-Minor release: adds new feature.
+Patch release: build and documentation changes only.
 
 ## Affected Packages
 - Python bot
-- PHP adapter metadata
 
 ## Rollback
-Revert commit to restore previous polling behavior.
+Revert commit to restore previous installation behavior.

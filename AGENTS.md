@@ -399,3 +399,4 @@ Adapter and bot Dockerfiles use multi-stage builds with base images pinned to im
 - `python:3.11-slim@sha256:0ce77749ac83174a31d5e107ce0cfa6b28a2fd6b0615e029d9d84b39c48976ee`
 - `postgres:15@sha256:0de3e43bbb424d5fb7ca1889150f8e1b525d6c9fbaf9df6d853dcbc2ed5ffa1e`
 Builder stages install toolchains and dependencies; runtime stages contain only application code and installed packages. Update digests alongside security releases.
+Python dependencies are pinned in `requirements.lock` and installed from this lock file in Docker builds and `scripts/install.sh` for reproducible environments.

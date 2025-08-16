@@ -7,10 +7,10 @@ RUN apt-get update \
     && apt-get install -y --no-install-recommends build-essential libffi-dev \
     && rm -rf /var/lib/apt/lists/*
 
-# Install runtime requirements only
-COPY requirements.txt .
+# Install runtime requirements from lock file
+COPY requirements.lock .
 RUN python -m venv /venv \
-    && /venv/bin/pip install --no-cache-dir -r requirements.txt
+    && /venv/bin/pip install --no-cache-dir -r requirements.lock
 
 FROM python:3.11-slim@sha256:0ce77749ac83174a31d5e107ce0cfa6b28a2fd6b0615e029d9d84b39c48976ee
 
