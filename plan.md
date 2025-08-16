@@ -1,12 +1,13 @@
 ## Goal
-Load stored subscriptions on bot startup so they persist across restarts and add a regression test.
+Pin Postgres image digest in Docker Compose and document the change.
 
 ## Constraints
 - Follow AGENTS.md: run make fmt and make check before committing.
+- Run pip-audit and agents-verify.
 - Keep versioning and changelog consistent.
 
 ## Risks
-- Scheduler jobs may execute during tests and call external services.
+- Digest may become outdated, requiring refreshes.
 
 ## Test Plan
 - `make fmt`
@@ -15,11 +16,12 @@ Load stored subscriptions on bot startup so they persist across restarts and add
 - `bash scripts/agents-verify.sh`
 
 ## Semver
-Patch release: internal bug fix.
+Patch release: security hardening.
 
 ## Affected Packages
+- Docker Compose configuration (db service)
 - Python bot
 - PHP adapter (version bump only)
 
 ## Rollback
-Revert the commit and reset versions.
+Revert commit and reset versions and digest.

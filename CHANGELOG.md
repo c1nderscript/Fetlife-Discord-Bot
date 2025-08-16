@@ -3,6 +3,10 @@ All notable changes to this project will be documented here.
 
 ## [Unreleased]
 
+## [1.3.13] - 2025-08-16
+### Security
+- Pin Postgres image to immutable digest in Docker Compose.
+
 ## [1.3.12] - 2025-08-16
 ### Fixed
 - Reschedule stored subscriptions on startup so they persist across restarts.

@@ -394,4 +394,5 @@ Releases are tagged from `main` and publish notes from `.github/RELEASE_NOTES.md
 Adapter and bot Dockerfiles use multi-stage builds with base images pinned to immutable digests for reproducible builds and smaller attack surfaces:
 - `php:8.2-cli@sha256:304cfb487bbe9b2ce5a933f6e5848e0248bff1fbb0d5ee36cec845f4a34f4fb1`
 - `python:3.11-slim@sha256:0ce77749ac83174a31d5e107ce0cfa6b28a2fd6b0615e029d9d84b39c48976ee`
+- `postgres:15@sha256:0de3e43bbb424d5fb7ca1889150f8e1b525d6c9fbaf9df6d853dcbc2ed5ffa1e`
 Builder stages install toolchains and dependencies; runtime stages contain only application code and installed packages. Update digests alongside security releases.
