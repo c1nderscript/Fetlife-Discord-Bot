@@ -7,6 +7,9 @@ All notable changes to this project will be documented here.
 - Pause polling after repeated adapter failures with `/fl health` status and manual resume.
 - Cache events, profiles, and RSVP records during polling.
 
+### Changed
+- Install Python dependencies from `requirements.lock` for reproducible builds.
+
 ### Security
 - Run `pip-audit` and `composer audit` in `make check` and release-hygiene workflow.
 
