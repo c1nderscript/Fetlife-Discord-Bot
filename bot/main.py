@@ -77,6 +77,7 @@ account_group = app_commands.Group(
 telegram_group = app_commands.Group(
     name="telegram", description="Manage Telegram relays", parent=fl_group
 )
+admin_group = app_commands.Group(name="role", description="Manage guild roles")
 
 
 async def poll_adapter(db, sub_id: int, data: Dict[str, Any]):
@@ -652,6 +653,80 @@ async def fl_purge(interaction: discord.Interaction) -> None:
         await bot_bucket.acquire()
         bot_tokens.set(bot_bucket.get_tokens())
         await interaction.response.send_message("Purged")
+    except Exception as exc:  # pragma: no cover - simple error path
+        await bot_bucket.acquire()
+        bot_tokens.set(bot_bucket.get_tokens())
+        await interaction.response.send_message(str(exc), ephemeral=True)
+
+
+@admin_group.command(name="add", description="Add a role to a member")
+@app_commands.default_permissions(manage_roles=True)
+async def role_add(
+    interaction: discord.Interaction, member: discord.Member, role_id: int
+) -> None:
+    try:
+        if not getattr(
+            getattr(interaction.user, "guild_permissions", None), "manage_roles", False
+        ):
+            raise PermissionError("Manage Roles permission required")
+        guild = interaction.guild
+        if guild is None:
+            raise RuntimeError("Guild not found")
+        role = guild.get_role(role_id)
+        if role is None:
+            raise ValueError("Role not found")
+        await member.add_roles(role)
+        await bot_bucket.acquire()
+        bot_tokens.set(bot_bucket.get_tokens())
+        await interaction.response.send_message("Role added")
+    except Exception as exc:  # pragma: no cover - simple error path
+        await bot_bucket.acquire()
+        bot_tokens.set(bot_bucket.get_tokens())
+        await interaction.response.send_message(str(exc), ephemeral=True)
+
+
+@admin_group.command(name="remove", description="Remove a role from a member")
+@app_commands.default_permissions(manage_roles=True)
+async def role_remove(
+    interaction: discord.Interaction, member: discord.Member, role_id: int
+) -> None:
+    try:
+        if not getattr(
+            getattr(interaction.user, "guild_permissions", None), "manage_roles", False
+        ):
+            raise PermissionError("Manage Roles permission required")
+        guild = interaction.guild
+        if guild is None:
+            raise RuntimeError("Guild not found")
+        role = guild.get_role(role_id)
+        if role is None:
+            raise ValueError("Role not found")
+        await member.remove_roles(role)
+        await bot_bucket.acquire()
+        bot_tokens.set(bot_bucket.get_tokens())
+        await interaction.response.send_message("Role removed")
+    except Exception as exc:  # pragma: no cover - simple error path
+        await bot_bucket.acquire()
+        bot_tokens.set(bot_bucket.get_tokens())
+        await interaction.response.send_message(str(exc), ephemeral=True)
+
+
+@admin_group.command(name="list", description="List guild roles")
+@app_commands.default_permissions(manage_roles=True)
+async def role_list(interaction: discord.Interaction) -> None:
+    try:
+        if not getattr(
+            getattr(interaction.user, "guild_permissions", None), "manage_roles", False
+        ):
+            raise PermissionError("Manage Roles permission required")
+        guild = interaction.guild
+        if guild is None:
+            raise RuntimeError("Guild not found")
+        roles = getattr(guild, "roles", []) or []
+        desc = "\n".join(f"`{r.id}` {r.name}" for r in roles) if roles else "No roles"
+        await bot_bucket.acquire()
+        bot_tokens.set(bot_bucket.get_tokens())
+        await interaction.response.send_message(desc)
     except Exception as exc:  # pragma: no cover - simple error path
         await bot_bucket.acquire()
         bot_tokens.set(bot_bucket.get_tokens())

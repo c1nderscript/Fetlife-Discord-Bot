@@ -79,6 +79,10 @@ Docker Compose declares health checks for both services using these endpoints. A
 
    The Telegram bridge automatically reconnects and forwards photos and documents as Discord attachments. For `messages` subscriptions, relayed DMs are also sent to the mapped Telegram chat.
 
+### Role Management
+
+Use `/role add <user> <role_id>` to assign roles, `/role remove <user> <role_id>` to revoke them, and `/role list` to display available roles. These commands require the **Manage Roles** permission.
+
 Run the bot with:
 
 ```bash
