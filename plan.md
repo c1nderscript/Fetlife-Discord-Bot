@@ -1,23 +1,24 @@
 ## Goal
-Document how to run the adapter behind an HTTPS reverse proxy and note TLS expectations in the development spec.
+Introduce a shared aiohttp ClientSession with a default timeout and ensure it is closed on shutdown.
 
 ## Constraints
 - Follow AGENTS.md: run `make fmt` and `make check` before committing.
-- Update README.markdown, AGENTS.md, and CHANGELOG.md.
+- Update tests, CHANGELOG.md, and documentation if needed.
 
 ## Risks
-- Misconfigured proxy headers could break authentication.
-- Inconsistent documentation may confuse deployers.
+- Unclosed sessions could leak resources.
+- Improper refactor may break adapter_client callers.
 
 ## Test Plan
 - `make fmt`
 - `make check`
 
 ## Semver
-Patch release: documentation-only changes.
+Patch release: internal refactor.
 
 ## Affected Packages
-- Documentation
+- Python bot code
+- Tests
 
 ## Rollback
-Revert the commit to remove documentation changes.
+Revert the commit to restore per-call ClientSessions.
