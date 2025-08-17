@@ -11,6 +11,7 @@ All notable changes to this project will be documented here.
 - Document running the adapter behind an HTTPS reverse proxy and note TLS expectations.
 - Index frequent lookup columns for faster database queries.
 - Docker-based tests for group posts, messages, and Telegram bridge flows.
+- Guild role management commands `/role add`, `/role remove`, and `/role list`.
 
 ### Changed
 - Install Python dependencies from `requirements.lock` for reproducible builds.
