@@ -1,28 +1,23 @@
 ## Goal
-Add an aiohttp-based management web interface for administrating subscriptions, role mappings, and channel settings, secured via Discord OAuth2 login.
+Add `.codex-policy.yml` documenting branch protections, Conventional Commit requirements, required reviews, and security expectations. Reference the policy in contributor docs.
 
 ## Constraints
-- Serve the interface at configurable `MGMT_PORT`.
-- Restrict access to user IDs listed in `ADMIN_IDS` after Discord OAuth2 login.
-- Store session data in HMAC-signed cookies using `SESSION_SECRET`.
 - Follow AGENTS.md: run `make fmt` and `make check` before committing.
 
 ## Risks
-- Incorrect OAuth configuration could expose admin pages.
-- Invalid input may corrupt stored channel settings.
+- Policy may drift from actual repository settings.
+- Missing documentation links could confuse contributors.
 
 ## Test Plan
-- `pytest bot/tests/test_web_interface.py`
 - `make fmt`
 - `make check`
+- `rg \.codex-policy.yml -n README.markdown`
 
 ## Semver
-Minor release: adds a new management UI secured by Discord OAuth2.
+Patch release: documentation only.
 
 ## Affected Packages
-- Python bot code
-- Tests
 - Documentation
 
 ## Rollback
-Revert the commit and remove the new environment variables to restore previous behavior.
+Revert the commits and remove `.codex-policy.yml` and related README and CHANGELOG entries.
