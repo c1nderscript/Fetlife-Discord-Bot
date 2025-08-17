@@ -89,6 +89,53 @@ def remove_subscription(db: Session, sub_id: int, channel_id: int) -> None:
     db.commit()
 
 
+def set_reaction_role(
+    db: Session, message_id: int, emoji: str, role_id: int, guild_id: int
+) -> None:
+    rr = (
+        db.query(models.ReactionRole)
+        .filter(
+            models.ReactionRole.message_id == message_id,
+            models.ReactionRole.emoji == emoji,
+        )
+        .first()
+    )
+    if rr:
+        cast(Any, rr).role_id = role_id
+        cast(Any, rr).guild_id = guild_id
+    else:
+        rr = models.ReactionRole(
+            message_id=message_id,
+            emoji=emoji,
+            role_id=role_id,
+            guild_id=guild_id,
+        )
+        db.add(rr)
+    db.commit()
+
+
+def remove_reaction_role(db: Session, message_id: int, emoji: str) -> None:
+    db.query(models.ReactionRole).filter(
+        models.ReactionRole.message_id == message_id,
+        models.ReactionRole.emoji == emoji,
+    ).delete()
+    db.commit()
+
+
+def get_reaction_role(
+    db: Session, message_id: int, emoji: str
+) -> tuple[int, int] | None:
+    row = (
+        db.query(models.ReactionRole.role_id, models.ReactionRole.guild_id)
+        .filter(
+            models.ReactionRole.message_id == message_id,
+            models.ReactionRole.emoji == emoji,
+        )
+        .first()
+    )
+    return cast("tuple[int, int] | None", row)
+
+
 def set_channel_settings(db: Session, channel_id: int, **settings: Any) -> None:
     channel = db.get(models.Channel, channel_id)
     if not channel:

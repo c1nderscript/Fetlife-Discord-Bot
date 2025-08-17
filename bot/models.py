@@ -108,3 +108,11 @@ class RSVP(Base):
     profile_fl_id = Column(String, primary_key=True)
     status = Column(String, nullable=False)
     seen_at = Column(DateTime, server_default=func.now(), nullable=False)
+
+
+class ReactionRole(Base):
+    __tablename__ = "reaction_roles"
+    message_id = Column(BigInteger, primary_key=True)
+    emoji = Column(String, primary_key=True)
+    role_id = Column(BigInteger, nullable=False)
+    guild_id = Column(BigInteger, nullable=False)

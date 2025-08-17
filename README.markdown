@@ -87,6 +87,10 @@ Use `/channel create <name>` to create text channels, `/channel delete <channel>
 
 Use `/role add <user> <role_id>` to assign roles, `/role remove <user> <role_id>` to revoke them, and `/role list` to display available roles. These commands require the **Manage Roles** permission.
 
+### Reaction Roles
+
+Map reactions on a specific message to roles with `/reactionrole add <message_id> <emoji> <role_id>` and remove them with `/reactionrole remove <message_id> <emoji>`. When users add the configured reaction they receive the role; removing the reaction revokes it. These commands require the **Manage Roles** permission.
+
 Run the bot with:
 
 ```bash

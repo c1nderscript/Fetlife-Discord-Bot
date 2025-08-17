@@ -79,6 +79,9 @@ telegram_group = app_commands.Group(
 )
 admin_group = app_commands.Group(name="role", description="Manage guild roles")
 channel_group = app_commands.Group(name="channel", description="Manage guild channels")
+reactionrole_group = app_commands.Group(
+    name="reactionrole", description="Manage reaction roles"
+)
 
 
 async def poll_adapter(db, sub_id: int, data: Dict[str, Any]):
@@ -802,6 +805,90 @@ async def role_list(interaction: discord.Interaction) -> None:
         await bot_bucket.acquire()
         bot_tokens.set(bot_bucket.get_tokens())
         await interaction.response.send_message(str(exc), ephemeral=True)
+
+
+@reactionrole_group.command(
+    name="add", description="Add a reaction role mapping"
+)
+@app_commands.default_permissions(manage_roles=True)
+async def reactionrole_add(
+    interaction: discord.Interaction, message_id: int, emoji: str, role_id: int
+) -> None:
+    try:
+        if not getattr(
+            getattr(interaction.user, "guild_permissions", None), "manage_roles", False
+        ):
+            raise PermissionError("Manage Roles permission required")
+        guild = interaction.guild
+        if guild is None:
+            raise RuntimeError("Guild not found")
+        role = guild.get_role(role_id)
+        if role is None:
+            raise ValueError("Role not found")
+        storage.set_reaction_role(bot.db, message_id, emoji, role_id, guild.id)
+        await bot_bucket.acquire()
+        bot_tokens.set(bot_bucket.get_tokens())
+        await interaction.response.send_message("Reaction role added")
+    except Exception as exc:  # pragma: no cover - simple error path
+        await bot_bucket.acquire()
+        bot_tokens.set(bot_bucket.get_tokens())
+        await interaction.response.send_message(str(exc), ephemeral=True)
+
+
+@reactionrole_group.command(
+    name="remove", description="Remove a reaction role mapping"
+)
+@app_commands.default_permissions(manage_roles=True)
+async def reactionrole_remove(
+    interaction: discord.Interaction, message_id: int, emoji: str
+) -> None:
+    try:
+        if not getattr(
+            getattr(interaction.user, "guild_permissions", None), "manage_roles", False
+        ):
+            raise PermissionError("Manage Roles permission required")
+        storage.remove_reaction_role(bot.db, message_id, emoji)
+        await bot_bucket.acquire()
+        bot_tokens.set(bot_bucket.get_tokens())
+        await interaction.response.send_message("Reaction role removed")
+    except Exception as exc:  # pragma: no cover - simple error path
+        await bot_bucket.acquire()
+        bot_tokens.set(bot_bucket.get_tokens())
+        await interaction.response.send_message(str(exc), ephemeral=True)
+
+
+@bot.event
+async def on_raw_reaction_add(payload: discord.RawReactionActionEvent) -> None:
+    info = storage.get_reaction_role(bot.db, payload.message_id, str(payload.emoji))
+    if not info or payload.guild_id != info[1]:
+        return
+    guild = bot.get_guild(info[1])
+    if guild is None:
+        return
+    role = guild.get_role(info[0])
+    member = guild.get_member(payload.user_id) if role else None
+    if member is None:
+        return
+    await bot_bucket.acquire()
+    bot_tokens.set(bot_bucket.get_tokens())
+    await member.add_roles(role)
+
+
+@bot.event
+async def on_raw_reaction_remove(payload: discord.RawReactionActionEvent) -> None:
+    info = storage.get_reaction_role(bot.db, payload.message_id, str(payload.emoji))
+    if not info or payload.guild_id != info[1]:
+        return
+    guild = bot.get_guild(info[1])
+    if guild is None:
+        return
+    role = guild.get_role(info[0])
+    member = guild.get_member(payload.user_id) if role else None
+    if member is None:
+        return
+    await bot_bucket.acquire()
+    bot_tokens.set(bot_bucket.get_tokens())
+    await member.remove_roles(role)
 
 
 async def metrics_handler(request: web.Request) -> web.Response:
