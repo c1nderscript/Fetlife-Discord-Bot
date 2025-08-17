@@ -12,6 +12,7 @@ All notable changes to this project will be documented here.
 - Index frequent lookup columns for faster database queries.
 - Docker-based tests for group posts, messages, and Telegram bridge flows.
 - Guild role management commands `/role add`, `/role remove`, and `/role list`.
+- Channel management commands `/channel create`, `/channel delete`, and `/channel rename` with permission checks.
 
 ### Changed
 - Install Python dependencies from `requirements.lock` for reproducible builds.
