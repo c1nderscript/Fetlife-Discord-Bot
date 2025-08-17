@@ -15,6 +15,7 @@ All notable changes to this project will be documented here.
 ### Changed
 - Install Python dependencies from `requirements.lock` for reproducible builds.
 - Share an aiohttp `ClientSession` with a default timeout across adapter requests and close it on shutdown.
+- Replace `# mypy: ignore-errors` in `bot/storage.py` with explicit type annotations.
 
 ### Security
 - Run `pip-audit` and `composer audit` in `make check` and release-hygiene workflow.
