@@ -1,8 +1,6 @@
 from __future__ import annotations
 
-# mypy: ignore-errors
-
-from typing import Any, Dict, Iterable, Tuple
+from typing import Any, Dict, Iterable, Tuple, cast
 
 from sqlalchemy.orm import Session
 
@@ -41,7 +39,7 @@ def add_subscription(
     db.add(sub)
     db.commit()
     db.refresh(sub)
-    return sub.id
+    return cast(int, sub.id)
 
 
 def add_account(db: Session, username: str, password: str) -> int:
@@ -50,15 +48,16 @@ def add_account(db: Session, username: str, password: str) -> int:
     db.add(acct)
     db.commit()
     db.refresh(acct)
-    return acct.id
+    return cast(int, acct.id)
 
 
 def list_accounts(db: Session) -> Iterable[Tuple[int, str]]:
-    return (
+    rows = (
         db.query(models.Account.id, models.Account.username)
         .order_by(models.Account.id)
         .all()
     )
+    return cast(list[Tuple[int, str]], rows)
 
 
 def remove_account(db: Session, account_id: int) -> None:
@@ -69,7 +68,7 @@ def remove_account(db: Session, account_id: int) -> None:
 def list_subscriptions(
     db: Session, channel_id: int
 ) -> Iterable[Tuple[int, str, str, int | None]]:
-    subs = (
+    rows = (
         db.query(
             models.Subscription.id,
             models.Subscription.type,
@@ -80,7 +79,7 @@ def list_subscriptions(
         .order_by(models.Subscription.id)
         .all()
     )
-    return subs
+    return cast(list[Tuple[int, str, str, int | None]], rows)
 
 
 def remove_subscription(db: Session, sub_id: int, channel_id: int) -> None:
@@ -96,23 +95,25 @@ def set_channel_settings(db: Session, channel_id: int, **settings: Any) -> None:
         channel = models.Channel(id=channel_id, settings_json=settings)
         db.add(channel)
     else:
-        current = channel.settings_json or {}
+        current: Dict[str, Any] = cast(Dict[str, Any], channel.settings_json or {})
         current.update(settings)
-        channel.settings_json = current
+        cast(Any, channel).settings_json = current
     db.commit()
 
 
 def get_channel_settings(db: Session, channel_id: int) -> Dict[str, Any]:
     channel = db.get(models.Channel, channel_id)
-    return channel.settings_json or {} if channel else {}
+    if channel and isinstance(channel.settings_json, dict):
+        return cast(Dict[str, Any], channel.settings_json)
+    return {}
 
 
 def get_cursor(db: Session, sub_id: int) -> Tuple[Any | None, list[str]]:
     cur = db.get(models.Cursor, sub_id)
     if not cur:
         return None, []
-    ids = cur.last_item_ids_json or []
-    return cur.last_seen_at, ids
+    ids = cast(list[str], cur.last_item_ids_json or [])
+    return cast(Any, cur.last_seen_at), ids
 
 
 def update_cursor(
@@ -122,8 +123,8 @@ def update_cursor(
     if not cur:
         cur = models.Cursor(subscription_id=sub_id)
         db.add(cur)
-    cur.last_seen_at = last_seen_at
-    cur.last_item_ids_json = last_item_ids
+    cast(Any, cur).last_seen_at = last_seen_at
+    cast(Any, cur).last_item_ids_json = last_item_ids
     db.commit()
 
 
@@ -156,9 +157,9 @@ def upsert_profile(
 ) -> int:
     profile = db.query(models.Profile).filter(models.Profile.fl_id == fl_id).first()
     if profile:
-        profile.nickname = nickname
+        cast(Any, profile).nickname = nickname
         if last_seen_at is not None:
-            profile.last_seen_at = last_seen_at
+            cast(Any, profile).last_seen_at = last_seen_at
     else:
         profile = models.Profile(
             fl_id=fl_id, nickname=nickname, last_seen_at=last_seen_at
@@ -166,7 +167,7 @@ def upsert_profile(
         db.add(profile)
     db.commit()
     db.refresh(profile)
-    return profile.id
+    return cast(int, profile.id)
 
 
 def upsert_event(
@@ -181,12 +182,12 @@ def upsert_event(
 ) -> int:
     event = db.query(models.Event).filter(models.Event.fl_id == fl_id).first()
     if event:
-        event.title = title
-        event.city = city
-        event.region = region
-        event.start_at = start_at
-        event.permalink = permalink
-        event.last_populated_at = last_populated_at
+        cast(Any, event).title = title
+        cast(Any, event).city = city
+        cast(Any, event).region = region
+        cast(Any, event).start_at = start_at
+        cast(Any, event).permalink = permalink
+        cast(Any, event).last_populated_at = last_populated_at
     else:
         event = models.Event(
             fl_id=fl_id,
@@ -200,7 +201,7 @@ def upsert_event(
         db.add(event)
     db.commit()
     db.refresh(event)
-    return event.id
+    return cast(int, event.id)
 
 
 def upsert_rsvp(
@@ -224,9 +225,9 @@ def upsert_rsvp(
         .first()
     )
     if rsvp:
-        rsvp.status = status
+        cast(Any, rsvp).status = status
         if seen_at is not None:
-            rsvp.seen_at = seen_at
+            cast(Any, rsvp).seen_at = seen_at
     else:
         rsvp = models.RSVP(
             event_id=event.id,
