@@ -389,6 +389,7 @@ Pull requests are welcome. Please:
 - Include tests and documentation updates.
 - Run `make check` (lint, tests, schema) before submitting.
 - Follow semantic commit messages and Conventional Changelog guidelines.
+- Review [.codex-policy.yml](.codex-policy.yml) for branch protections, Conventional Commit requirements, required reviews, and security expectations.
 
 ## License
 

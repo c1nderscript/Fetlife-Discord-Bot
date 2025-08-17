@@ -30,6 +30,9 @@ All notable changes to this project will be documented here.
 - Allow importing `bot.main` without triggering environment checks by moving
   initialization into `main()`.
 
+### Docs
+- Document branch protections, Conventional Commit requirements, review policy, and security expectations in `.codex-policy.yml` and reference it in contributor guides.
+
 ## [1.3.14] - 2025-08-16
 ### Security
 - Hash account credentials with Argon2id and migrate existing SHA-256 hashes.
