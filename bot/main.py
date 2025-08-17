@@ -78,6 +78,7 @@ telegram_group = app_commands.Group(
     name="telegram", description="Manage Telegram relays", parent=fl_group
 )
 admin_group = app_commands.Group(name="role", description="Manage guild roles")
+channel_group = app_commands.Group(name="channel", description="Manage guild channels")
 
 
 async def poll_adapter(db, sub_id: int, data: Dict[str, Any]):
@@ -653,6 +654,76 @@ async def fl_purge(interaction: discord.Interaction) -> None:
         await bot_bucket.acquire()
         bot_tokens.set(bot_bucket.get_tokens())
         await interaction.response.send_message("Purged")
+    except Exception as exc:  # pragma: no cover - simple error path
+        await bot_bucket.acquire()
+        bot_tokens.set(bot_bucket.get_tokens())
+        await interaction.response.send_message(str(exc), ephemeral=True)
+
+
+@channel_group.command(name="create", description="Create a text channel")
+@app_commands.default_permissions(manage_channels=True)
+@app_commands.describe(name="Name for the new channel")
+async def channel_create(interaction: discord.Interaction, name: str) -> None:
+    try:
+        if not getattr(
+            getattr(interaction.user, "guild_permissions", None),
+            "manage_channels",
+            False,
+        ):
+            raise PermissionError("Manage Channels permission required")
+        guild = interaction.guild
+        if guild is None:
+            raise RuntimeError("Guild not found")
+        await guild.create_text_channel(name)
+        await bot_bucket.acquire()
+        bot_tokens.set(bot_bucket.get_tokens())
+        await interaction.response.send_message("Channel created")
+    except Exception as exc:  # pragma: no cover - simple error path
+        await bot_bucket.acquire()
+        bot_tokens.set(bot_bucket.get_tokens())
+        await interaction.response.send_message(str(exc), ephemeral=True)
+
+
+@channel_group.command(name="delete", description="Delete a text channel")
+@app_commands.default_permissions(manage_channels=True)
+@app_commands.describe(channel="Channel to delete")
+async def channel_delete(
+    interaction: discord.Interaction, channel: discord.TextChannel
+) -> None:
+    try:
+        if not getattr(
+            getattr(interaction.user, "guild_permissions", None),
+            "manage_channels",
+            False,
+        ):
+            raise PermissionError("Manage Channels permission required")
+        await channel.delete()
+        await bot_bucket.acquire()
+        bot_tokens.set(bot_bucket.get_tokens())
+        await interaction.response.send_message("Channel deleted")
+    except Exception as exc:  # pragma: no cover - simple error path
+        await bot_bucket.acquire()
+        bot_tokens.set(bot_bucket.get_tokens())
+        await interaction.response.send_message(str(exc), ephemeral=True)
+
+
+@channel_group.command(name="rename", description="Rename a text channel")
+@app_commands.default_permissions(manage_channels=True)
+@app_commands.describe(channel="Channel to rename", name="New channel name")
+async def channel_rename(
+    interaction: discord.Interaction, channel: discord.TextChannel, name: str
+) -> None:
+    try:
+        if not getattr(
+            getattr(interaction.user, "guild_permissions", None),
+            "manage_channels",
+            False,
+        ):
+            raise PermissionError("Manage Channels permission required")
+        await channel.edit(name=name)
+        await bot_bucket.acquire()
+        bot_tokens.set(bot_bucket.get_tokens())
+        await interaction.response.send_message("Channel renamed")
     except Exception as exc:  # pragma: no cover - simple error path
         await bot_bucket.acquire()
         bot_tokens.set(bot_bucket.get_tokens())
