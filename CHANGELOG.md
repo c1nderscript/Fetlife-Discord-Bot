@@ -21,6 +21,8 @@ All notable changes to this project will be documented here.
 ### Fixed
 - Validate adapter responses against JSON schemas and relay minimal links on mismatch.
 - Exit with clear error when required environment variables are missing.
+- Allow importing `bot.main` without triggering environment checks by moving
+  initialization into `main()`.
 
 ## [1.3.14] - 2025-08-16
 ### Security

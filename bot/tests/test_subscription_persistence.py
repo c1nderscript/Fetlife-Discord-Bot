@@ -16,7 +16,9 @@ def _reload_main():
     for collector in list(REGISTRY._collector_to_names):
         REGISTRY.unregister(collector)
     sys.modules.pop("bot.main", None)
-    return importlib.import_module("bot.main")
+    m = importlib.import_module("bot.main")
+    m.main(require_env=False)
+    return m
 
 
 def test_subscriptions_persist_across_restarts(tmp_path, monkeypatch):
@@ -24,6 +26,8 @@ def test_subscriptions_persist_across_restarts(tmp_path, monkeypatch):
     db_url = f"sqlite:///{db_file}"
     monkeypatch.setenv("DATABASE_URL", db_url)
     monkeypatch.setenv("DISCORD_TOKEN", "x")
+    monkeypatch.delenv("TELEGRAM_API_ID", raising=False)
+    monkeypatch.delenv("TELEGRAM_API_HASH", raising=False)
 
     db = storage.init_db(db_url)
     sub_id = storage.add_subscription(db, 1, "events", "cities/1")

@@ -28,23 +28,12 @@ from .config import get_channel_config, load_config, save_config
 from .rate_limit import TokenBucket
 from .telegram_bridge import TelegramBridge
 
-load_dotenv()
 
-missing = []
-if not os.getenv("DISCORD_TOKEN"):
-    missing.append("DISCORD_TOKEN")
-if not os.getenv("ADAPTER_AUTH_TOKEN"):
-    missing.append("ADAPTER_AUTH_TOKEN")
-if not os.getenv("DATABASE_URL"):
-    if not (os.getenv("DB_HOST") and os.getenv("DB_NAME")):
-        missing.append("database settings (DATABASE_URL or DB_HOST/DB_NAME)")
-if missing:
-    raise SystemExit(f"Missing required environment variables: {', '.join(missing)}")
-
-TOKEN = os.environ["DISCORD_TOKEN"]
-ADAPTER_BASE_URL = os.getenv("ADAPTER_BASE_URL", "http://adapter:8000")
-TELEGRAM_API_ID = os.getenv("TELEGRAM_API_ID")
-TELEGRAM_API_HASH = os.getenv("TELEGRAM_API_HASH")
+TOKEN = ""
+ADAPTER_BASE_URL = "http://adapter:8000"
+TELEGRAM_API_ID: Optional[str] = None
+TELEGRAM_API_HASH: Optional[str] = None
+bot: Optional["FLBot"] = None
 
 
 class JsonFormatter(logging.Formatter):
@@ -302,6 +291,30 @@ class FLBot(commands.Bot):
 
 
 bot = FLBot()
+
+
+def main(require_env: bool = True) -> FLBot:
+    load_dotenv()
+    missing = []
+    if not os.getenv("DISCORD_TOKEN"):
+        missing.append("DISCORD_TOKEN")
+    if not os.getenv("ADAPTER_AUTH_TOKEN"):
+        missing.append("ADAPTER_AUTH_TOKEN")
+    if not os.getenv("DATABASE_URL"):
+        if not (os.getenv("DB_HOST") and os.getenv("DB_NAME")):
+            missing.append("database settings (DATABASE_URL or DB_HOST/DB_NAME)")
+    if require_env and missing:
+        raise SystemExit(
+            f"Missing required environment variables: {', '.join(missing)}"
+        )
+    global TOKEN, ADAPTER_BASE_URL, TELEGRAM_API_ID, TELEGRAM_API_HASH
+    TOKEN = os.getenv("DISCORD_TOKEN", "")
+    ADAPTER_BASE_URL = os.getenv("ADAPTER_BASE_URL", ADAPTER_BASE_URL)
+    TELEGRAM_API_ID = os.getenv("TELEGRAM_API_ID")
+    TELEGRAM_API_HASH = os.getenv("TELEGRAM_API_HASH")
+    return bot
+
+
 ready_flag = False
 
 
@@ -656,7 +669,7 @@ async def ready_handler(request: web.Request) -> web.Response:
     return web.Response(status=503, text="not ready")
 
 
-async def main() -> None:
+async def run_bot() -> None:
     if not TOKEN:
         raise RuntimeError("DISCORD_TOKEN is not set")
     app = web.Application()
@@ -677,4 +690,5 @@ async def main() -> None:
 
 
 if __name__ == "__main__":
-    asyncio.run(main())
+    main()
+    asyncio.run(run_bot())
