@@ -1,0 +1,10 @@
+# Code ownership rules for automatic review assignment.
+# See https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/about-code-owners
+
+* @c1nderscript @raincoats
+
+/bot/ @c1nderscript
+/adapter/ @raincoats
+/src/ @c1nderscript
+/tests/ @c1nderscript @raincoats
+/docs/ @raincoats

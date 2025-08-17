@@ -1,23 +1,25 @@
 ## Goal
-Add `.codex-policy.yml` documenting branch protections, Conventional Commit requirements, required reviews, and security expectations. Reference the policy in contributor docs.
+Add CODEOWNERS file assigning maintainers to key directories to enforce review policy.
 
 ## Constraints
-- Follow AGENTS.md: run `make fmt` and `make check` before committing.
+- Follow AGENTS.md: run `docker-compose -f tests/docker-compose.test.yml run --rm -e MOCK_ADAPTER=1 bot-test`, `docker-compose build`, and `docker-compose run --rm bot sh -c "pip install -r requirements-dev.txt && black --check bot && flake8 bot && mypy bot"` before committing.
 
 ## Risks
-- Policy may drift from actual repository settings.
-- Missing documentation links could confuse contributors.
+- Incorrect owner handles could block merges or fail to require review.
+- CODEOWNERS patterns may not match actual directories.
 
 ## Test Plan
-- `make fmt`
-- `make check`
-- `rg \.codex-policy.yml -n README.markdown`
+- docker-compose -f tests/docker-compose.test.yml run --rm -e MOCK_ADAPTER=1 bot-test
+- docker-compose build
+- docker-compose run --rm bot sh -c "pip install -r requirements-dev.txt && black --check bot && flake8 bot && mypy bot"
+- pip-audit
+- composer audit
 
 ## Semver
-Patch release: documentation only.
+Patch release: repository metadata only.
 
 ## Affected Packages
-- Documentation
+- Repository configuration
 
 ## Rollback
-Revert the commits and remove `.codex-policy.yml` and related README and CHANGELOG entries.
+Revert the commit and remove CODEOWNERS entries from the repository, AGENTS, and CHANGELOG.
