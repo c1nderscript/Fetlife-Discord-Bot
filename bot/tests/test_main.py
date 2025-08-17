@@ -11,5 +11,6 @@ def test_flbot_without_telegram(monkeypatch):
         REGISTRY.unregister(collector)
     sys.modules.pop("bot.main", None)
     m = importlib.import_module("bot.main")
+    m.main(require_env=False)
     bot = m.FLBot()
     assert bot.bridge is None
