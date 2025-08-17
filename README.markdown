@@ -23,7 +23,7 @@ Copy `.env.example` to `.env` and fill in your values. The `.env` file supports 
 - `DISCORD_TOKEN` – Discord bot token.
 - `TELEGRAM_API_ID`, `TELEGRAM_API_HASH` – optional Telegram API credentials for the bridge.
 - `ADAPTER_AUTH_TOKEN` – shared token clients must send via `Authorization: Bearer` to the adapter.
-- `ADAPTER_BASE_URL` – base URL for the adapter service (default `http://adapter:8000`).
+- `ADAPTER_BASE_URL` – HTTPS base URL for the adapter service (default `https://adapter:8000`). Override via the `ADAPTER_BASE_URL` environment variable if the adapter is exposed elsewhere. This value must begin with `https://`.
 - `DB_HOST`, `DB_PORT`, `DB_NAME`, `DB_USER`, `DB_PASSWORD` – database connection settings.
 - `DATABASE_URL` – optional full connection URL that overrides the above.
 - `FETLIFE_PROXY`, `FETLIFE_PROXY_TYPE`, `FETLIFE_PROXY_USERNAME`, `FETLIFE_PROXY_PASSWORD` – optional proxy configuration.
