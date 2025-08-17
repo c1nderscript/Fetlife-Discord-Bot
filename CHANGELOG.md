@@ -33,6 +33,7 @@ All notable changes to this project will be documented here.
 ### Docs
 - Streamline AGENTS.md with repo-ops skeleton.
 - Document branch protections, Conventional Commit requirements, review policy, and security expectations in `.codex-policy.yml` and reference it in contributor guides.
+- Define CODEOWNERS for key directories to enforce maintainer reviews.
 
 ## [1.3.14] - 2025-08-16
 ### Security
