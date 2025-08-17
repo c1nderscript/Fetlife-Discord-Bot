@@ -31,6 +31,7 @@ All notable changes to this project will be documented here.
   initialization into `main()`.
 
 ### Docs
+- Streamline AGENTS.md with repo-ops skeleton.
 - Document branch protections, Conventional Commit requirements, review policy, and security expectations in `.codex-policy.yml` and reference it in contributor guides.
 
 ## [1.3.14] - 2025-08-16
