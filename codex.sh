@@ -1,11 +1,6 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-if [[ ${EUID:-$(id -u)} -eq 0 ]]; then
-  echo "Refusing to run as root" >&2
-  exit 1
-fi
-
 confirm=false
 if [[ "${1:-}" == "--confirm" ]]; then
   confirm=true
@@ -17,11 +12,24 @@ cmd="${1:-help}"
 dry_run=true
 $confirm && dry_run=false
 
+# Allow a limited command set when running as root to prevent destructive actions.
+# Unsafe commands exit immediately; safe ones continue after a warning.
+safe_root_cmds=(fast-validate daemon:status)
+if [[ ${EUID:-$(id -u)} -eq 0 ]]; then
+  if [[ " ${safe_root_cmds[*]} " == *" ${cmd} "* ]]; then
+    echo "Warning: running '${cmd}' as root" >&2
+  else
+    echo "Refusing to run '${cmd}' as root" >&2
+    exit 1
+  fi
+fi
+
 run() {
   if $dry_run; then
-    echo "[dry-run] $*"
+    printf '[dry-run] %q ' "$@"
+    echo
   else
-    eval "$@"
+    "$@"
   fi
 }
 

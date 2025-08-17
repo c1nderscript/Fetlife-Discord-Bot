@@ -1,12 +1,13 @@
 ## Goal
-Add CODEOWNERS file assigning maintainers to key directories to enforce review policy.
+Improve `codex.sh` safety: permit non-destructive commands when run as root, warn on unsafe usage, and replace `eval` with direct command invocation.
 
 ## Constraints
 - Follow AGENTS.md: run `docker-compose -f tests/docker-compose.test.yml run --rm -e MOCK_ADAPTER=1 bot-test`, `docker-compose build`, and `docker-compose run --rm bot sh -c "pip install -r requirements-dev.txt && black --check bot && flake8 bot && mypy bot"` before committing.
+- Maintain `codex.sh` executable bit and default `--dry-run` behavior.
 
 ## Risks
-- Incorrect owner handles could block merges or fail to require review.
-- CODEOWNERS patterns may not match actual directories.
+- Misclassifying commands could allow destructive operations as root.
+- Removing `eval` might break commands relying on shell features.
 
 ## Test Plan
 - docker-compose -f tests/docker-compose.test.yml run --rm -e MOCK_ADAPTER=1 bot-test
@@ -16,10 +17,10 @@ Add CODEOWNERS file assigning maintainers to key directories to enforce review p
 - composer audit
 
 ## Semver
-Patch release: repository metadata only.
+Patch release: security hardening of tooling.
 
 ## Affected Packages
-- Repository configuration
+- Repository scripts (`codex.sh`)
 
 ## Rollback
-Revert the commit and remove CODEOWNERS entries from the repository, AGENTS, and CHANGELOG.
+Revert the commit to restore previous root check and `eval` usage.
