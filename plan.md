@@ -1,26 +1,27 @@
 ## Goal
-Remove the global `# mypy: ignore-errors` from `bot/storage.py` and add precise
-type annotations so the file passes `mypy`.
+Add reaction-role functionality that maps emoji reactions on specific messages to guild roles and applies or removes those roles automatically.
 
 ## Constraints
 - Follow AGENTS.md: run `make fmt` and `make check` before committing.
-- Update calling code and tests impacted by stricter types.
+- Commands must require the Manage Roles permission and validate inputs.
+- Storage helpers should store mappings by message ID and emoji.
 
 ## Risks
-- Extensive use of `cast` may obscure future type issues.
-- Missed call sites could break if return types change.
+- Misconfigured mappings may grant unintended permissions.
+- Reaction events could exceed Discord rate limits.
 
 ## Test Plan
-- `mypy bot/storage.py`
+- `pytest bot/tests/test_reaction_roles.py`
 - `make fmt`
 - `make check`
 
 ## Semver
-Patch release: internal type-hint improvements.
+Minor release: adds a new feature for reaction-based role assignment.
 
 ## Affected Packages
 - Python bot code
 - Tests
+- Documentation
 
 ## Rollback
-Revert the commit to restore previous typing behaviour.
+Revert the commit and drop the `reaction_roles` table to restore previous behavior.

@@ -13,6 +13,7 @@ All notable changes to this project will be documented here.
 - Docker-based tests for group posts, messages, and Telegram bridge flows.
 - Guild role management commands `/role add`, `/role remove`, and `/role list`.
 - Channel management commands `/channel create`, `/channel delete`, and `/channel rename` with permission checks.
+- Reaction role mappings with `/reactionrole add` and `/reactionrole remove` plus automatic role application on reactions.
 
 ### Changed
 - Install Python dependencies from `requirements.lock` for reproducible builds.
