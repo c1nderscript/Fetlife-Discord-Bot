@@ -687,6 +687,7 @@ async def run_bot() -> None:
         if bot.bridge:
             await bot.bridge.stop()
         await runner.cleanup()
+        await adapter_client.close_session()
 
 
 if __name__ == "__main__":
