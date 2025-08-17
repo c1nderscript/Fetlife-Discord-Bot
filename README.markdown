@@ -8,6 +8,8 @@ The `bot/` directory contains a Python application using `discord.py` that relay
 
 ### Docker Compose Quick Start
 
+> **Note**: The commands below use the Docker Compose V2 plugin (`docker compose`). Install the plugin if your Docker setup still relies on the legacy `docker-compose` binary.
+
 1. `bash scripts/install.sh` and select **Install**. This creates `.venv` and installs runtime and development dependencies.
 2. `docker compose up -d` to launch the adapter, bot, and database. The `db` service pins
    `postgres:15` to digest `sha256:0de3e43bbb424d5fb7ca1889150f8e1b525d6c9fbaf9df6d853dcbc2ed5ffa1e` for reproducible builds.

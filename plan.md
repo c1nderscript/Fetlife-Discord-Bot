@@ -1,24 +1,24 @@
 ## Goal
-Introduce a shared aiohttp ClientSession with a default timeout and ensure it is closed on shutdown.
+Replace deprecated `docker-compose` commands with the modern `docker compose` CLI and document the change.
 
 ## Constraints
 - Follow AGENTS.md: run `make fmt` and `make check` before committing.
-- Update tests, CHANGELOG.md, and documentation if needed.
+- Update README and CHANGELOG.md to reference the new CLI.
 
 ## Risks
-- Unclosed sessions could leak resources.
-- Improper refactor may break adapter_client callers.
+- Environments without the Docker Compose plugin will fail to run Makefile targets.
+- Command flag differences could break developer workflows.
 
 ## Test Plan
 - `make fmt`
 - `make check`
 
 ## Semver
-Patch release: internal refactor.
+Patch release: docs and tooling update.
 
 ## Affected Packages
-- Python bot code
-- Tests
+- Makefile
+- Documentation
 
 ## Rollback
-Revert the commit to restore per-call ClientSessions.
+Revert the commit to restore previous Compose commands.

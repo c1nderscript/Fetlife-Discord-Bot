@@ -15,6 +15,7 @@ All notable changes to this project will be documented here.
 ### Changed
 - Install Python dependencies from `requirements.lock` for reproducible builds.
 - Share an aiohttp `ClientSession` with a default timeout across adapter requests and close it on shutdown.
+- Replace `docker-compose` commands with `docker compose` and document the Docker Compose V2 plugin requirement.
 
 ### Security
 - Run `pip-audit` and `composer audit` in `make check` and release-hygiene workflow.
