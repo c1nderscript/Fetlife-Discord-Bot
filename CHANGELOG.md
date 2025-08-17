@@ -3,6 +3,8 @@ All notable changes to this project will be documented here.
 
 ## [Unreleased]
 
+## [1.4.0] - 2025-08-17
+
 ### Added
 - Pause polling after repeated adapter failures with `/fl health` status and manual resume.
 - Cache events, profiles, and RSVP records during polling.

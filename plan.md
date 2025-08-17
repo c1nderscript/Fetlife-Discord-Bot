@@ -1,23 +1,28 @@
 ## Goal
-Add `.codex-policy.yml` documenting branch protections, Conventional Commit requirements, required reviews, and security expectations. Reference the policy in contributor docs.
+Align project version across metadata files and changelog for the 1.4.0 release.
 
 ## Constraints
-- Follow AGENTS.md: run `make fmt` and `make check` before committing.
+- Follow AGENTS.md instructions and repository policies.
 
 ## Risks
-- Policy may drift from actual repository settings.
-- Missing documentation links could confuse contributors.
+- Docker or dependency issues could block CI commands.
+- Version mismatch might break packaging.
 
 ## Test Plan
-- `make fmt`
-- `make check`
-- `rg \.codex-policy.yml -n README.markdown`
+- docker-compose build
+- docker-compose run --rm bot sh -c "pip install -r requirements-dev.txt && black --check bot && flake8 bot && mypy bot"
+- docker-compose -f tests/docker-compose.test.yml run --rm -e MOCK_ADAPTER=1 bot-test
+- pip-audit
+- composer audit
+- ./codex.sh
 
 ## Semver
-Patch release: documentation only.
+Minor release: new features warrant bump from 1.3.x to 1.4.0.
 
 ## Affected Packages
-- Documentation
+- pyproject.toml
+- composer.json
+- CHANGELOG.md
 
 ## Rollback
-Revert the commits and remove `.codex-policy.yml` and related README and CHANGELOG entries.
+Revert the commit and restore previous version numbers in affected files.
