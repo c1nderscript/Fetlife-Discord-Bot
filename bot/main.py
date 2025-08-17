@@ -34,7 +34,7 @@ from .telegram_bridge import TelegramBridge
 
 
 TOKEN = ""
-ADAPTER_BASE_URL = "http://adapter:8000"
+ADAPTER_BASE_URL = "https://adapter:8000"
 TELEGRAM_API_ID: Optional[str] = None
 TELEGRAM_API_HASH: Optional[str] = None
 bot: Optional["FLBot"] = None
