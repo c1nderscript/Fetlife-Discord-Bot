@@ -5,5 +5,5 @@ flowchart TD
     D[codex.sh] --> B
 ```
 
-**Interfaces**: Discord API, FetLife adapter, Telegram API
+**Interfaces**: Discord API, FetLife adapter, Telegram API, Management Web UI
 **Critical paths**: deployment, testing, release flows

@@ -1,4 +1,7 @@
 import asyncio
+import base64
+import hashlib
+import hmac
 import json
 import os
 import time
@@ -6,11 +9,12 @@ import logging
 import random
 import re
 from datetime import datetime, timedelta
-from typing import Any, Dict, Optional, cast
+from typing import Any, Dict, Optional, Callable, Awaitable, cast
 
 import discord
 import discord.abc
-from aiohttp import web, ClientError
+from aiohttp import web, ClientError, ClientSession
+from urllib.parse import urlencode
 from apscheduler.schedulers.asyncio import AsyncIOScheduler  # type: ignore[import-untyped]
 from discord import app_commands
 from discord.ext import commands
@@ -34,6 +38,12 @@ ADAPTER_BASE_URL = "http://adapter:8000"
 TELEGRAM_API_ID: Optional[str] = None
 TELEGRAM_API_HASH: Optional[str] = None
 bot: Optional["FLBot"] = None
+MGMT_PORT = 8000
+SESSION_SECRET = ""
+ADMIN_IDS: set[str] = set()
+DISCORD_CLIENT_ID = ""
+DISCORD_CLIENT_SECRET = ""
+OAUTH_REDIRECT_URI = ""
 
 
 class JsonFormatter(logging.Formatter):
@@ -50,6 +60,45 @@ handler = logging.StreamHandler()
 handler.setFormatter(JsonFormatter())
 logging.basicConfig(level=logging.INFO, handlers=[handler])
 logger = logging.getLogger("flbot")
+
+
+# Session helpers
+def sign_session(data: Dict[str, Any], secret: str | None = None) -> str:
+    key = (secret or SESSION_SECRET).encode()
+    payload = base64.urlsafe_b64encode(json.dumps(data).encode()).decode()
+    sig = hmac.new(key, payload.encode(), hashlib.sha256).hexdigest()
+    return f"{payload}.{sig}"
+
+
+def verify_session(cookie: str, secret: str | None = None) -> Optional[Dict[str, Any]]:
+    key = (secret or SESSION_SECRET).encode()
+    try:
+        payload, sig = cookie.split(".", 1)
+        expected = hmac.new(key, payload.encode(), hashlib.sha256).hexdigest()
+        if not hmac.compare_digest(expected, sig):
+            return None
+        data = json.loads(base64.urlsafe_b64decode(payload.encode()).decode())
+        return cast(Dict[str, Any], data)
+    except Exception:
+        return None
+
+
+@web.middleware
+async def auth_middleware(
+    request: web.Request,
+    handler: Callable[[web.Request], Awaitable[web.StreamResponse]],
+) -> web.StreamResponse:
+    request["user"] = None
+    cookie = request.cookies.get("session")
+    if cookie:
+        data = verify_session(cookie)
+        if data and str(data.get("id")) in ADMIN_IDS:
+            request["user"] = data
+    if request.path in {"/login", "/oauth/callback", "/metrics", "/ready"}:
+        return await handler(request)
+    if not request["user"]:
+        raise web.HTTPFound("/login")
+    return await handler(request)
 
 
 # Metrics
@@ -312,11 +361,17 @@ def main(require_env: bool = True) -> FLBot:
         raise SystemExit(
             f"Missing required environment variables: {', '.join(missing)}"
         )
-    global TOKEN, ADAPTER_BASE_URL, TELEGRAM_API_ID, TELEGRAM_API_HASH
+    global TOKEN, ADAPTER_BASE_URL, TELEGRAM_API_ID, TELEGRAM_API_HASH, MGMT_PORT, SESSION_SECRET, ADMIN_IDS, DISCORD_CLIENT_ID, DISCORD_CLIENT_SECRET, OAUTH_REDIRECT_URI
     TOKEN = os.getenv("DISCORD_TOKEN", "")
     ADAPTER_BASE_URL = os.getenv("ADAPTER_BASE_URL", ADAPTER_BASE_URL)
     TELEGRAM_API_ID = os.getenv("TELEGRAM_API_ID")
     TELEGRAM_API_HASH = os.getenv("TELEGRAM_API_HASH")
+    MGMT_PORT = int(os.getenv("MGMT_PORT", str(MGMT_PORT)))
+    SESSION_SECRET = os.getenv("SESSION_SECRET", SESSION_SECRET)
+    ADMIN_IDS = {x for x in os.getenv("ADMIN_IDS", "").split(",") if x}
+    DISCORD_CLIENT_ID = os.getenv("DISCORD_CLIENT_ID", "")
+    DISCORD_CLIENT_SECRET = os.getenv("DISCORD_CLIENT_SECRET", "")
+    OAUTH_REDIRECT_URI = os.getenv("OAUTH_REDIRECT_URI", "")
     return bot
 
 
@@ -807,9 +862,7 @@ async def role_list(interaction: discord.Interaction) -> None:
         await interaction.response.send_message(str(exc), ephemeral=True)
 
 
-@reactionrole_group.command(
-    name="add", description="Add a reaction role mapping"
-)
+@reactionrole_group.command(name="add", description="Add a reaction role mapping")
 @app_commands.default_permissions(manage_roles=True)
 async def reactionrole_add(
     interaction: discord.Interaction, message_id: int, emoji: str, role_id: int
@@ -835,9 +888,7 @@ async def reactionrole_add(
         await interaction.response.send_message(str(exc), ephemeral=True)
 
 
-@reactionrole_group.command(
-    name="remove", description="Remove a reaction role mapping"
-)
+@reactionrole_group.command(name="remove", description="Remove a reaction role mapping")
 @app_commands.default_permissions(manage_roles=True)
 async def reactionrole_remove(
     interaction: discord.Interaction, message_id: int, emoji: str
@@ -891,6 +942,58 @@ async def on_raw_reaction_remove(payload: discord.RawReactionActionEvent) -> Non
     await member.remove_roles(role)
 
 
+async def login(request: web.Request) -> web.Response:
+    params = {
+        "client_id": DISCORD_CLIENT_ID,
+        "redirect_uri": OAUTH_REDIRECT_URI,
+        "response_type": "code",
+        "scope": "identify",
+    }
+    raise web.HTTPFound("https://discord.com/api/oauth2/authorize?" + urlencode(params))
+
+
+async def oauth_callback(request: web.Request) -> web.Response:
+    code = request.query.get("code")
+    if not code:
+        return web.Response(status=400, text="missing code")
+    async with ClientSession() as session:
+        data = {
+            "client_id": DISCORD_CLIENT_ID,
+            "client_secret": DISCORD_CLIENT_SECRET,
+            "grant_type": "authorization_code",
+            "code": code,
+            "redirect_uri": OAUTH_REDIRECT_URI,
+        }
+        async with session.post(
+            "https://discord.com/api/oauth2/token", data=data
+        ) as resp:
+            token_data = await resp.json()
+        access = token_data.get("access_token")
+        if not access:
+            return web.Response(status=400, text="invalid token")
+        async with session.get(
+            "https://discord.com/api/users/@me",
+            headers={"Authorization": f"Bearer {access}"},
+        ) as resp:
+            user = await resp.json()
+    if str(user.get("id")) not in ADMIN_IDS:
+        return web.Response(status=403, text="unauthorized")
+    resp = web.HTTPFound("/")
+    resp.set_cookie(
+        "session",
+        sign_session({"id": user["id"], "username": user.get("username", "")}),
+        httponly=True,
+        max_age=3600,
+    )
+    return resp
+
+
+async def logout(request: web.Request) -> web.Response:
+    resp = web.HTTPFound("/login")
+    resp.del_cookie("session")
+    return resp
+
+
 async def metrics_handler(request: web.Request) -> web.Response:
     data = generate_latest()
     return web.Response(body=data, content_type=CONTENT_TYPE_LATEST)
@@ -902,15 +1005,99 @@ async def ready_handler(request: web.Request) -> web.Response:
     return web.Response(status=503, text="not ready")
 
 
+def create_management_app(db) -> web.Application:
+    app = web.Application(middlewares=[auth_middleware])
+
+    async def index(request: web.Request) -> web.Response:
+        return web.Response(
+            text="<h1>Management</h1><ul><li><a href='/subscriptions'>Subscriptions</a></li><li><a href='/roles'>Roles</a></li><li><a href='/channels'>Channels</a></li></ul>",
+            content_type="text/html",
+        )
+
+    async def subscriptions_page(request: web.Request) -> web.Response:
+        subs = db.query(models.Subscription).all()
+        rows = "".join(
+            f"<li>{s.id} {s.type} {s.target_id}<form method='post' action='/subscriptions/{s.id}/delete'><button>Delete</button></form></li>"
+            for s in subs
+        )
+        return web.Response(
+            text=f"<h1>Subscriptions</h1><ul>{rows}</ul>",
+            content_type="text/html",
+        )
+
+    async def subscription_delete(request: web.Request) -> web.Response:
+        sub_id = int(request.match_info["sub_id"])
+        db.query(models.Subscription).filter(models.Subscription.id == sub_id).delete()
+        db.commit()
+        raise web.HTTPFound("/subscriptions")
+
+    async def roles_page(request: web.Request) -> web.Response:
+        roles = db.query(models.ReactionRole).all()
+        rows = "".join(
+            f"<li>{r.message_id} {r.emoji} {r.role_id}<form method='post' action='/roles/remove'><input type='hidden' name='message_id' value='{r.message_id}'/><input type='hidden' name='emoji' value='{r.emoji}'/><button>Remove</button></form></li>"
+            for r in roles
+        )
+        return web.Response(
+            text=f"<h1>Roles</h1><ul>{rows}</ul>",
+            content_type="text/html",
+        )
+
+    async def roles_remove(request: web.Request) -> web.Response:
+        data = await request.post()
+        message_id = int(data.get("message_id", 0))
+        emoji = data.get("emoji", "")
+        storage.remove_reaction_role(db, message_id, emoji)
+        raise web.HTTPFound("/roles")
+
+    async def channels_page(request: web.Request) -> web.Response:
+        channels = db.query(models.Channel).all()
+        rows = "".join(
+            f"<li>{c.id} {c.name or ''}<form method='post' action='/channels/{c.id}/settings'><input type='text' name='settings' value='{json.dumps(c.settings_json or {})}'/><button>Save</button></form></li>"
+            for c in channels
+        )
+        return web.Response(
+            text=f"<h1>Channels</h1><ul>{rows}</ul>",
+            content_type="text/html",
+        )
+
+    async def channel_settings(request: web.Request) -> web.Response:
+        channel_id = int(request.match_info["channel_id"])
+        data = await request.post()
+        try:
+            settings = (
+                json.loads(data.get("settings", "{}")) if data.get("settings") else {}
+            )
+        except Exception:
+            return web.Response(status=400, text="invalid settings")
+        channel = db.get(models.Channel, channel_id)
+        if not channel:
+            return web.Response(status=404, text="not found")
+        channel.settings_json = settings
+        db.commit()
+        raise web.HTTPFound("/channels")
+
+    app.router.add_get("/", index)
+    app.router.add_get("/subscriptions", subscriptions_page)
+    app.router.add_post("/subscriptions/{sub_id:\d+}/delete", subscription_delete)
+    app.router.add_get("/roles", roles_page)
+    app.router.add_post("/roles/remove", roles_remove)
+    app.router.add_get("/channels", channels_page)
+    app.router.add_post("/channels/{channel_id:\d+}/settings", channel_settings)
+    app.router.add_get("/login", login)
+    app.router.add_get("/oauth/callback", oauth_callback)
+    app.router.add_get("/logout", logout)
+    app.router.add_get("/metrics", metrics_handler)
+    app.router.add_get("/ready", ready_handler)
+    return app
+
+
 async def run_bot() -> None:
     if not TOKEN:
         raise RuntimeError("DISCORD_TOKEN is not set")
-    app = web.Application()
-    app.router.add_get("/metrics", metrics_handler)
-    app.router.add_get("/ready", ready_handler)
+    app = create_management_app(bot.db)
     runner = web.AppRunner(app)
     await runner.setup()
-    site = web.TCPSite(runner, "0.0.0.0", 8000)
+    site = web.TCPSite(runner, "0.0.0.0", MGMT_PORT)
     await site.start()
     if bot.bridge:
         await bot.bridge.start()

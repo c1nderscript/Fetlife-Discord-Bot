@@ -27,6 +27,16 @@ Copy `.env.example` to `.env` and fill in your values. The `.env` file supports 
 - `DB_HOST`, `DB_PORT`, `DB_NAME`, `DB_USER`, `DB_PASSWORD` – database connection settings.
 - `DATABASE_URL` – optional full connection URL that overrides the above.
 - `FETLIFE_PROXY`, `FETLIFE_PROXY_TYPE`, `FETLIFE_PROXY_USERNAME`, `FETLIFE_PROXY_PASSWORD` – optional proxy configuration.
+- `MGMT_PORT` – port for the management web interface (default `8000`).
+- `SESSION_SECRET` – secret key for signing management UI sessions.
+- `DISCORD_CLIENT_ID`, `DISCORD_CLIENT_SECRET`, `OAUTH_REDIRECT_URI` – Discord OAuth2 credentials for admin login.
+- `ADMIN_IDS` – comma-separated Discord user IDs allowed to access the management UI.
+
+### Management Web Interface
+
+After configuring the above variables, start the bot and visit `http://localhost:<MGMT_PORT>/`.
+Log in with Discord to access pages for viewing and editing subscriptions, reaction role mappings,
+and channel settings.
 
 ### Database Migrations
 

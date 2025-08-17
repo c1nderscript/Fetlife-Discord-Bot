@@ -14,6 +14,7 @@ All notable changes to this project will be documented here.
 - Guild role management commands `/role add`, `/role remove`, and `/role list`.
 - Channel management commands `/channel create`, `/channel delete`, and `/channel rename` with permission checks.
 - Reaction role mappings with `/reactionrole add` and `/reactionrole remove` plus automatic role application on reactions.
+- A management web interface with Discord OAuth2 login for subscriptions, role assignments, and channel settings.
 
 ### Changed
 - Install Python dependencies from `requirements.lock` for reproducible builds.
