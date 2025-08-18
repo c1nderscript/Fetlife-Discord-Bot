@@ -3,6 +3,8 @@ All notable changes to this project will be documented here.
 
 ## [Unreleased]
 
+## [1.5.2] - 2025-08-18
+
 ### Added
 - Pause polling after repeated adapter failures with `/fl health` status and manual resume.
 - Cache events, profiles, and RSVP records during polling.
@@ -24,7 +26,7 @@ All notable changes to this project will be documented here.
 ### Security
 - Run `pip-audit` and `composer audit` in `make check` and release-hygiene workflow.
 - Relax root check in `codex.sh` to allow safe commands with a warning and replace `eval` with direct command invocation.
-- Default to HTTPS for `ADAPTER_BASE_URL` and document the requirement with environment variable overrides.
+ - Default to HTTPS for `ADAPTER_BASE_URL`, reject non-HTTPS values, and document the requirement with environment variable overrides.
 
 ### Fixed
 - Validate adapter responses against JSON schemas and relay minimal links on mismatch.

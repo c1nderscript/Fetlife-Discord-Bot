@@ -1,6 +1,6 @@
 [project]
 name = "fetlife-discord-bot"
-version = "1.5.1"
+version = "1.5.2"
 license = { file = "LICENSE" }
 requires-python = ">=3.11"
 classifiers = [
