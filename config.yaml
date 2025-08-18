@@ -1,12 +1,16 @@
 # Default settings applied to all channels
 defaults:
   thread_per_event: false
+  admin_command_rate: 5
+  admin_command_per: 60
 
 # Per-guild overrides
 # Replace the IDs below with your guild and channel IDs
 # guilds:
 #   "123456789012345678":
 #     thread_per_event: true
+#     admin_command_rate: 10
+#     admin_command_per: 60
 #     channels:
 #       "234567890123456789":
 #         attendee_sample: 5

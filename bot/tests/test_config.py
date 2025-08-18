@@ -5,7 +5,7 @@ import pytest
 
 sys.path.append(str(pathlib.Path(__file__).resolve().parents[2]))
 
-from bot.config import get_channel_config, load_config
+from bot.config import get_channel_config, get_guild_config, load_config
 from bot import main
 
 
@@ -28,6 +28,15 @@ def test_get_channel_config():
     }
     result = get_channel_config(cfg, 1, 10)
     assert result == {"a": 1, "b": 2, "c": 3}
+
+
+def test_get_guild_config():
+    cfg = {
+        "defaults": {"a": 1},
+        "guilds": {"1": {"b": 2, "channels": {"10": {"c": 3}}}},
+    }
+    result = get_guild_config(cfg, 1)
+    assert result == {"a": 1, "b": 2}
 
 
 def test_missing_discord_token(monkeypatch):

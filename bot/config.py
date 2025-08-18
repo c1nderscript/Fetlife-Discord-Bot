@@ -44,3 +44,17 @@ def get_channel_config(
     channel_cfg = guild_cfg.get("channels", {}).get(str(channel_id), {})
     settings.update(channel_cfg)
     return settings
+
+
+def get_guild_config(config: Dict[str, Any], guild_id: int | None) -> Dict[str, Any]:
+    settings: Dict[str, Any] = {}
+    if not config:
+        return settings
+    settings.update(config.get("defaults", {}))
+    if guild_id is None:
+        return settings
+    guild_cfg = config.get("guilds", {}).get(str(guild_id), {})
+    for key, value in guild_cfg.items():
+        if key != "channels":
+            settings[key] = value
+    return settings
