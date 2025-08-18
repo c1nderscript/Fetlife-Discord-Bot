@@ -11,6 +11,8 @@ def test_management_ui(monkeypatch):
     db = app_bot.db
     sub_id = storage.add_subscription(db, 123, "events", "target")
     storage.set_reaction_role(db, 10, "😀", 20, 1)
+    db.add(models.AuditLog(user_id=1, action="test", target="x", details={}))
+    db.commit()
 
     async def run():
         app = main.create_management_app(db)
@@ -31,6 +33,9 @@ def test_management_ui(monkeypatch):
         assert channel.settings_json == {"x": 1}
         await client.post("/roles/remove", data={"message_id": "10", "emoji": "😀"})
         assert storage.get_reaction_role(db, 10, "😀") is None
+        resp = await client.get("/audit")
+        text = await resp.text()
+        assert "test" in text
         await client.close()
         await server.close()
 

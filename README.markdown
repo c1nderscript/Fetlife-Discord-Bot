@@ -36,7 +36,8 @@ Copy `.env.example` to `.env` and fill in your values. The `.env` file supports 
 
 After configuring the above variables, start the bot and visit `http://localhost:<MGMT_PORT>/`.
 Log in with Discord to access pages for viewing and editing subscriptions, reaction role mappings,
-and channel settings.
+and channel settings. An audit log viewer is available at `/audit` and the `/audit search` command
+allows filtering records by user or action.
 
 ### Database Migrations
 
