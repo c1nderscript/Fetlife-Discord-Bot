@@ -27,7 +27,7 @@ from prometheus_client import (
     generate_latest,
 )
 
-from . import storage, adapter_client, models, tasks
+from . import storage, adapter_client, models, tasks, birthday
 from .audit import log_action
 from .config import get_channel_config, get_guild_config, load_config, save_config
 from .rate_limit import TokenBucket
@@ -370,6 +370,8 @@ class FLBot(commands.Bot):
                     replace_existing=True,
                     run_date=datetime.utcnow() + timedelta(seconds=1),
                 )
+        self.tree.add_command(birthday.birthday_group)
+        birthday.schedule(self)
         self.scheduler.start()
         self.loop.create_task(tasks.delete_expired_messages(self))
 
@@ -1143,7 +1145,7 @@ def create_management_app(db) -> web.Application:
 
     async def index(request: web.Request) -> web.Response:
         return web.Response(
-            text="<h1>Management</h1><ul><li><a href='/subscriptions'>Subscriptions</a></li><li><a href='/roles'>Roles</a></li><li><a href='/channels'>Channels</a></li><li><a href='/audit'>Audit Log</a></li></ul>",
+            text="<h1>Management</h1><ul><li><a href='/subscriptions'>Subscriptions</a></li><li><a href='/roles'>Roles</a></li><li><a href='/channels'>Channels</a></li><li><a href='/birthdays'>Birthdays</a></li><li><a href='/audit'>Audit Log</a></li></ul>",
             content_type="text/html",
         )
 
@@ -1163,6 +1165,15 @@ def create_management_app(db) -> web.Application:
         db.query(models.Subscription).filter(models.Subscription.id == sub_id).delete()
         db.commit()
         raise web.HTTPFound("/subscriptions")
+
+    async def birthdays_page(request: web.Request) -> web.Response:
+        rows = db.query(birthday.Birthday).all()
+        items = "".join(
+            f"<li>{r.guild_id}:{r.user_id} {r.date} {r.timezone}</li>" for r in rows
+        )
+        return web.Response(
+            text=f"<h1>Birthdays</h1><ul>{items}</ul>", content_type="text/html"
+        )
 
     async def roles_page(request: web.Request) -> web.Response:
         roles = db.query(models.ReactionRole).all()
@@ -1190,7 +1201,7 @@ def create_management_app(db) -> web.Application:
             .all()
         )
         rows = "".join(
-            f"<li>{l.created_at} {l.user_id} {l.action} {l.target}</li>" for l in logs
+            f"<li>{log.created_at} {log.user_id} {log.action} {log.target}</li>" for log in logs
         )
         return web.Response(
             text=f"<h1>Audit Log</h1><ul>{rows}</ul>",
@@ -1229,6 +1240,7 @@ def create_management_app(db) -> web.Application:
     app.router.add_post(r"/subscriptions/{sub_id:\d+}/delete", subscription_delete)
     app.router.add_get("/roles", roles_page)
     app.router.add_post("/roles/remove", roles_remove)
+    app.router.add_get("/birthdays", birthdays_page)
     app.router.add_get("/channels", channels_page)
     app.router.add_post(r"/channels/{channel_id:\d+}/settings", channel_settings)
     app.router.add_get("/audit", audit_page)
