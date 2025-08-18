@@ -2,6 +2,11 @@ All notable changes to this project will be documented here.
 
 ## [Unreleased]
 
+## [1.10.0] - 2025-08-18
+
+### Added
+- Polling system with `/poll create`, `/poll close`, `/poll results`, and `/poll list` commands supporting yes/no, multiple choice, and ranked voting with reactions or buttons, auto-close timers, and web UI analytics.
+
 ## [1.9.0] - 2025-08-18
 
 ### Added

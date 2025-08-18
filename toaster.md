@@ -1,4 +1,4 @@
-# toaster.md — Fetlife-Discord-Bot (v1.9.0)
+# toaster.md — Fetlife-Discord-Bot (v1.10.0)
 
 **TL;DR:** Discord bot and PHP adapter that relay FetLife activity into chat channels.  
 **Primary runtime(s):** Python 3.11 & PHP 8.2 · **Targets:** bot, adapter services · **Owner(s):** @c1nderscript @raincoats  
@@ -36,6 +36,7 @@ flowchart LR
 | bot/audit.py | Audit logging decorator | Records management actions to DB | `log_action` |
 | bot/utils.py | Misc helpers | Shared utility functions | `parse_filters` |
 | bot/birthday.py | Birthday reminders and scheduler | Stores birthdays and announces them daily | `Birthday`, `schedule` |
+| bot/polling.py | Poll models and helpers | Stores polls and votes and schedules auto-close timers | `Poll`, `PollVote` |
 | adapter/public/index.php | Adapter HTTP entrypoint | Exposes FetLife scraping functions over HTTP | Slim `App`, `metric_inc` |
 | adapter/openapi.yaml | Adapter API spec | Documents adapter endpoints | OpenAPI definitions |
 | src/Connection.php | PHP client for FetLife | Handles session and CSRF management | `Connection` |
