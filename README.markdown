@@ -36,10 +36,10 @@ Copy `.env.example` to `.env` and fill in your values. The `.env` file supports 
 
 After configuring the above variables, start the bot and visit `http://localhost:<MGMT_PORT>/`.
 Log in with Discord to access pages for viewing and editing subscriptions, reaction role mappings,
-channel settings, polls, timed messages, and welcome configuration. An audit log viewer is
-available at `/audit`, moderation appeals at `/appeals`, poll management at `/polls` for creating,
-closing, and viewing results, timed message scheduling at `/timed-messages`, and welcome settings
-at `/welcome`.
+channel settings, polls, timed messages, auto-delete settings, and welcome configuration. An audit
+log viewer is available at `/audit`, moderation appeals at `/appeals`, poll management at `/polls`
+for creating, closing, and viewing results, timed message scheduling at `/timers`, default
+auto-delete configuration at `/autodelete`, and welcome settings at `/welcome`.
 
 ### Audit Logs
 
@@ -51,7 +51,8 @@ The management UI at `/audit` exposes the same records with filtering and pagina
 Send self-deleting messages with `/timer <duration> <content>`.
 Example: `/timer 10m Remember to stretch` deletes the reminder after ten minutes.
 Set channel defaults with `/autodelete enable 1h` and disable with `/autodelete disable`.
-Existing timers can be reviewed or scheduled through the management UI at `/timed-messages`.
+Existing timers can be reviewed or scheduled through the management UI at `/timers`. Channel
+defaults may be configured at `/autodelete`.
 
 ### Poll Commands
 

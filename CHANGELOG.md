@@ -2,6 +2,14 @@ All notable changes to this project will be documented here.
 
 ## [Unreleased]
 
+## [1.15.0] - 2025-08-18
+
+### Added
+- feat: add management pages for timers and auto-delete settings via `/timers` and `/autodelete`.
+
+### Docs
+- docs: document timer and auto-delete management pages.
+
 ## [1.14.0] - 2025-08-18
 
 ### Added

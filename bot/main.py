@@ -1783,7 +1783,7 @@ def create_management_app(db) -> web.Application:
             content_type="text/html",
         )
 
-    async def timed_messages_page(request: web.Request) -> web.Response:
+    async def timers_page(request: web.Request) -> web.Response:
         rows = db.query(models.TimedMessage).all()
         items = "".join(f"<li>{r.message_id} delete:{r.delete_at}</li>" for r in rows)
         form = (
@@ -1798,7 +1798,7 @@ def create_management_app(db) -> web.Application:
             content_type="text/html",
         )
 
-    async def timed_messages_create(request: web.Request) -> web.Response:
+    async def timers_create(request: web.Request) -> web.Response:
         data = await request.post()
         channel_id = int(data.get("channel_id", 0))
         message = str(data.get("message", ""))
@@ -1819,7 +1819,32 @@ def create_management_app(db) -> web.Application:
         )
         db.commit()
         messages_scheduled.inc()
-        raise web.HTTPFound("/timed-messages")
+        raise web.HTTPFound("/timers")
+
+    async def autodelete_page(request: web.Request) -> web.Response:
+        channels = db.query(models.Channel).all()
+        rows = "".join(
+            f"<li>{c.id} <form method='post'><input type='hidden' name='channel_id' value='{c.id}'/>"
+            f"Seconds:<input name='seconds' value='{int((c.settings_json or {}).get('autodelete', 0))}'/>"
+            "<button>Save</button></form></li>" for c in channels
+        )
+        return web.Response(
+            text=f"<h1>Auto-Delete</h1><ul>{rows}</ul>",
+            content_type="text/html",
+        )
+
+    async def autodelete_set(request: web.Request) -> web.Response:
+        data = await request.post()
+        channel_id = int(data.get("channel_id", 0))
+        seconds_str = data.get("seconds")
+        try:
+            seconds = int(seconds_str or 0)
+        except Exception:
+            return web.Response(status=400, text="invalid seconds")
+        if not channel_id:
+            return web.Response(status=400, text="invalid channel")
+        storage.set_channel_settings(db, channel_id, autodelete=seconds)
+        raise web.HTTPFound("/autodelete")
 
     async def welcome_page(request: web.Request) -> web.Response:
         rows = db.query(welcome.WelcomeConfig).all()
@@ -1864,8 +1889,12 @@ def create_management_app(db) -> web.Application:
     app.router.add_post("/polls", poll_create)
     app.router.add_post(r"/polls/{poll_id:\d+}/close", poll_close)
     app.router.add_get(r"/polls/{poll_id:\d+}", poll_results_page)
-    app.router.add_get("/timed-messages", timed_messages_page)
-    app.router.add_post("/timed-messages", timed_messages_create)
+    app.router.add_get("/timed-messages", timers_page)
+    app.router.add_post("/timed-messages", timers_create)
+    app.router.add_get("/timers", timers_page)
+    app.router.add_post("/timers", timers_create)
+    app.router.add_get("/autodelete", autodelete_page)
+    app.router.add_post("/autodelete", autodelete_set)
     app.router.add_get("/welcome", welcome_page)
     app.router.add_post("/welcome", welcome_set)
     app.router.add_get("/audit", audit_page)

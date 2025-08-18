@@ -69,11 +69,18 @@ def test_management_ui(monkeypatch):
 
         monkeypatch.setattr(main.bot, "get_channel", lambda _cid: DummyChannel())
         await client.post(
-            "/timed-messages",
+            "/timers",
             data={"channel_id": "1", "message": "hi", "seconds": "5"},
         )
         tm = db.query(models.TimedMessage).first()
         assert tm and tm.channel_id == 1
+
+        await client.post(
+            "/autodelete",
+            data={"channel_id": "1", "seconds": "30"},
+        )
+        settings = storage.get_channel_settings(db, 1)
+        assert settings.get("autodelete") == 30
 
         await client.post(
             "/welcome",
