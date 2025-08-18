@@ -4,7 +4,7 @@
 
 ## Discord Bot
 
-The `bot/` directory contains a Python application using `discord.py` that relays FetLife updates into Discord. It implements `/fl` slash commands for managing subscriptions, `/timer` for self-deleting messages, `/autodelete` for per-channel defaults, moderation commands like `/warn`, `/mute`, `/kick`, `/ban`, `/timeout`, `/modlog`, `/purge`, `/poll` for gathering yes/no, multiple choice, or ranked responses with automatic closing and web UI analytics, and exposes Prometheus metrics at `/metrics` plus a readiness probe at `/ready`. Metrics include counters such as `fetlife_requests_total`, `discord_messages_sent_total`, and `duplicates_suppressed_total` as well as histograms like `poll_cycle_seconds` and gauges such as `rate_limit_tokens`. Configuration is read from a `.env` file and an optional `config.yaml`.
+The `bot/` directory contains a Python application using `discord.py` that relays FetLife updates into Discord. It implements `/fl` slash commands for managing subscriptions, `/timer` for self-deleting messages, `/autodelete` for per-channel defaults, moderation commands like `/warn`, `/mute`, `/kick`, `/ban`, `/timeout`, `/modlog`, `/purge`, `/poll` for gathering yes/no, multiple choice, or ranked responses with automatic closing and web UI analytics, `/welcome setup` for configurable welcome messages and optional verification, and exposes Prometheus metrics at `/metrics` plus a readiness probe at `/ready`. Metrics include counters such as `fetlife_requests_total`, `discord_messages_sent_total`, and `duplicates_suppressed_total` as well as histograms like `poll_cycle_seconds` and gauges such as `rate_limit_tokens`. Configuration is read from a `.env` file and an optional `config.yaml`.
 
 ### Docker Compose Quick Start
 
@@ -52,6 +52,13 @@ Configure a `birthday_channel` for each guild in `config.yaml` to receive daily 
 Members can manage entries with `/birthday set`, `/birthday list`, and `/birthday remove`.
 The command supports time zones, a privacy flag to hide mentions, and an optional role assignment
 applied on the user's birthday. A calendar view is available in the management UI at `/birthdays`.
+
+### Welcome Messages
+
+Run `/welcome setup` to choose a channel, message template, and optional verification role for new members.
+Use `{user}` in the message to mention the joining member and enable the `preview` option to send a sample.
+If a verification role is configured, the bot sends a button that grants the role when clicked. Joins and
+leaves are logged for auditing.
 
 ### Database Migrations
 

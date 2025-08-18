@@ -27,7 +27,16 @@ from prometheus_client import (
     generate_latest,
 )
 
-from . import storage, adapter_client, models, tasks, birthday, polling, moderation
+from . import (
+    storage,
+    adapter_client,
+    models,
+    tasks,
+    birthday,
+    polling,
+    moderation,
+    welcome,
+)
 from .audit import log_action
 from .config import get_channel_config, get_guild_config, load_config, save_config
 from .rate_limit import TokenBucket
@@ -138,6 +147,9 @@ reactionrole_group = app_commands.Group(
 audit_group = app_commands.Group(name="audit", description="Audit log")
 poll_group = app_commands.Group(name="poll", description="Poll commands")
 mod_group = app_commands.Group(name="mod", description="Moderation commands")
+welcome_group = app_commands.Group(
+    name="welcome", description="Welcome message commands"
+)
 
 
 async def admin_rate_limit(interaction: discord.Interaction) -> bool:
@@ -375,6 +387,7 @@ class FLBot(commands.Bot):
         self.tree.add_command(birthday.birthday_group)
         self.tree.add_command(poll_group)
         self.tree.add_command(mod_group)
+        self.tree.add_command(welcome_group)
         birthday.schedule(self)
         self.scheduler.start()
         self.loop.create_task(tasks.delete_expired_messages(self))
@@ -423,6 +436,33 @@ async def on_ready() -> None:
     logger.info("bot_ready", extra={"user": str(bot.user)})
 
 
+@bot.event
+async def on_member_join(member: discord.Member) -> None:
+    logger.info(
+        "member_join",
+        extra={"guild_id": member.guild.id, "user_id": member.id},
+    )
+    cfg = welcome.get_config(bot.db, member.guild.id)
+    if not cfg:
+        return
+    channel = member.guild.get_channel(cfg.channel_id)
+    if not isinstance(channel, discord.TextChannel):
+        return
+    msg = cfg.message.replace("{user}", member.mention)
+    view = welcome.VerifyView(cfg.verify_role_id) if cfg.verify_role_id else None
+    await bot_bucket.acquire()
+    bot_tokens.set(bot_bucket.get_tokens())
+    await channel.send(msg, view=view)
+
+
+@bot.event
+async def on_member_remove(member: discord.Member) -> None:
+    logger.info(
+        "member_leave",
+        extra={"guild_id": member.guild.id, "user_id": member.id},
+    )
+
+
 @bot.tree.command(name="timer", description="Send a self-deleting message")
 @app_commands.describe(message="Message to send", seconds="Seconds before deletion")
 async def timer(
@@ -465,6 +505,41 @@ async def autodelete(interaction: discord.Interaction, seconds: int) -> None:
     await bot_bucket.acquire()
     bot_tokens.set(bot_bucket.get_tokens())
     await interaction.response.send_message("Auto-delete updated")
+
+
+@app_commands.default_permissions(administrator=True)
+@log_action("welcome_setup")
+@welcome_group.command(name="setup", description="Configure welcome message")
+@app_commands.describe(
+    channel="Channel for welcome messages",
+    message="Welcome message (use {user} to mention)",
+    verify_role="Role granted after verification",
+    preview="Send a preview to the channel",
+)
+async def welcome_setup(
+    interaction: discord.Interaction,
+    channel: discord.TextChannel,
+    message: str,
+    verify_role: discord.Role | None = None,
+    preview: bool = False,
+) -> None:
+    if interaction.guild_id is None:
+        await interaction.response.send_message("Guild only", ephemeral=True)
+        return
+    welcome.set_config(
+        bot.db,
+        interaction.guild_id,
+        channel.id,
+        message,
+        verify_role.id if verify_role else None,
+    )
+    await bot_bucket.acquire()
+    bot_tokens.set(bot_bucket.get_tokens())
+    await interaction.response.send_message("Welcome configuration saved")
+    if preview:
+        view = welcome.VerifyView(verify_role.id) if verify_role else None
+        msg = message.replace("{user}", interaction.user.mention)
+        await channel.send(msg, view=view)
 
 
 @fl_group.command(name="login", description="Validate adapter service connectivity")
@@ -1185,8 +1260,12 @@ async def mod_warn(
     user: discord.Member,
     reason: str | None = None,
 ) -> None:
-    if not getattr(getattr(interaction.user, "guild_permissions", None), "moderate_members", False):
-        await interaction.response.send_message("Moderate Members permission required", ephemeral=True)
+    if not getattr(
+        getattr(interaction.user, "guild_permissions", None), "moderate_members", False
+    ):
+        await interaction.response.send_message(
+            "Moderate Members permission required", ephemeral=True
+        )
         return
     db = storage.init_db()
     try:
@@ -1224,7 +1303,9 @@ async def mod_warn(
 
 
 @mod_group.command(name="mute", description="Mute a user")
-@app_commands.describe(user="Member to mute", minutes="Minutes to mute", reason="Reason")
+@app_commands.describe(
+    user="Member to mute", minutes="Minutes to mute", reason="Reason"
+)
 @app_commands.default_permissions(moderate_members=True)
 @log_action("mute", target_param="user")
 async def mod_mute(
@@ -1233,8 +1314,12 @@ async def mod_mute(
     minutes: int = 10,
     reason: str | None = None,
 ) -> None:
-    if not getattr(getattr(interaction.user, "guild_permissions", None), "moderate_members", False):
-        await interaction.response.send_message("Moderate Members permission required", ephemeral=True)
+    if not getattr(
+        getattr(interaction.user, "guild_permissions", None), "moderate_members", False
+    ):
+        await interaction.response.send_message(
+            "Moderate Members permission required", ephemeral=True
+        )
         return
     await user.timeout(timedelta(minutes=minutes), reason=reason)
     db = storage.init_db()
@@ -1310,7 +1395,9 @@ async def mod_ban(
 
 
 @mod_group.command(name="timeout", description="Timeout a user")
-@app_commands.describe(user="Member to timeout", minutes="Minutes to timeout", reason="Reason")
+@app_commands.describe(
+    user="Member to timeout", minutes="Minutes to timeout", reason="Reason"
+)
 @app_commands.default_permissions(moderate_members=True)
 @log_action("timeout", target_param="user")
 async def mod_timeout(
@@ -1358,7 +1445,11 @@ async def mod_modlog(interaction: discord.Interaction, user: discord.Member) -> 
 
 
 @mod_group.command(name="purge", description="Delete messages with optional filters")
-@app_commands.describe(limit="Max messages to search", user="Only delete from user", contains="Only delete containing text")
+@app_commands.describe(
+    limit="Max messages to search",
+    user="Only delete from user",
+    contains="Only delete containing text",
+)
 @app_commands.default_permissions(manage_messages=True)
 @log_action("purge")
 async def mod_purge(
@@ -1380,6 +1471,8 @@ async def mod_purge(
     await interaction.response.send_message(
         f"Deleted {len(deleted)} messages", ephemeral=True
     )
+
+
 @bot.event
 async def on_raw_reaction_add(payload: discord.RawReactionActionEvent) -> None:
     info = storage.get_reaction_role(bot.db, payload.message_id, str(payload.emoji))
@@ -1638,4 +1731,3 @@ async def run_bot() -> None:
 if __name__ == "__main__":
     main()
     asyncio.run(run_bot())
-
