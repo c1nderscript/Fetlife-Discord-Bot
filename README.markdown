@@ -36,8 +36,9 @@ Copy `.env.example` to `.env` and fill in your values. The `.env` file supports 
 
 After configuring the above variables, start the bot and visit `http://localhost:<MGMT_PORT>/`.
 Log in with Discord to access pages for viewing and editing subscriptions, reaction role mappings,
-and channel settings. An audit log viewer is available at `/audit`, the `/audit search` command
-allows filtering records by user or action, and moderation appeals can be reviewed at `/appeals`.
+channel settings, polls, timed messages, and welcome configuration. An audit log viewer is
+available at `/audit`, moderation appeals at `/appeals`, poll management at `/polls`, timed
+message scheduling at `/timed-messages`, and welcome settings at `/welcome`.
 
 ### Audit Logs
 
@@ -49,6 +50,7 @@ The management UI at `/audit` exposes the same records with filtering and pagina
 Send self-deleting messages with `/timer <duration> <content>`.
 Example: `/timer 10m Remember to stretch` deletes the reminder after ten minutes.
 Set channel defaults with `/autodelete enable 1h` and disable with `/autodelete disable`.
+Existing timers can be reviewed or scheduled through the management UI at `/timed-messages`.
 
 ### Poll Commands
 
@@ -56,7 +58,7 @@ Use `/poll create` to open a poll. Specify `yes/no`, `multiple`, or `ranked` typ
 semicolon-separated options for multi-option polls. Polls may auto-close after a duration.
 Example: `/poll create "Best snack?" type:multiple options:"chips;cookies"`.
 `/poll list` shows active polls, `/poll close` ends a poll early, and `/poll results` displays vote
-counts. Poll statistics are visible in the management web interface.
+counts. Poll statistics and manual poll creation are available in the management UI at `/polls`.
 
 ### Birthday Reminders
 
@@ -76,7 +78,7 @@ Examples:
 Run `/welcome setup` to choose a channel, message template, and optional verification role for new members.
 Use `{user}` in the message to mention the joining member and enable the `preview` option to send a sample.
 If a verification role is configured, the bot sends a button that grants the role when clicked. Joins and
-leaves are logged for auditing.
+leaves are logged for auditing. Existing settings can also be managed from the web UI at `/welcome`.
 
 ### Database Migrations
 

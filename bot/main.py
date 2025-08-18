@@ -1600,7 +1600,19 @@ def create_management_app(db) -> web.Application:
 
     async def index(request: web.Request) -> web.Response:
         return web.Response(
-            text="<h1>Management</h1><ul><li><a href='/subscriptions'>Subscriptions</a></li><li><a href='/roles'>Roles</a></li><li><a href='/channels'>Channels</a></li><li><a href='/birthdays'>Birthdays</a></li><li><a href='/audit'>Audit Log</a></li></ul>",
+            text=(
+                "<h1>Management</h1><ul>"
+                "<li><a href='/subscriptions'>Subscriptions</a></li>"
+                "<li><a href='/roles'>Roles</a></li>"
+                "<li><a href='/channels'>Channels</a></li>"
+                "<li><a href='/birthdays'>Birthdays</a></li>"
+                "<li><a href='/polls'>Polls</a></li>"
+                "<li><a href='/timed-messages'>Timed Messages</a></li>"
+                "<li><a href='/welcome'>Welcome</a></li>"
+                "<li><a href='/appeals'>Appeals</a></li>"
+                "<li><a href='/audit'>Audit Log</a></li>"
+                "</ul>"
+            ),
             content_type="text/html",
         )
 
@@ -1691,6 +1703,116 @@ def create_management_app(db) -> web.Application:
         db.commit()
         raise web.HTTPFound("/channels")
 
+    async def polls_page(request: web.Request) -> web.Response:
+        polls = polling.list_polls(db, active_only=False)
+        rows = "".join(f"<li>{p.id} {p.question}</li>" for p in polls)
+        form = (
+            "<form method='post'>"
+            "Question:<input name='question'/><br>"
+            "Type:<input name='type'/><br>"
+            "Options:<input name='options'/><br>"
+            "Channel ID:<input name='channel_id'/><br>"
+            "Closes at (ISO):<input name='closes_at'/><br>"
+            "<button>Create</button></form>"
+        )
+        return web.Response(
+            text=f"<h1>Polls</h1><ul>{rows}</ul>{form}",
+            content_type="text/html",
+        )
+
+    async def poll_create(request: web.Request) -> web.Response:
+        data = await request.post()
+        question = data.get("question", "").strip()
+        poll_type = data.get("type", "yesno").strip()
+        options = [o.strip() for o in data.get("options", "").split(";") if o.strip()]
+        channel_id = int(data.get("channel_id", 0))
+        closes_at_str = data.get("closes_at")
+        closes_at = datetime.fromisoformat(closes_at_str) if closes_at_str else None
+        user_id = int(request["user"]["id"]) if request.get("user") else 0
+        if not question or not channel_id:
+            return web.Response(status=400, text="invalid poll")
+        poll = polling.create_poll(
+            db,
+            question,
+            poll_type,
+            options,
+            user_id,
+            channel_id,
+            closes_at,
+        )
+        if closes_at:
+            polling.schedule_close(bot, poll.id, closes_at)
+        raise web.HTTPFound("/polls")
+
+    async def timed_messages_page(request: web.Request) -> web.Response:
+        rows = db.query(models.TimedMessage).all()
+        items = "".join(f"<li>{r.message_id} delete:{r.delete_at}</li>" for r in rows)
+        form = (
+            "<form method='post'>"
+            "Channel ID:<input name='channel_id'/><br>"
+            "Message:<input name='message'/><br>"
+            "Seconds:<input name='seconds'/><br>"
+            "<button>Send</button></form>"
+        )
+        return web.Response(
+            text=f"<h1>Timed Messages</h1><ul>{items}</ul>{form}",
+            content_type="text/html",
+        )
+
+    async def timed_messages_create(request: web.Request) -> web.Response:
+        data = await request.post()
+        channel_id = int(data.get("channel_id", 0))
+        message = str(data.get("message", ""))
+        seconds = int(data.get("seconds", 0))
+        if not channel_id or not message or seconds <= 0:
+            return web.Response(status=400, text="invalid timer")
+        channel = bot.get_channel(channel_id) if bot else None
+        if not channel or not hasattr(channel, "send"):
+            return web.Response(status=404, text="channel not found")
+        await bot_bucket.acquire()
+        bot_tokens.set(bot_bucket.get_tokens())
+        sent = await channel.send(message)
+        delete_at = datetime.utcnow() + timedelta(seconds=seconds)
+        db.add(
+            models.TimedMessage(
+                message_id=sent.id, channel_id=channel_id, delete_at=delete_at
+            )
+        )
+        db.commit()
+        messages_scheduled.inc()
+        raise web.HTTPFound("/timed-messages")
+
+    async def welcome_page(request: web.Request) -> web.Response:
+        rows = db.query(welcome.WelcomeConfig).all()
+        items = "".join(
+            f"<li>{r.guild_id} channel:{r.channel_id} role:{r.verify_role_id or ''} {r.message}</li>"
+            for r in rows
+        )
+        form = (
+            "<form method='post'>"
+            "Guild ID:<input name='guild_id'/><br>"
+            "Channel ID:<input name='channel_id'/><br>"
+            "Message:<input name='message'/><br>"
+            "Verify Role ID:<input name='verify_role'/><br>"
+            "<button>Save</button></form>"
+        )
+        return web.Response(
+            text=f"<h1>Welcome</h1><ul>{items}</ul>{form}",
+            content_type="text/html",
+        )
+
+    async def welcome_set(request: web.Request) -> web.Response:
+        data = await request.post()
+        guild_id = int(data.get("guild_id", 0))
+        channel_id = int(data.get("channel_id", 0))
+        message = str(data.get("message", ""))
+        verify_role = data.get("verify_role")
+        verify_role_id = int(verify_role) if verify_role else None
+        if not guild_id or not channel_id or not message:
+            return web.Response(status=400, text="invalid config")
+        welcome.set_config(db, guild_id, channel_id, message, verify_role_id)
+        raise web.HTTPFound("/welcome")
+
     app.router.add_get("/", index)
     app.router.add_get("/subscriptions", subscriptions_page)
     app.router.add_post(r"/subscriptions/{sub_id:\d+}/delete", subscription_delete)
@@ -1699,6 +1821,12 @@ def create_management_app(db) -> web.Application:
     app.router.add_get("/birthdays", birthdays_page)
     app.router.add_get("/channels", channels_page)
     app.router.add_post(r"/channels/{channel_id:\d+}/settings", channel_settings)
+    app.router.add_get("/polls", polls_page)
+    app.router.add_post("/polls", poll_create)
+    app.router.add_get("/timed-messages", timed_messages_page)
+    app.router.add_post("/timed-messages", timed_messages_create)
+    app.router.add_get("/welcome", welcome_page)
+    app.router.add_post("/welcome", welcome_set)
     app.router.add_get("/audit", audit_page)
     app.router.add_get("/login", login)
     app.router.add_get("/oauth/callback", oauth_callback)
