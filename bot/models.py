@@ -116,3 +116,13 @@ class ReactionRole(Base):
     emoji = Column(String, primary_key=True)
     role_id = Column(BigInteger, nullable=False)
     guild_id = Column(BigInteger, nullable=False)
+
+
+class AuditLog(Base):
+    __tablename__ = "audit_log"
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    user_id = Column(BigInteger, nullable=True)
+    action = Column(String, nullable=False)
+    target = Column(String, nullable=True)
+    details = Column(JSON, nullable=True)
+    created_at = Column(DateTime, server_default=func.now(), nullable=False)

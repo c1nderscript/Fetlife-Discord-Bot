@@ -28,6 +28,7 @@ from prometheus_client import (
 )
 
 from . import storage, adapter_client, models
+from .audit import log_action
 from .config import get_channel_config, get_guild_config, load_config, save_config
 from .rate_limit import TokenBucket
 from .telegram_bridge import TelegramBridge
@@ -131,6 +132,7 @@ channel_group = app_commands.Group(name="channel", description="Manage guild cha
 reactionrole_group = app_commands.Group(
     name="reactionrole", description="Manage reaction roles"
 )
+audit_group = app_commands.Group(name="audit", description="Audit log")
 
 
 async def admin_rate_limit(interaction: discord.Interaction) -> bool:
@@ -412,6 +414,7 @@ async def on_ready() -> None:
 
 
 @fl_group.command(name="login", description="Validate adapter service connectivity")
+@log_action("login")
 async def fl_login(interaction: discord.Interaction) -> None:
     try:
         ok = await adapter_client.login_adapter(ADAPTER_BASE_URL)
@@ -425,6 +428,7 @@ async def fl_login(interaction: discord.Interaction) -> None:
 
 @account_group.command(name="add", description="Add a FetLife account")
 @app_commands.default_permissions(administrator=True)
+@log_action("account_add", target_param="username")
 async def fl_account_add(
     interaction: discord.Interaction, username: str, password: str
 ) -> None:
@@ -447,6 +451,7 @@ async def fl_account_add(
 
 
 @account_group.command(name="list", description="List stored accounts")
+@log_action("account_list")
 async def fl_account_list(interaction: discord.Interaction) -> None:
     accounts = storage.list_accounts(bot.db)
     if not accounts:
@@ -463,6 +468,7 @@ async def fl_account_list(interaction: discord.Interaction) -> None:
 
 @account_group.command(name="remove", description="Remove an account")
 @app_commands.default_permissions(administrator=True)
+@log_action("account_remove", target_param="account_id")
 async def fl_account_remove(interaction: discord.Interaction, account_id: int) -> None:
     try:
         if not getattr(
@@ -481,6 +487,7 @@ async def fl_account_remove(interaction: discord.Interaction, account_id: int) -
 
 @telegram_group.command(name="add", description="Relay a Telegram chat to a channel")
 @app_commands.default_permissions(administrator=True)
+@log_action("telegram_add", target_param="chat_id")
 async def fl_telegram_add(
     interaction: discord.Interaction, chat_id: str, channel: discord.TextChannel
 ) -> None:
@@ -507,6 +514,7 @@ async def fl_telegram_add(
 
 @telegram_group.command(name="remove", description="Stop relaying a Telegram chat")
 @app_commands.default_permissions(administrator=True)
+@log_action("telegram_remove", target_param="chat_id")
 async def fl_telegram_remove(interaction: discord.Interaction, chat_id: str) -> None:
     try:
         if not getattr(
@@ -530,6 +538,7 @@ async def fl_telegram_remove(interaction: discord.Interaction, chat_id: str) -> 
 
 
 @telegram_group.command(name="list", description="Show active Telegram relays")
+@log_action("telegram_list")
 async def fl_telegram_list(interaction: discord.Interaction) -> None:
     mappings = bot.bridge.mappings if bot.bridge else {}
     if mappings:
@@ -558,6 +567,7 @@ async def fl_telegram_list(interaction: discord.Interaction) -> None:
         app_commands.Choice(name="messages", value="messages"),
     ]
 )
+@log_action("subscribe", target_param="target")
 async def fl_subscribe(
     interaction: discord.Interaction,
     sub_type: str,
@@ -609,6 +619,7 @@ async def fl_subscribe(
 
 
 @fl_group.command(name="list", description="List channel subscriptions")
+@log_action("subscription_list")
 async def fl_list(interaction: discord.Interaction) -> None:
     channel_id = interaction.channel_id
     if channel_id is None:
@@ -628,6 +639,7 @@ async def fl_list(interaction: discord.Interaction) -> None:
 
 
 @fl_group.command(name="unsubscribe", description="Remove a subscription")
+@log_action("unsubscribe", target_param="sub_id")
 async def fl_unsubscribe(interaction: discord.Interaction, sub_id: int) -> None:
     channel_id = interaction.channel_id
     if channel_id is None:
@@ -644,6 +656,7 @@ async def fl_unsubscribe(interaction: discord.Interaction, sub_id: int) -> None:
 
 
 @fl_group.command(name="test", description="Preview an embed")
+@log_action("test", target_param="sub_id")
 async def fl_test(interaction: discord.Interaction, sub_id: int) -> None:
     embed = discord.Embed(title="Test Notification", description=f"sub {sub_id}")
     await bot_bucket.acquire()
@@ -663,6 +676,7 @@ async def fl_test(interaction: discord.Interaction, sub_id: int) -> None:
 
 
 @fl_group.command(name="settings", description="Per-channel configuration")
+@log_action("settings")
 async def fl_settings(
     interaction: discord.Interaction, key: str | None = None, value: str | None = None
 ) -> None:
@@ -685,6 +699,7 @@ async def fl_settings(
 
 
 @fl_group.command(name="health", description="Show adapter health")
+@log_action("health", target_param="resume")
 async def fl_health(
     interaction: discord.Interaction, resume: int | None = None
 ) -> None:
@@ -729,6 +744,7 @@ async def fl_health(
 
 @fl_group.command(name="purge", description="Purge local caches")
 @app_commands.default_permissions(administrator=True)
+@log_action("purge")
 async def fl_purge(interaction: discord.Interaction) -> None:
     try:
         if not getattr(
@@ -748,6 +764,7 @@ async def fl_purge(interaction: discord.Interaction) -> None:
 @channel_group.command(name="create", description="Create a text channel")
 @app_commands.default_permissions(manage_channels=True)
 @app_commands.describe(name="Name for the new channel")
+@log_action("channel_create", target_param="name")
 async def channel_create(interaction: discord.Interaction, name: str) -> None:
     try:
         if not getattr(
@@ -773,6 +790,7 @@ async def channel_create(interaction: discord.Interaction, name: str) -> None:
 @channel_group.command(name="delete", description="Delete a text channel")
 @app_commands.default_permissions(manage_channels=True)
 @app_commands.describe(channel="Channel to delete")
+@log_action("channel_delete", target_param="channel")
 async def channel_delete(
     interaction: discord.Interaction, channel: discord.TextChannel
 ) -> None:
@@ -797,6 +815,7 @@ async def channel_delete(
 @channel_group.command(name="rename", description="Rename a text channel")
 @app_commands.default_permissions(manage_channels=True)
 @app_commands.describe(channel="Channel to rename", name="New channel name")
+@log_action("channel_rename", target_param="channel")
 async def channel_rename(
     interaction: discord.Interaction, channel: discord.TextChannel, name: str
 ) -> None:
@@ -820,6 +839,7 @@ async def channel_rename(
 @admin_cooldown()
 @admin_group.command(name="add", description="Add a role to a member")
 @app_commands.default_permissions(manage_roles=True)
+@log_action("role_add", target_param="role_id")
 async def role_add(
     interaction: discord.Interaction, member: discord.Member, role_id: int
 ) -> None:
@@ -847,6 +867,7 @@ async def role_add(
 @admin_cooldown()
 @admin_group.command(name="remove", description="Remove a role from a member")
 @app_commands.default_permissions(manage_roles=True)
+@log_action("role_remove", target_param="role_id")
 async def role_remove(
     interaction: discord.Interaction, member: discord.Member, role_id: int
 ) -> None:
@@ -874,6 +895,7 @@ async def role_remove(
 @admin_cooldown()
 @admin_group.command(name="list", description="List guild roles")
 @app_commands.default_permissions(manage_roles=True)
+@log_action("role_list")
 async def role_list(interaction: discord.Interaction) -> None:
     try:
         if not getattr(
@@ -897,6 +919,7 @@ async def role_list(interaction: discord.Interaction) -> None:
 @admin_cooldown()
 @reactionrole_group.command(name="add", description="Add a reaction role mapping")
 @app_commands.default_permissions(manage_roles=True)
+@log_action("reactionrole_add", target_param="message_id")
 async def reactionrole_add(
     interaction: discord.Interaction, message_id: int, emoji: str, role_id: int
 ) -> None:
@@ -924,6 +947,7 @@ async def reactionrole_add(
 @admin_cooldown()
 @reactionrole_group.command(name="remove", description="Remove a reaction role mapping")
 @app_commands.default_permissions(manage_roles=True)
+@log_action("reactionrole_remove", target_param="message_id")
 async def reactionrole_remove(
     interaction: discord.Interaction, message_id: int, emoji: str
 ) -> None:
@@ -940,6 +964,33 @@ async def reactionrole_remove(
         await bot_bucket.acquire()
         bot_tokens.set(bot_bucket.get_tokens())
         await interaction.response.send_message(str(exc), ephemeral=True)
+
+
+@audit_group.command(name="search", description="Search audit log")
+@app_commands.describe(
+    user="Filter by user ID", action="Filter by action", limit="Max results"
+)
+@app_commands.default_permissions(administrator=True)
+@log_action("audit_search")
+async def audit_search(
+    interaction: discord.Interaction,
+    user: Optional[int] = None,
+    action: Optional[str] = None,
+    limit: int = 20,
+) -> None:
+    query = bot.db.query(models.AuditLog).order_by(models.AuditLog.id.desc())
+    if user is not None:
+        query = query.filter(models.AuditLog.user_id == user)
+    if action is not None:
+        query = query.filter(models.AuditLog.action == action)
+    rows = query.limit(limit).all()
+    desc = (
+        "\n".join(f"{r.id} {r.user_id} {r.action} {r.target}" for r in rows)
+        or "No results"
+    )
+    await bot_bucket.acquire()
+    bot_tokens.set(bot_bucket.get_tokens())
+    await interaction.response.send_message(desc, ephemeral=True)
 
 
 @bot.event
@@ -1044,7 +1095,7 @@ def create_management_app(db) -> web.Application:
 
     async def index(request: web.Request) -> web.Response:
         return web.Response(
-            text="<h1>Management</h1><ul><li><a href='/subscriptions'>Subscriptions</a></li><li><a href='/roles'>Roles</a></li><li><a href='/channels'>Channels</a></li></ul>",
+            text="<h1>Management</h1><ul><li><a href='/subscriptions'>Subscriptions</a></li><li><a href='/roles'>Roles</a></li><li><a href='/channels'>Channels</a></li><li><a href='/audit'>Audit Log</a></li></ul>",
             content_type="text/html",
         )
 
@@ -1083,6 +1134,21 @@ def create_management_app(db) -> web.Application:
         storage.remove_reaction_role(db, message_id, emoji)
         raise web.HTTPFound("/roles")
 
+    async def audit_page(request: web.Request) -> web.Response:
+        logs = (
+            db.query(models.AuditLog)
+            .order_by(models.AuditLog.id.desc())
+            .limit(100)
+            .all()
+        )
+        rows = "".join(
+            f"<li>{l.created_at} {l.user_id} {l.action} {l.target}</li>" for l in logs
+        )
+        return web.Response(
+            text=f"<h1>Audit Log</h1><ul>{rows}</ul>",
+            content_type="text/html",
+        )
+
     async def channels_page(request: web.Request) -> web.Response:
         channels = db.query(models.Channel).all()
         rows = "".join(
@@ -1117,6 +1183,7 @@ def create_management_app(db) -> web.Application:
     app.router.add_post("/roles/remove", roles_remove)
     app.router.add_get("/channels", channels_page)
     app.router.add_post(r"/channels/{channel_id:\d+}/settings", channel_settings)
+    app.router.add_get("/audit", audit_page)
     app.router.add_get("/login", login)
     app.router.add_get("/oauth/callback", oauth_callback)
     app.router.add_get("/logout", logout)

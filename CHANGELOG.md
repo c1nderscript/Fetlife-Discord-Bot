@@ -3,6 +3,11 @@ All notable changes to this project will be documented here.
 
 ## [Unreleased]
 
+## [1.7.0] - 2025-08-18
+
+### Added
+- Audit log decorator and `/audit search` command with web UI viewer.
+
 ## [1.6.0] - 2025-08-18
 
 ### Added
