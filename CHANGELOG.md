@@ -1,7 +1,11 @@
-# Changelog
 All notable changes to this project will be documented here.
 
 ## [Unreleased]
+
+## [1.8.0] - 2025-08-18
+
+### Added
+- Timed message auto-deletion with `/timer` and `/autodelete` commands, persistent timers, and metrics.
 
 ### Docs
 - docs(toaster): refresh architecture, core files, deps

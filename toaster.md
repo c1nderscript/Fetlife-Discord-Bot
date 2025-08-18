@@ -1,8 +1,8 @@
-# toaster.md — Fetlife-Discord-Bot (v1.7.0)
+# toaster.md — Fetlife-Discord-Bot (v1.8.0)
 
 **TL;DR:** Discord bot and PHP adapter that relay FetLife activity into chat channels.  
 **Primary runtime(s):** Python 3.11 & PHP 8.2 · **Targets:** bot, adapter services · **Owner(s):** @c1nderscript @raincoats  
-**Last refreshed:** 2025-08-18 10:38 UTC
+**Last refreshed:** 2025-08-18 11:13 UTC
 
 ## System Overview
 Python bot polls a FetLife adapter service, persists state in PostgreSQL, and forwards updates to Discord and optional Telegram chats.
@@ -31,6 +31,7 @@ flowchart LR
 | bot/models.py | ORM models | Defines tables for guilds, channels, accounts, subscriptions | `Guild`, `Subscription` |
 | bot/storage.py | Subscription persistence helpers | Adds and retrieves subscriptions from DB | `add_subscription`, `list_subscriptions` |
 | bot/rate_limit.py | Async token bucket rate limiter | Throttles admin commands | `TokenBucket` |
+| bot/tasks.py | Background cleanup tasks | Deletes expired timed messages | `delete_expired_messages` |
 | bot/telegram_bridge.py | Telegram integration | Bridges messages between Discord and Telegram | `TelegramBridge` |
 | bot/audit.py | Audit logging decorator | Records management actions to DB | `log_action` |
 | bot/utils.py | Misc helpers | Shared utility functions | `parse_filters` |
