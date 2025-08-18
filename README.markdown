@@ -41,6 +41,7 @@ moderation actions. An audit log viewer is available at `/audit`, moderation for
 for warn, mute, kick, ban, timeout, and purge, appeals at `/appeals`, poll management at `/polls`
 for creating, closing, and viewing results, timed message scheduling at `/timers`, default
 auto-delete configuration at `/autodelete`, and welcome settings at `/welcome`.
+Pages render using Jinja2 templates stored under `bot/templates/`.
 
 ### Audit Logs
 

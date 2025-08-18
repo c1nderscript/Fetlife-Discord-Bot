@@ -1,0 +1,6 @@
+<h1>Channels</h1>
+<ul>
+{% for c in channels %}
+<li>{{ c.id }} {{ c.name }}<form method='post' action='/channels/{{ c.id }}/settings'><input type='text' name='settings' value='{{ c.settings }}'/><button>Save</button></form></li>
+{% endfor %}
+</ul>

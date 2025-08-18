@@ -1,0 +1,14 @@
+<h1>Welcome</h1>
+<ul>
+{% for r in rows %}
+<li>{{ r.guild_id }} channel:{{ r.channel_id }} role:{{ r.verify_role_id or '' }} {{ r.message }}</li>
+{% endfor %}
+</ul>
+<form method='post'>
+Guild ID:<input name='guild_id'/><br>
+Channel ID:<input name='channel_id'/><br>
+Message:<input name='message'/><br>
+Verify Role ID:<input name='verify_role'/><br>
+<button type='submit'>Save</button>
+<button type='submit' formaction='/welcome/preview'>Preview</button>
+</form>

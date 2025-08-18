@@ -1,0 +1,6 @@
+<h1>Subscriptions</h1>
+<ul>
+{% for s in subs %}
+<li>{{ s.id }} {{ s.type }} {{ s.target_id }}<form method='post' action='/subscriptions/{{ s.id }}/delete'><button>Delete</button></form></li>
+{% endfor %}
+</ul>

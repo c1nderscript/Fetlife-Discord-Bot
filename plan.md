@@ -1,5 +1,5 @@
 ## Goal
-Add `/welcome` management web form to configure channel, message template, verification role, and provide message preview.
+Replace inline HTML management pages with Jinja2 templates and verify rendering.
 
 ## Constraints
 - Follow AGENTS.md: run `docker-compose -f tests/docker-compose.test.yml run --rm -e MOCK_ADAPTER=1 bot-test`, `docker-compose build`, and `docker-compose run --rm bot sh -c "pip install -r requirements-dev.txt && black --check bot && flake8 bot && mypy bot"` before committing.
@@ -7,8 +7,9 @@ Add `/welcome` management web form to configure channel, message template, verif
 - Validate with `su nobody -s /bin/bash -c ./codex.sh fast-validate`.
 
 ## Risks
-- Input validation for guild, channel, and role IDs may be insufficient.
-- Preview rendering may not match actual Discord formatting.
+- Template paths misconfigured leading to runtime errors.
+- Tests may rely on previous inline HTML structure.
+- Unescaped input could allow HTML injection.
 
 ## Test Plan
 - `docker-compose -f tests/docker-compose.test.yml run --rm -e MOCK_ADAPTER=1 bot-test`
@@ -19,11 +20,14 @@ Add `/welcome` management web form to configure channel, message template, verif
 - `su nobody -s /bin/bash -c ./codex.sh fast-validate`
 
 ## Semver
-Minor release: adds welcome configuration web form with preview.
+Minor release: add Jinja2-templated management web interface.
 
 ## Affected Files
 - `bot/main.py`
+- `bot/templates/*`
 - `bot/tests/test_web_interface.py`
+- `requirements.txt`
+- `requirements.lock`
 - `README.markdown`
 - `CHANGELOG.md`
 - `pyproject.toml`

@@ -1,0 +1,6 @@
+<h1>Birthdays</h1>
+<ul>
+{% for r in rows %}
+<li>{{ r.guild_id }}:{{ r.user_id }} {{ r.date }} {{ r.timezone }}</li>
+{% endfor %}
+</ul>
