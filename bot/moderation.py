@@ -17,7 +17,8 @@ from sqlalchemy import (
 )
 from sqlalchemy.orm import Session
 
-from .db import Base, SessionLocal
+from .db import Base
+from .models import AuditLog
 
 
 class InfractionType(str, Enum):
@@ -119,6 +120,186 @@ def submit_appeal(db: Session, infraction_id: int, user_id: int, text: str) -> A
     db.commit()
     db.refresh(appeal)
     return appeal
+
+
+def _log(
+    db: Session,
+    moderator_id: int,
+    action: str,
+    target: str,
+    details: dict | None = None,
+) -> None:
+    """Persist an audit log entry."""
+    entry = AuditLog(
+        user_id=moderator_id, action=action, target=target, details=details or {}
+    )
+    db.add(entry)
+    db.commit()
+
+
+async def warn(
+    bot,
+    db: Session,
+    guild_id: int,
+    moderator_id: int,
+    user_id: int,
+    reason: str | None = None,
+) -> str:
+    guild = bot.get_guild(guild_id)
+    member = guild.get_member(user_id) if guild else None
+    if not guild or not member:
+        raise ValueError("member not found")
+    add_infraction(db, guild_id, user_id, moderator_id, InfractionType.WARN, reason)
+    escalate_to = escalate(db, guild_id, user_id)
+    msg = f"{member.mention} warned"
+    if escalate_to == InfractionType.MUTE:
+        await member.timeout(timedelta(minutes=10), reason="Auto escalation")
+        add_infraction(
+            db,
+            guild_id,
+            user_id,
+            moderator_id,
+            InfractionType.MUTE,
+            "Auto escalation",
+            datetime.utcnow() + timedelta(minutes=10),
+        )
+        msg = f"{member.mention} warned and muted"
+    _log(db, moderator_id, "warn", str(user_id), {"reason": reason})
+    return msg
+
+
+async def mute(
+    bot,
+    db: Session,
+    guild_id: int,
+    moderator_id: int,
+    user_id: int,
+    minutes: int,
+    reason: str | None = None,
+) -> str:
+    guild = bot.get_guild(guild_id)
+    member = guild.get_member(user_id) if guild else None
+    if not guild or not member:
+        raise ValueError("member not found")
+    await member.timeout(timedelta(minutes=minutes), reason=reason)
+    add_infraction(
+        db,
+        guild_id,
+        user_id,
+        moderator_id,
+        InfractionType.MUTE,
+        reason,
+        datetime.utcnow() + timedelta(minutes=minutes),
+    )
+    _log(db, moderator_id, "mute", str(user_id), {"minutes": minutes, "reason": reason})
+    return f"{member.mention} muted"
+
+
+async def kick(
+    bot,
+    db: Session,
+    guild_id: int,
+    moderator_id: int,
+    user_id: int,
+    reason: str | None = None,
+) -> str:
+    guild = bot.get_guild(guild_id)
+    member = guild.get_member(user_id) if guild else None
+    if not guild or not member:
+        raise ValueError("member not found")
+    await guild.kick(member, reason=reason)
+    add_infraction(db, guild_id, user_id, moderator_id, InfractionType.KICK, reason)
+    _log(db, moderator_id, "kick", str(user_id), {"reason": reason})
+    return f"{member.mention} kicked"
+
+
+async def ban(
+    bot,
+    db: Session,
+    guild_id: int,
+    moderator_id: int,
+    user_id: int,
+    reason: str | None = None,
+) -> str:
+    guild = bot.get_guild(guild_id)
+    member = guild.get_member(user_id) if guild else None
+    if not guild or not member:
+        raise ValueError("member not found")
+    await guild.ban(member, reason=reason)
+    add_infraction(db, guild_id, user_id, moderator_id, InfractionType.BAN, reason)
+    _log(db, moderator_id, "ban", str(user_id), {"reason": reason})
+    return f"{member.mention} banned"
+
+
+async def timeout(
+    bot,
+    db: Session,
+    guild_id: int,
+    moderator_id: int,
+    user_id: int,
+    minutes: int,
+    reason: str | None = None,
+) -> str:
+    if minutes <= 0:
+        raise ValueError("minutes must be > 0")
+    guild = bot.get_guild(guild_id)
+    member = guild.get_member(user_id) if guild else None
+    if not guild or not member:
+        raise ValueError("member not found")
+    await member.timeout(timedelta(minutes=minutes), reason=reason)
+    add_infraction(
+        db,
+        guild_id,
+        user_id,
+        moderator_id,
+        InfractionType.TIMEOUT,
+        reason,
+        datetime.utcnow() + timedelta(minutes=minutes),
+    )
+    _log(
+        db,
+        moderator_id,
+        "timeout",
+        str(user_id),
+        {"minutes": minutes, "reason": reason},
+    )
+    return f"{member.mention} timed out"
+
+
+async def purge(
+    bot,
+    db: Session,
+    channel_id: int,
+    moderator_id: int,
+    limit: int = 100,
+    user_id: int | None = None,
+    contains: str | None = None,
+) -> int:
+    channel = bot.get_channel(channel_id) if bot else None
+    if not channel or not hasattr(channel, "purge"):
+        raise ValueError("channel not found")
+
+    def check(msg):
+        if user_id and getattr(msg.author, "id", None) != user_id:
+            return False
+        if contains and contains not in getattr(msg, "content", ""):
+            return False
+        return True
+
+    deleted = await channel.purge(limit=limit, check=check)
+    _log(
+        db,
+        moderator_id,
+        "purge",
+        str(channel_id),
+        {
+            "limit": limit,
+            "user_id": user_id,
+            "contains": contains,
+            "deleted": len(deleted),
+        },
+    )
+    return len(deleted)
 
 
 def register_routes(app, db: Session) -> None:
