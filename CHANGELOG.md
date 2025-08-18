@@ -2,6 +2,11 @@ All notable changes to this project will be documented here.
 
 ## [Unreleased]
 
+## [1.18.0] - 2025-08-19
+
+### Added
+- feat: render management pages with Jinja2 templates.
+
 ## [1.17.0] - 2025-08-19
 
 ### Added

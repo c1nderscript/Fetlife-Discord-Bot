@@ -9,11 +9,13 @@ import logging
 import random
 import re
 from datetime import datetime, timedelta
+from pathlib import Path
 from typing import Any, Dict, Optional, Callable, Awaitable, cast
 
 import discord
 import discord.abc
 from aiohttp import web, ClientError, ClientSession
+from jinja2 import Environment, FileSystemLoader
 from urllib.parse import urlencode
 from apscheduler.schedulers.asyncio import AsyncIOScheduler  # type: ignore[import-untyped]
 from discord import app_commands
@@ -1597,36 +1599,23 @@ async def ready_handler(request: web.Request) -> web.Response:
 
 def create_management_app(db) -> web.Application:
     app = web.Application(middlewares=[auth_middleware])
+    templates = Environment(
+        loader=FileSystemLoader(Path(__file__).parent / "templates"),
+        autoescape=True,
+    )
 
-    async def index(request: web.Request) -> web.Response:
+    def render(name: str, **ctx: Any) -> web.Response:
         return web.Response(
-            text=(
-                "<h1>Management</h1><ul>"
-                "<li><a href='/subscriptions'>Subscriptions</a></li>"
-                "<li><a href='/roles'>Roles</a></li>"
-                "<li><a href='/channels'>Channels</a></li>"
-                "<li><a href='/birthdays'>Birthdays</a></li>"
-                "<li><a href='/polls'>Polls</a></li>"
-                "<li><a href='/timed-messages'>Timed Messages</a></li>"
-                "<li><a href='/welcome'>Welcome</a></li>"
-                "<li><a href='/moderation'>Moderation</a></li>"
-                "<li><a href='/appeals'>Appeals</a></li>"
-                "<li><a href='/audit'>Audit Log</a></li>"
-                "</ul>"
-            ),
+            text=templates.get_template(name).render(**ctx),
             content_type="text/html",
         )
+
+    async def index(request: web.Request) -> web.Response:
+        return render("index.html")
 
     async def subscriptions_page(request: web.Request) -> web.Response:
         subs = db.query(models.Subscription).all()
-        rows = "".join(
-            f"<li>{s.id} {s.type} {s.target_id}<form method='post' action='/subscriptions/{s.id}/delete'><button>Delete</button></form></li>"
-            for s in subs
-        )
-        return web.Response(
-            text=f"<h1>Subscriptions</h1><ul>{rows}</ul>",
-            content_type="text/html",
-        )
+        return render("subscriptions.html", subs=subs)
 
     async def subscription_delete(request: web.Request) -> web.Response:
         sub_id = int(request.match_info["sub_id"])
@@ -1636,23 +1625,11 @@ def create_management_app(db) -> web.Application:
 
     async def birthdays_page(request: web.Request) -> web.Response:
         rows = db.query(birthday.Birthday).all()
-        items = "".join(
-            f"<li>{r.guild_id}:{r.user_id} {r.date} {r.timezone}</li>" for r in rows
-        )
-        return web.Response(
-            text=f"<h1>Birthdays</h1><ul>{items}</ul>", content_type="text/html"
-        )
+        return render("birthdays.html", rows=rows)
 
     async def roles_page(request: web.Request) -> web.Response:
         roles = db.query(models.ReactionRole).all()
-        rows = "".join(
-            f"<li>{r.message_id} {r.emoji} {r.role_id}<form method='post' action='/roles/remove'><input type='hidden' name='message_id' value='{r.message_id}'/><input type='hidden' name='emoji' value='{r.emoji}'/><button>Remove</button></form></li>"
-            for r in roles
-        )
-        return web.Response(
-            text=f"<h1>Roles</h1><ul>{rows}</ul>",
-            content_type="text/html",
-        )
+        return render("roles.html", roles=roles)
 
     async def roles_remove(request: web.Request) -> web.Response:
         data = await request.post()
@@ -1668,25 +1645,19 @@ def create_management_app(db) -> web.Application:
             .limit(100)
             .all()
         )
-        rows = "".join(
-            f"<li>{log.created_at} {log.user_id} {log.action} {log.target}</li>"
-            for log in logs
-        )
-        return web.Response(
-            text=f"<h1>Audit Log</h1><ul>{rows}</ul>",
-            content_type="text/html",
-        )
+        return render("audit.html", logs=logs)
 
     async def channels_page(request: web.Request) -> web.Response:
         channels = db.query(models.Channel).all()
-        rows = "".join(
-            f"<li>{c.id} {c.name or ''}<form method='post' action='/channels/{c.id}/settings'><input type='text' name='settings' value='{json.dumps(c.settings_json or {})}'/><button>Save</button></form></li>"
+        channels_data = [
+            {
+                "id": c.id,
+                "name": c.name or "",
+                "settings": json.dumps(c.settings_json or {}),
+            }
             for c in channels
-        )
-        return web.Response(
-            text=f"<h1>Channels</h1><ul>{rows}</ul>",
-            content_type="text/html",
-        )
+        ]
+        return render("channels.html", channels=channels_data)
 
     async def channel_settings(request: web.Request) -> web.Response:
         channel_id = int(request.match_info["channel_id"])
@@ -1706,38 +1677,7 @@ def create_management_app(db) -> web.Application:
 
     async def polls_page(request: web.Request) -> web.Response:
         polls = polling.list_polls(db, active_only=False)
-        rows = "".join(
-            (
-                f"<li>{p.id} {p.question}{' (closed)' if p.closed else ''} "
-                f"<a href='/polls/{p.id}'>Results</a>"
-                + (
-                    (
-                        "<form style='display:inline' method='post' action='/polls/{p.id}/close'><button>Close</button></form>"
-                    ).format(p=p)
-                    if not p.closed
-                    else ""
-                )
-                + "</li>"
-            )
-            for p in polls
-        )
-        form = (
-            "<form method='post'>"
-            "Question:<input name='question'/><br>"
-            "Type:<select name='type'>"
-            "<option value='yesno'>yes/no</option>"
-            "<option value='multiple'>multiple</option>"
-            "<option value='ranked'>ranked</option>"
-            "</select><br>"
-            "Options (semicolon separated):<input name='options'/><br>"
-            "Channel ID:<input name='channel_id'/><br>"
-            "Duration minutes:<input name='duration'/><br>"
-            "<button>Create</button></form>"
-        )
-        return web.Response(
-            text=f"<h1>Polls</h1><ul>{rows}</ul>{form}",
-            content_type="text/html",
-        )
+        return render("polls.html", polls=polls)
 
     async def poll_create(request: web.Request) -> web.Response:
         data = await request.post()
@@ -1780,26 +1720,11 @@ def create_management_app(db) -> web.Application:
         poll = db.get(polling.Poll, poll_id)
         if not poll:
             return web.Response(status=404, text="not found")
-        rows = "".join(f"<li>{opt}: {count}</li>" for opt, count in results.items())
-        return web.Response(
-            text=f"<h1>{poll.question}</h1><ul>{rows}</ul>",
-            content_type="text/html",
-        )
+        return render("poll_results.html", poll=poll, results=results)
 
     async def timers_page(request: web.Request) -> web.Response:
         rows = db.query(models.TimedMessage).all()
-        items = "".join(f"<li>{r.message_id} delete:{r.delete_at}</li>" for r in rows)
-        form = (
-            "<form method='post'>"
-            "Channel ID:<input name='channel_id'/><br>"
-            "Message:<input name='message'/><br>"
-            "Seconds:<input name='seconds'/><br>"
-            "<button>Send</button></form>"
-        )
-        return web.Response(
-            text=f"<h1>Timed Messages</h1><ul>{items}</ul>{form}",
-            content_type="text/html",
-        )
+        return render("timers.html", rows=rows)
 
     async def timers_create(request: web.Request) -> web.Response:
         data = await request.post()
@@ -1826,16 +1751,14 @@ def create_management_app(db) -> web.Application:
 
     async def autodelete_page(request: web.Request) -> web.Response:
         channels = db.query(models.Channel).all()
-        rows = "".join(
-            f"<li>{c.id} <form method='post'><input type='hidden' name='channel_id' value='{c.id}'/>"
-            f"Seconds:<input name='seconds' value='{int((c.settings_json or {}).get('autodelete', 0))}'/>"
-            "<button>Save</button></form></li>"
+        channels_data = [
+            {
+                "id": c.id,
+                "seconds": int((c.settings_json or {}).get("autodelete", 0)),
+            }
             for c in channels
-        )
-        return web.Response(
-            text=f"<h1>Auto-Delete</h1><ul>{rows}</ul>",
-            content_type="text/html",
-        )
+        ]
+        return render("autodelete.html", channels=channels_data)
 
     async def autodelete_set(request: web.Request) -> web.Response:
         data = await request.post()
@@ -1852,24 +1775,7 @@ def create_management_app(db) -> web.Application:
 
     async def welcome_page(request: web.Request) -> web.Response:
         rows = db.query(welcome.WelcomeConfig).all()
-        items = "".join(
-            f"<li>{r.guild_id} channel:{r.channel_id} role:{r.verify_role_id or ''} {r.message}</li>"
-            for r in rows
-        )
-        form = (
-            "<form method='post'>"
-            "Guild ID:<input name='guild_id'/><br>"
-            "Channel ID:<input name='channel_id'/><br>"
-            "Message:<input name='message'/><br>"
-            "Verify Role ID:<input name='verify_role'/><br>"
-            "<button type='submit'>Save</button>"
-            "<button type='submit' formaction='/welcome/preview'>Preview</button>"
-            "</form>"
-        )
-        return web.Response(
-            text=f"<h1>Welcome</h1><ul>{items}</ul>{form}",
-            content_type="text/html",
-        )
+        return render("welcome.html", rows=rows)
 
     async def welcome_set(request: web.Request) -> web.Response:
         data = await request.post()
@@ -1887,49 +1793,10 @@ def create_management_app(db) -> web.Application:
         data = await request.post()
         message = str(data.get("message", ""))
         preview = message.replace("{user}", "@User")
-        body = (
-            f"<h1>Preview</h1><p>{preview}</p><a href='/welcome'>Back</a>"
-        )
-        return web.Response(text=body, content_type="text/html")
+        return render("welcome_preview.html", preview=preview)
 
     async def moderation_page(request: web.Request) -> web.Response:
-        forms = (
-            "<h1>Moderation</h1>"
-            "<form method='post' action='/moderation/warn'>"
-            "Guild ID:<input name='guild_id'/><br>"
-            "User ID:<input name='user_id'/><br>"
-            "Reason:<input name='reason'/><br>"
-            "<button>Warn</button></form>"
-            "<form method='post' action='/moderation/mute'>"
-            "Guild ID:<input name='guild_id'/><br>"
-            "User ID:<input name='user_id'/><br>"
-            "Minutes:<input name='minutes' value='10'/><br>"
-            "Reason:<input name='reason'/><br>"
-            "<button>Mute</button></form>"
-            "<form method='post' action='/moderation/kick'>"
-            "Guild ID:<input name='guild_id'/><br>"
-            "User ID:<input name='user_id'/><br>"
-            "Reason:<input name='reason'/><br>"
-            "<button>Kick</button></form>"
-            "<form method='post' action='/moderation/ban'>"
-            "Guild ID:<input name='guild_id'/><br>"
-            "User ID:<input name='user_id'/><br>"
-            "Reason:<input name='reason'/><br>"
-            "<button>Ban</button></form>"
-            "<form method='post' action='/moderation/timeout'>"
-            "Guild ID:<input name='guild_id'/><br>"
-            "User ID:<input name='user_id'/><br>"
-            "Minutes:<input name='minutes'/><br>"
-            "Reason:<input name='reason'/><br>"
-            "<button>Timeout</button></form>"
-            "<form method='post' action='/moderation/purge'>"
-            "Channel ID:<input name='channel_id'/><br>"
-            "Limit:<input name='limit' value='100'/><br>"
-            "User ID:<input name='user_id'/><br>"
-            "Contains:<input name='contains'/><br>"
-            "<button>Purge</button></form>"
-        )
-        return web.Response(text=forms, content_type="text/html")
+        return render("moderation.html")
 
     async def moderation_warn(request: web.Request) -> web.Response:
         data = await request.post()

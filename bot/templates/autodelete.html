@@ -1,0 +1,6 @@
+<h1>Auto-Delete</h1>
+<ul>
+{% for c in channels %}
+<li>{{ c.id }} <form method='post'><input type='hidden' name='channel_id' value='{{ c.id }}'/>Seconds:<input name='seconds' value='{{ c.seconds }}'/><button>Save</button></form></li>
+{% endfor %}
+</ul>

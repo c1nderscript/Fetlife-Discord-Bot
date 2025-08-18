@@ -1,0 +1,11 @@
+<h1>Timed Messages</h1>
+<ul>
+{% for r in rows %}
+<li>{{ r.message_id }} delete:{{ r.delete_at }}</li>
+{% endfor %}
+</ul>
+<form method='post'>
+Channel ID:<input name='channel_id'/><br>
+Message:<input name='message'/><br>
+Seconds:<input name='seconds'/><br>
+<button>Send</button></form>

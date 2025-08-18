@@ -1,0 +1,34 @@
+<h1>Moderation</h1>
+<form method='post' action='/moderation/warn'>
+Guild ID:<input name='guild_id'/><br>
+User ID:<input name='user_id'/><br>
+Reason:<input name='reason'/><br>
+<button>Warn</button></form>
+<form method='post' action='/moderation/mute'>
+Guild ID:<input name='guild_id'/><br>
+User ID:<input name='user_id'/><br>
+Minutes:<input name='minutes' value='10'/><br>
+Reason:<input name='reason'/><br>
+<button>Mute</button></form>
+<form method='post' action='/moderation/kick'>
+Guild ID:<input name='guild_id'/><br>
+User ID:<input name='user_id'/><br>
+Reason:<input name='reason'/><br>
+<button>Kick</button></form>
+<form method='post' action='/moderation/ban'>
+Guild ID:<input name='guild_id'/><br>
+User ID:<input name='user_id'/><br>
+Reason:<input name='reason'/><br>
+<button>Ban</button></form>
+<form method='post' action='/moderation/timeout'>
+Guild ID:<input name='guild_id'/><br>
+User ID:<input name='user_id'/><br>
+Minutes:<input name='minutes'/><br>
+Reason:<input name='reason'/><br>
+<button>Timeout</button></form>
+<form method='post' action='/moderation/purge'>
+Channel ID:<input name='channel_id'/><br>
+Limit:<input name='limit' value='100'/><br>
+User ID:<input name='user_id'/><br>
+Contains:<input name='contains'/><br>
+<button>Purge</button></form>

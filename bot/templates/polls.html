@@ -1,0 +1,17 @@
+<h1>Polls</h1>
+<ul>
+{% for p in polls %}
+<li>{{ p.id }} {{ p.question }}{% if p.closed %} (closed){% endif %} <a href='/polls/{{ p.id }}'>Results</a>{% if not p.closed %}<form style='display:inline' method='post' action='/polls/{{ p.id }}/close'><button>Close</button></form>{% endif %}</li>
+{% endfor %}
+</ul>
+<form method='post'>
+Question:<input name='question'/><br>
+Type:<select name='type'>
+<option value='yesno'>yes/no</option>
+<option value='multiple'>multiple</option>
+<option value='ranked'>ranked</option>
+</select><br>
+Options (semicolon separated):<input name='options'/><br>
+Channel ID:<input name='channel_id'/><br>
+Duration minutes:<input name='duration'/><br>
+<button>Create</button></form>

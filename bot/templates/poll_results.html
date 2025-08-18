@@ -1,0 +1,6 @@
+<h1>{{ poll.question }}</h1>
+<ul>
+{% for opt, count in results.items() %}
+<li>{{ opt }}: {{ count }}</li>
+{% endfor %}
+</ul>

@@ -25,7 +25,7 @@ def test_management_ui(monkeypatch):
         client.session.cookie_jar.update_cookies({"session": cookie})
         resp = await client.get("/subscriptions")
         text = await resp.text()
-        assert "events" in text
+        assert "<h1>Subscriptions" in text and "events" in text and "<form" in text
         await client.post(f"/subscriptions/{sub_id}/delete")
         assert storage.list_subscriptions(db, 123) == []
         await client.post("/channels/123/settings", data={"settings": '{"x":1}'})
@@ -35,7 +35,7 @@ def test_management_ui(monkeypatch):
         assert storage.get_reaction_role(db, 10, "😀") is None
         resp = await client.get("/audit")
         text = await resp.text()
-        assert "test" in text
+        assert "<h1>Audit Log" in text and "test" in text
 
         await client.post(
             "/polls",
@@ -97,7 +97,7 @@ def test_management_ui(monkeypatch):
             "/welcome/preview", data={"message": "hi {user}"}
         )
         text = await resp.text()
-        assert "hi @User" in text
+        assert "<h1>Preview" in text and "hi @User" in text
         await client.close()
         await server.close()
 
