@@ -1,5 +1,5 @@
 ## Goal
-Add birthday reminders with /birthday commands, daily announcements, optional role assignment, time zones, and web UI calendar.
+Add polling system with `/poll create`, `/poll close`, `/poll results`, and `/poll list` commands supporting yes/no, multiple choice, and ranked voting with reaction or button inputs, auto-close timers, and analytics in the web UI.
 
 ## Constraints
 - Follow AGENTS.md: run `docker-compose -f tests/docker-compose.test.yml run --rm -e MOCK_ADAPTER=1 bot-test`, `docker-compose build`, and `docker-compose run --rm bot sh -c "pip install -r requirements-dev.txt && black --check bot && flake8 bot && mypy bot"` before committing.
@@ -7,8 +7,9 @@ Add birthday reminders with /birthday commands, daily announcements, optional ro
 - Validate with `su nobody -s /bin/bash -c ./codex.sh fast-validate`.
 
 ## Risks
-- Incorrect time zone handling could miss or duplicate announcements.
-- Privacy settings might expose dates if misconfigured.
+- Concurrency issues could allow multiple votes per user if reactions aren't properly tracked.
+- Ranked-choice tallying may be miscomputed leading to incorrect results.
+- Auto-close timers might fail if the bot restarts before completion.
 
 ## Test Plan
 - `docker-compose -f tests/docker-compose.test.yml run --rm -e MOCK_ADAPTER=1 bot-test`
@@ -22,13 +23,11 @@ Add birthday reminders with /birthday commands, daily announcements, optional ro
 Minor release: adds new feature without breaking existing APIs.
 
 ## Affected Packages
-- `bot/birthday.py`
+- `bot/polling.py`
 - `bot/main.py`
-- `bot/models.py`
-- `bot/tests/test_birthday_commands.py`
 - `README.markdown`
-- `CHANGELOG.md`
 - `toaster.md`
+- `CHANGELOG.md`
 - `pyproject.toml`
 - `composer.json`
 

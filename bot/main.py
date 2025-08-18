@@ -27,7 +27,7 @@ from prometheus_client import (
     generate_latest,
 )
 
-from . import storage, adapter_client, models, tasks, birthday
+from . import storage, adapter_client, models, tasks, birthday, polling
 from .audit import log_action
 from .config import get_channel_config, get_guild_config, load_config, save_config
 from .rate_limit import TokenBucket
@@ -136,6 +136,7 @@ reactionrole_group = app_commands.Group(
     name="reactionrole", description="Manage reaction roles"
 )
 audit_group = app_commands.Group(name="audit", description="Audit log")
+poll_group = app_commands.Group(name="poll", description="Poll commands")
 
 
 async def admin_rate_limit(interaction: discord.Interaction) -> bool:
@@ -371,6 +372,7 @@ class FLBot(commands.Bot):
                     run_date=datetime.utcnow() + timedelta(seconds=1),
                 )
         self.tree.add_command(birthday.birthday_group)
+        self.tree.add_command(poll_group)
         birthday.schedule(self)
         self.scheduler.start()
         self.loop.create_task(tasks.delete_expired_messages(self))
@@ -1043,6 +1045,135 @@ async def audit_search(
     await interaction.response.send_message(desc, ephemeral=True)
 
 
+@poll_group.command(name="create", description="Create a poll")
+@app_commands.describe(
+    question="Question to ask",
+    poll_type="Type of poll",
+    options="Semicolon-separated options for multiple or ranked",
+    duration="Seconds until auto-close",
+)
+@app_commands.choices(
+    poll_type=[
+        app_commands.Choice(name="yes/no", value="yesno"),
+        app_commands.Choice(name="multiple choice", value="multiple"),
+        app_commands.Choice(name="ranked", value="ranked"),
+    ]
+)
+async def poll_create(
+    interaction: discord.Interaction,
+    question: str,
+    poll_type: app_commands.Choice[str],
+    options: str | None = None,
+    duration: int | None = None,
+) -> None:
+    opts = [o.strip() for o in (options or "").split(";") if o.strip()]
+    if poll_type.value == "yesno":
+        opts = ["Yes", "No"]
+    elif not opts:
+        await interaction.response.send_message("options required", ephemeral=True)
+        return
+    closes_at = (
+        datetime.utcnow() + timedelta(seconds=duration)
+        if duration and duration > 0
+        else None
+    )
+    db = storage.init_db()
+    poll = polling.create_poll(
+        db,
+        question,
+        poll_type.value,
+        opts,
+        interaction.user.id,
+        interaction.channel_id,
+        closes_at,
+    )
+    db.close()
+    content = f"**{question}**\n" + "\n".join(
+        f"{i + 1}. {opt}" for i, opt in enumerate(opts)
+    )
+    await bot_bucket.acquire()
+    bot_tokens.set(bot_bucket.get_tokens())
+    msg = await interaction.channel.send(content)
+    if poll_type.value == "yesno":
+        await msg.add_reaction("👍")
+        await msg.add_reaction("👎")
+    else:
+
+        class PollButton(discord.ui.Button):
+            def __init__(self, idx: int, label: str) -> None:
+                super().__init__(label=label, custom_id=f"poll:{poll.id}:{idx}")
+                self.idx = idx
+
+            async def callback(self, btn_inter: discord.Interaction) -> None:
+                dbi = storage.init_db()
+                try:
+                    polling.record_vote(dbi, poll.id, btn_inter.user.id, self.idx)
+                finally:
+                    dbi.close()
+                await btn_inter.response.send_message("Vote recorded", ephemeral=True)
+
+        class PollView(discord.ui.View):
+            def __init__(self) -> None:
+                super().__init__(timeout=None)
+                for i, opt in enumerate(opts):
+                    self.add_item(PollButton(i, opt))
+
+        view = PollView()
+        await msg.edit(view=view)
+    db = storage.init_db()
+    try:
+        polling.set_message(db, poll.id, msg.id)
+    finally:
+        db.close()
+    if closes_at:
+        polling.schedule_close(bot, poll.id, closes_at)
+    await interaction.response.send_message(f"Created poll {poll.id}", ephemeral=True)
+
+
+@poll_group.command(name="close", description="Close a poll")
+async def poll_close(interaction: discord.Interaction, poll_id: int) -> None:
+    db = storage.init_db()
+    poll = db.get(polling.Poll, poll_id)
+    if not poll:
+        db.close()
+        await interaction.response.send_message("poll not found", ephemeral=True)
+        return
+    polling.close_poll(db, poll_id)
+    db.close()
+    channel = bot.get_channel(poll.channel_id)
+    if hasattr(channel, "fetch_message") and poll.message_id:
+        try:
+            msg = await channel.fetch_message(poll.message_id)
+            await msg.edit(view=None)
+        except Exception:
+            pass
+    await interaction.response.send_message("Poll closed", ephemeral=True)
+
+
+@poll_group.command(name="results", description="Show poll results")
+async def poll_results_cmd(interaction: discord.Interaction, poll_id: int) -> None:
+    db = storage.init_db()
+    results = polling.poll_results(db, poll_id)
+    db.close()
+    if not results:
+        await interaction.response.send_message("poll not found", ephemeral=True)
+        return
+    lines = [f"{opt}: {count}" for opt, count in results.items()]
+    await interaction.response.send_message("\n".join(lines), ephemeral=True)
+
+
+@poll_group.command(name="list", description="List active polls")
+async def poll_list(interaction: discord.Interaction) -> None:
+    db = storage.init_db()
+    polls = polling.list_polls(db)
+    db.close()
+    if not polls:
+        await interaction.response.send_message("No active polls", ephemeral=True)
+        return
+    lines = [f"{p.id}: {p.question}" for p in polls]
+    await interaction.response.send_message("\n".join(lines), ephemeral=True)
+
+
 @bot.event
 async def on_raw_reaction_add(payload: discord.RawReactionActionEvent) -> None:
     info = storage.get_reaction_role(bot.db, payload.message_id, str(payload.emoji))
@@ -1075,6 +1206,31 @@ async def on_raw_reaction_remove(payload: discord.RawReactionActionEvent) -> Non
     await bot_bucket.acquire()
     bot_tokens.set(bot_bucket.get_tokens())
     await member.remove_roles(role)
+
+
+@bot.event
+async def on_reaction_add(reaction: discord.Reaction, user: discord.User) -> None:
+    if user.bot:
+        return
+    db = storage.init_db()
+    try:
+        poll = (
+            db.query(polling.Poll)
+            .filter_by(message_id=reaction.message.id, closed=False)
+            .first()
+        )
+        if not poll:
+            return
+        choice = (
+            0
+            if str(reaction.emoji) == "👍"
+            else 1 if str(reaction.emoji) == "👎" else None
+        )
+        if choice is None:
+            return
+        polling.record_vote(db, poll.id, user.id, choice)
+    finally:
+        db.close()
 
 
 async def login(request: web.Request) -> web.Response:
@@ -1201,7 +1357,8 @@ def create_management_app(db) -> web.Application:
             .all()
         )
         rows = "".join(
-            f"<li>{log.created_at} {log.user_id} {log.action} {log.target}</li>" for log in logs
+            f"<li>{log.created_at} {log.user_id} {log.action} {log.target}</li>"
+            for log in logs
         )
         return web.Response(
             text=f"<h1>Audit Log</h1><ul>{rows}</ul>",
