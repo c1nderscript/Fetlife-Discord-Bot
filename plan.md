@@ -1,5 +1,5 @@
 ## Goal
-Expose polling, timed message, moderation appeal, and welcome configuration controls via the management web UI and document the new capabilities.
+Add management web UI support for polls including listing, creation, manual closing, and result display while documenting the new endpoints.
 
 ## Constraints
 - Follow AGENTS.md: run `docker-compose -f tests/docker-compose.test.yml run --rm -e MOCK_ADAPTER=1 bot-test`, `docker-compose build`, and `docker-compose run --rm bot sh -c "pip install -r requirements-dev.txt && black --check bot && flake8 bot && mypy bot"` before committing.
