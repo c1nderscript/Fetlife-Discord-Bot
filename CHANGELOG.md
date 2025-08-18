@@ -3,6 +3,11 @@ All notable changes to this project will be documented here.
 
 ## [Unreleased]
 
+## [1.6.0] - 2025-08-18
+
+### Added
+- Rate limit admin commands with configurable per-guild cooldowns.
+
 ## [1.5.2] - 2025-08-18
 
 ### Added

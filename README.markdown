@@ -72,10 +72,14 @@ Docker Compose declares health checks for both services using these endpoints. A
 
    ```yaml
    defaults:
-     thread_per_event: false
+    thread_per_event: false
+    admin_command_rate: 5
+    admin_command_per: 60
    guilds:
      "123456789012345678":
        thread_per_event: true
+       admin_command_rate: 10
+       admin_command_per: 60
        channels:
          "234567890123456789":
            attendee_sample: 5
@@ -86,6 +90,9 @@ Docker Compose declares health checks for both services using these endpoints. A
 
    This file is loaded at runtime; avoid storing credentials in it.
    Manage Telegram relays at runtime with `/fl telegram add`, `/fl telegram remove`, and `/fl telegram list`.
+
+   Administrative commands like `/role`, `/channel`, and `/reactionrole` are rate limited. Defaults allow `5` uses per `60`
+   seconds per guild and can be overridden with `admin_command_rate` and `admin_command_per` in `config.yaml`.
 
    The Telegram bridge automatically reconnects and forwards photos and documents as Discord attachments. For `messages` subscriptions, relayed DMs are also sent to the mapped Telegram chat.
 

@@ -28,7 +28,7 @@ from prometheus_client import (
 )
 
 from . import storage, adapter_client, models
-from .config import get_channel_config, load_config, save_config
+from .config import get_channel_config, get_guild_config, load_config, save_config
 from .rate_limit import TokenBucket
 from .telegram_bridge import TelegramBridge
 
@@ -131,6 +131,29 @@ channel_group = app_commands.Group(name="channel", description="Manage guild cha
 reactionrole_group = app_commands.Group(
     name="reactionrole", description="Manage reaction roles"
 )
+
+
+async def admin_rate_limit(interaction: discord.Interaction) -> bool:
+    cfg = get_guild_config(bot.config, interaction.guild_id)
+    rate = int(cfg.get("admin_command_rate", 5))
+    per = float(cfg.get("admin_command_per", 60))
+    command_name = interaction.command.qualified_name if interaction.command else ""
+    key = (interaction.guild_id or 0, command_name)
+    mapping = bot.admin_cooldowns.get(key)
+    if not mapping or mapping._cooldown.rate != rate or mapping._cooldown.per != per:
+        mapping = commands.CooldownMapping.from_cooldown(
+            rate, per, commands.BucketType.guild
+        )
+        bot.admin_cooldowns[key] = mapping
+    bucket = mapping.get_bucket(interaction)
+    retry_after = bucket.update_rate_limit()
+    if retry_after:
+        raise app_commands.CommandOnCooldown(mapping._cooldown, retry_after)
+    return True
+
+
+def admin_cooldown() -> Callable[[Callable[..., Any]], Callable[..., Any]]:
+    return app_commands.check(admin_rate_limit)
 
 
 async def poll_adapter(db, sub_id: int, data: Dict[str, Any]):
@@ -323,6 +346,7 @@ class FLBot(commands.Bot):
             )
         self.last_poll = 0.0
         self.sub_status: Dict[int, Dict[str, Any]] = {}
+        self.admin_cooldowns: Dict[tuple[int, str], commands.CooldownMapping] = {}
 
     async def setup_hook(self) -> None:
         channels = [c.id for c in self.db.query(models.Channel.id).all()]
@@ -720,6 +744,7 @@ async def fl_purge(interaction: discord.Interaction) -> None:
         await interaction.response.send_message(str(exc), ephemeral=True)
 
 
+@admin_cooldown()
 @channel_group.command(name="create", description="Create a text channel")
 @app_commands.default_permissions(manage_channels=True)
 @app_commands.describe(name="Name for the new channel")
@@ -744,6 +769,7 @@ async def channel_create(interaction: discord.Interaction, name: str) -> None:
         await interaction.response.send_message(str(exc), ephemeral=True)
 
 
+@admin_cooldown()
 @channel_group.command(name="delete", description="Delete a text channel")
 @app_commands.default_permissions(manage_channels=True)
 @app_commands.describe(channel="Channel to delete")
@@ -767,6 +793,7 @@ async def channel_delete(
         await interaction.response.send_message(str(exc), ephemeral=True)
 
 
+@admin_cooldown()
 @channel_group.command(name="rename", description="Rename a text channel")
 @app_commands.default_permissions(manage_channels=True)
 @app_commands.describe(channel="Channel to rename", name="New channel name")
@@ -790,6 +817,7 @@ async def channel_rename(
         await interaction.response.send_message(str(exc), ephemeral=True)
 
 
+@admin_cooldown()
 @admin_group.command(name="add", description="Add a role to a member")
 @app_commands.default_permissions(manage_roles=True)
 async def role_add(
@@ -816,6 +844,7 @@ async def role_add(
         await interaction.response.send_message(str(exc), ephemeral=True)
 
 
+@admin_cooldown()
 @admin_group.command(name="remove", description="Remove a role from a member")
 @app_commands.default_permissions(manage_roles=True)
 async def role_remove(
@@ -842,6 +871,7 @@ async def role_remove(
         await interaction.response.send_message(str(exc), ephemeral=True)
 
 
+@admin_cooldown()
 @admin_group.command(name="list", description="List guild roles")
 @app_commands.default_permissions(manage_roles=True)
 async def role_list(interaction: discord.Interaction) -> None:
@@ -864,6 +894,7 @@ async def role_list(interaction: discord.Interaction) -> None:
         await interaction.response.send_message(str(exc), ephemeral=True)
 
 
+@admin_cooldown()
 @reactionrole_group.command(name="add", description="Add a reaction role mapping")
 @app_commands.default_permissions(manage_roles=True)
 async def reactionrole_add(
@@ -890,6 +921,7 @@ async def reactionrole_add(
         await interaction.response.send_message(str(exc), ephemeral=True)
 
 
+@admin_cooldown()
 @reactionrole_group.command(name="remove", description="Remove a reaction role mapping")
 @app_commands.default_permissions(manage_roles=True)
 async def reactionrole_remove(
