@@ -2,7 +2,7 @@
 
 **TL;DR:** Discord bot and PHP adapter that relay FetLife activity into chat channels.  
 **Primary runtime(s):** Python 3.11 & PHP 8.2 · **Targets:** bot, adapter services · **Owner(s):** @c1nderscript @raincoats  
-**Last refreshed:** 2025-08-18 11:25 UTC
+**Last refreshed:** 2025-08-18 12:28 UTC
 
 ## System Overview
 Python bot polls a FetLife adapter service, persists state in PostgreSQL, and forwards updates to Discord and optional Telegram chats.
@@ -145,6 +145,15 @@ python -m bot.main
 * Docker/Compose images: `postgres:15`, local `bot` and `adapter` builds
 * CI workflows: `.github/workflows/release-hygiene.yml`, `.github/workflows/release.yml`
 * Metrics/Logs/Tracing: Prometheus metrics at `/metrics`
+
+## Workflow Examples
+
+- **Audit logs:** `/audit search user:123 action:ban` → records stored via `bot/audit.py` and viewable at `/audit`.
+- **Timers:** `/timer 10m cleanup` → `apscheduler` schedules deletion in `bot/tasks.py`.
+- **Birthdays:** `/birthday set 2000-01-01` → `bot/birthday.py` saves the date and daily jobs announce in configured channels.
+- **Polls:** `/poll create "Best snack?" type:multiple options:"chips;cookies"` → `bot/polling.py` tracks votes and auto-closes.
+- **Moderation:** `/mute @user 10m` → `bot/moderation.py` logs an infraction and `bot/audit.py` records the action.
+- **Welcome:** `/welcome setup channel:#introductions message:"Welcome {user}" verify-role:@member` → `bot/welcome.py` sends messages and logs joins.
 
 ## Gaps & Assumptions
 

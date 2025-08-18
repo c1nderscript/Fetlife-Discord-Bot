@@ -1,5 +1,5 @@
 ## Goal
-Add welcome system with configurable messages and optional verification via `/welcome setup`, send welcome messages on member join, assign roles after verification, preview messages, and log joins/leaves.
+Document audit logs, timers, birthdays, polls, moderation, and welcome workflows with practical examples in README.markdown, AGENTS.md, and toaster.md.
 
 ## Constraints
 - Follow AGENTS.md: run `docker-compose -f tests/docker-compose.test.yml run --rm -e MOCK_ADAPTER=1 bot-test`, `docker-compose build`, and `docker-compose run --rm bot sh -c "pip install -r requirements-dev.txt && black --check bot && flake8 bot && mypy bot"` before committing.
@@ -7,9 +7,8 @@ Add welcome system with configurable messages and optional verification via `/we
 - Validate with `su nobody -s /bin/bash -c ./codex.sh fast-validate`.
 
 ## Risks
-- Misconfigured welcome messages could ping unintended roles.
-- Verification bypass could grant roles without checks.
-- Unhandled exceptions on join events could block onboarding.
+- Examples may drift from actual command syntax.
+- Documentation could omit security requirements (HTTPS adapter URL).
 
 ## Test Plan
 - `docker-compose -f tests/docker-compose.test.yml run --rm -e MOCK_ADAPTER=1 bot-test`
@@ -20,17 +19,14 @@ Add welcome system with configurable messages and optional verification via `/we
 - `su nobody -s /bin/bash -c ./codex.sh fast-validate`
 
 ## Semver
-Minor release: adds new welcome features without breaking existing APIs.
+Patch release: documentation-only updates.
 
-## Affected Packages
-- `bot/welcome.py`
-- `bot/main.py`
-- `alembic/versions/0007_add_welcome_configs.py`
+## Affected Files
 - `README.markdown`
+- `AGENTS.md`
 - `toaster.md`
 - `CHANGELOG.md`
-- `pyproject.toml`
-- `composer.json`
+- `plan.md`
 
 ## Rollback
 Revert commit.
