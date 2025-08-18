@@ -3,9 +3,9 @@
     "description": "FetLife adapter library",
     "type": "library",
     "license": "AGPL-3.0-or-later",
-    "version": "1.5.1",
+    "version": "1.5.2",
     "require": {"php": "^8.2"},
     "require-dev": {"phpunit/phpunit": "9.6.23"},
     "autoload": {"psr-4": {"FetLife\\": "src/"}},
-    "autoload-dev": {"psr-4": {"FetLife\\Tests\\": "tests/"}},
+    "autoload-dev": {"psr-4": {"FetLife\\Tests\\": "tests/"}}
 }

@@ -364,6 +364,8 @@ def main(require_env: bool = True) -> FLBot:
     global TOKEN, ADAPTER_BASE_URL, TELEGRAM_API_ID, TELEGRAM_API_HASH, MGMT_PORT, SESSION_SECRET, ADMIN_IDS, DISCORD_CLIENT_ID, DISCORD_CLIENT_SECRET, OAUTH_REDIRECT_URI
     TOKEN = os.getenv("DISCORD_TOKEN", "")
     ADAPTER_BASE_URL = os.getenv("ADAPTER_BASE_URL", ADAPTER_BASE_URL)
+    if not os.getenv("MOCK_ADAPTER") and not ADAPTER_BASE_URL.startswith("https://"):
+        raise SystemExit("ADAPTER_BASE_URL must start with https://")
     TELEGRAM_API_ID = os.getenv("TELEGRAM_API_ID")
     TELEGRAM_API_HASH = os.getenv("TELEGRAM_API_HASH")
     MGMT_PORT = int(os.getenv("MGMT_PORT", str(MGMT_PORT)))
@@ -1078,11 +1080,11 @@ def create_management_app(db) -> web.Application:
 
     app.router.add_get("/", index)
     app.router.add_get("/subscriptions", subscriptions_page)
-    app.router.add_post("/subscriptions/{sub_id:\d+}/delete", subscription_delete)
+    app.router.add_post(r"/subscriptions/{sub_id:\d+}/delete", subscription_delete)
     app.router.add_get("/roles", roles_page)
     app.router.add_post("/roles/remove", roles_remove)
     app.router.add_get("/channels", channels_page)
-    app.router.add_post("/channels/{channel_id:\d+}/settings", channel_settings)
+    app.router.add_post(r"/channels/{channel_id:\d+}/settings", channel_settings)
     app.router.add_get("/login", login)
     app.router.add_get("/oauth/callback", oauth_callback)
     app.router.add_get("/logout", logout)
