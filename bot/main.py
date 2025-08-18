@@ -1862,7 +1862,9 @@ def create_management_app(db) -> web.Application:
             "Channel ID:<input name='channel_id'/><br>"
             "Message:<input name='message'/><br>"
             "Verify Role ID:<input name='verify_role'/><br>"
-            "<button>Save</button></form>"
+            "<button type='submit'>Save</button>"
+            "<button type='submit' formaction='/welcome/preview'>Preview</button>"
+            "</form>"
         )
         return web.Response(
             text=f"<h1>Welcome</h1><ul>{items}</ul>{form}",
@@ -1880,6 +1882,15 @@ def create_management_app(db) -> web.Application:
             return web.Response(status=400, text="invalid config")
         welcome.set_config(db, guild_id, channel_id, message, verify_role_id)
         raise web.HTTPFound("/welcome")
+
+    async def welcome_preview(request: web.Request) -> web.Response:
+        data = await request.post()
+        message = str(data.get("message", ""))
+        preview = message.replace("{user}", "@User")
+        body = (
+            f"<h1>Preview</h1><p>{preview}</p><a href='/welcome'>Back</a>"
+        )
+        return web.Response(text=body, content_type="text/html")
 
     async def moderation_page(request: web.Request) -> web.Response:
         forms = (
@@ -2012,6 +2023,7 @@ def create_management_app(db) -> web.Application:
     app.router.add_post("/autodelete", autodelete_set)
     app.router.add_get("/welcome", welcome_page)
     app.router.add_post("/welcome", welcome_set)
+    app.router.add_post("/welcome/preview", welcome_preview)
     app.router.add_get("/moderation", moderation_page)
     app.router.add_post("/moderation/warn", moderation_warn)
     app.router.add_post("/moderation/mute", moderation_mute)

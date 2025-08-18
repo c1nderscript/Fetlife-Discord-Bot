@@ -81,7 +81,8 @@ Examples:
 Run `/welcome setup` to choose a channel, message template, and optional verification role for new members.
 Use `{user}` in the message to mention the joining member and enable the `preview` option to send a sample.
 If a verification role is configured, the bot sends a button that grants the role when clicked. Joins and
-leaves are logged for auditing. Existing settings can also be managed from the web UI at `/welcome`.
+leaves are logged for auditing. Existing settings can also be managed from the web UI at `/welcome`, which
+includes a preview option for the message template.
 
 ### Database Migrations
 

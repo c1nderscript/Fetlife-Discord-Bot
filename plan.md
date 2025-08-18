@@ -1,5 +1,5 @@
 ## Goal
-Add moderation management web forms for warn, mute, kick, ban, timeout, and purge actions.
+Add `/welcome` management web form to configure channel, message template, verification role, and provide message preview.
 
 ## Constraints
 - Follow AGENTS.md: run `docker-compose -f tests/docker-compose.test.yml run --rm -e MOCK_ADAPTER=1 bot-test`, `docker-compose build`, and `docker-compose run --rm bot sh -c "pip install -r requirements-dev.txt && black --check bot && flake8 bot && mypy bot"` before committing.
@@ -7,8 +7,8 @@ Add moderation management web forms for warn, mute, kick, ban, timeout, and purg
 - Validate with `su nobody -s /bin/bash -c ./codex.sh fast-validate`.
 
 ## Risks
-- Input validation for moderation forms may be insufficient.
-- Moderation actions may fail if Discord objects cannot be resolved.
+- Input validation for guild, channel, and role IDs may be insufficient.
+- Preview rendering may not match actual Discord formatting.
 
 ## Test Plan
 - `docker-compose -f tests/docker-compose.test.yml run --rm -e MOCK_ADAPTER=1 bot-test`
@@ -19,12 +19,11 @@ Add moderation management web forms for warn, mute, kick, ban, timeout, and purg
 - `su nobody -s /bin/bash -c ./codex.sh fast-validate`
 
 ## Semver
-Minor release: adds moderation web forms.
+Minor release: adds welcome configuration web form with preview.
 
 ## Affected Files
 - `bot/main.py`
-- `bot/moderation.py`
-- `bot/tests/test_moderation_forms.py`
+- `bot/tests/test_web_interface.py`
 - `README.markdown`
 - `CHANGELOG.md`
 - `pyproject.toml`
