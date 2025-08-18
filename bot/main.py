@@ -27,7 +27,7 @@ from prometheus_client import (
     generate_latest,
 )
 
-from . import storage, adapter_client, models
+from . import storage, adapter_client, models, tasks
 from .audit import log_action
 from .config import get_channel_config, get_guild_config, load_config, save_config
 from .rate_limit import TokenBucket
@@ -113,6 +113,9 @@ adapter_tokens = Gauge(
     "adapter_rate_limit_tokens", "Tokens currently available for adapter"
 )
 bot_tokens = Gauge("bot_rate_limit_tokens", "Tokens currently available for bot")
+messages_scheduled = Counter(
+    "timed_messages_scheduled_total", "Timed messages scheduled"
+)
 
 adapter_bucket = TokenBucket(5, 1)
 bot_bucket = TokenBucket(5, 1)
@@ -368,6 +371,7 @@ class FLBot(commands.Bot):
                     run_date=datetime.utcnow() + timedelta(seconds=1),
                 )
         self.scheduler.start()
+        self.loop.create_task(tasks.delete_expired_messages(self))
 
 
 bot = FLBot()
@@ -411,6 +415,50 @@ async def on_ready() -> None:
     global ready_flag
     ready_flag = True
     logger.info("bot_ready", extra={"user": str(bot.user)})
+
+
+@bot.tree.command(name="timer", description="Send a self-deleting message")
+@app_commands.describe(message="Message to send", seconds="Seconds before deletion")
+async def timer(
+    interaction: discord.Interaction, message: str, seconds: int | None = None
+) -> None:
+    if interaction.channel_id is None or interaction.channel is None:
+        await interaction.response.send_message("Channel only", ephemeral=True)
+        return
+    if seconds is None:
+        settings = storage.get_channel_settings(bot.db, interaction.channel_id)
+        seconds = int(settings.get("autodelete", 0))
+    if seconds <= 0:
+        await interaction.response.send_message(
+            "Timer must be positive", ephemeral=True
+        )
+        return
+    await bot_bucket.acquire()
+    bot_tokens.set(bot_bucket.get_tokens())
+    await interaction.response.send_message(message)
+    sent = await interaction.original_response()
+    delete_at = datetime.utcnow() + timedelta(seconds=seconds)
+    bot.db.add(
+        models.TimedMessage(
+            message_id=sent.id, channel_id=sent.channel.id, delete_at=delete_at
+        )
+    )
+    bot.db.commit()
+    messages_scheduled.inc()
+
+
+@app_commands.default_permissions(administrator=True)
+@log_action("autodelete")
+@bot.tree.command(name="autodelete", description="Set channel auto-delete timer")
+@app_commands.describe(seconds="Seconds before deletion (0 to disable)")
+async def autodelete(interaction: discord.Interaction, seconds: int) -> None:
+    if interaction.channel_id is None:
+        await interaction.response.send_message("Channel only", ephemeral=True)
+        return
+    storage.set_channel_settings(bot.db, interaction.channel_id, autodelete=seconds)
+    await bot_bucket.acquire()
+    bot_tokens.set(bot_bucket.get_tokens())
+    await interaction.response.send_message("Auto-delete updated")
 
 
 @fl_group.command(name="login", description="Validate adapter service connectivity")

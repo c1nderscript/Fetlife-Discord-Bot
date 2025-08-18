@@ -1,14 +1,14 @@
 ## Goal
-Refresh toaster.md architecture doc and update CHANGELOG.
+Add timed message auto-deletion with `/timer` and `/autodelete` commands, persistence, and metrics.
 
 ## Constraints
 - Follow AGENTS.md: run `docker-compose -f tests/docker-compose.test.yml run --rm -e MOCK_ADAPTER=1 bot-test`, `docker-compose build`, and `docker-compose run --rm bot sh -c "pip install -r requirements-dev.txt && black --check bot && flake8 bot && mypy bot"` before committing.
 - Run `pip-audit` and `composer audit`.
-- No code or config changes beyond docs.
+- Validate with `su nobody -s /bin/bash -c ./codex.sh fast-validate`.
 
 ## Risks
-- Architecture summary could drift from reality.
-- Missing required environment variable documentation.
+- Discord API errors could leave messages undeleted.
+- Misconfigured timers might remove messages unexpectedly.
 
 ## Test Plan
 - `docker-compose -f tests/docker-compose.test.yml run --rm -e MOCK_ADAPTER=1 bot-test`
@@ -19,11 +19,19 @@ Refresh toaster.md architecture doc and update CHANGELOG.
 - `su nobody -s /bin/bash -c ./codex.sh fast-validate`
 
 ## Semver
-Patch release: documentation update only.
+Minor release: new features.
 
 ## Affected Packages
-- `toaster.md`
+- `bot/main.py`
+- `bot/models.py`
+- `bot/tasks.py`
+- `alembic/versions/0006_add_timed_messages.py`
 - `CHANGELOG.md`
+- `README.markdown`
+- `toaster.md`
+- `pyproject.toml`
+- `composer.json`
+- `bot/tests/test_timer_commands.py`
 
 ## Rollback
 Revert commit.

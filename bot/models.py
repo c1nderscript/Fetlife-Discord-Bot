@@ -118,6 +118,13 @@ class ReactionRole(Base):
     guild_id = Column(BigInteger, nullable=False)
 
 
+class TimedMessage(Base):
+    __tablename__ = "timed_messages"
+    message_id = Column(BigInteger, primary_key=True)
+    channel_id = Column(BigInteger, nullable=False)
+    delete_at = Column(DateTime, nullable=False)
+
+
 class AuditLog(Base):
     __tablename__ = "audit_log"
     id = Column(Integer, primary_key=True, autoincrement=True)
