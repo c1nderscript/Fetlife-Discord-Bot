@@ -2,6 +2,11 @@ All notable changes to this project will be documented here.
 
 ## [Unreleased]
 
+## [1.17.0] - 2025-08-19
+
+### Added
+- feat: add welcome configuration web form with preview option.
+
 ## [1.16.0] - 2025-08-19
 
 ### Added

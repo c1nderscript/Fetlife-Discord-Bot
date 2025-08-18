@@ -93,6 +93,11 @@ def test_management_ui(monkeypatch):
         )
         cfg = welcome.get_config(db, 1)
         assert cfg and cfg.message == "hello"
+        resp = await client.post(
+            "/welcome/preview", data={"message": "hi {user}"}
+        )
+        text = await resp.text()
+        assert "hi @User" in text
         await client.close()
         await server.close()
 
