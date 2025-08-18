@@ -2,6 +2,11 @@ All notable changes to this project will be documented here.
 
 ## [Unreleased]
 
+## [1.11.0] - 2025-08-18
+
+### Added
+- Moderation system with `/warn`, `/mute`, `/kick`, `/ban`, `/timeout`, `/modlog`, `/purge`, infractions, escalation, appeals dashboard.
+
 ## [1.10.0] - 2025-08-18
 
 ### Added

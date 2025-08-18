@@ -27,7 +27,7 @@ from prometheus_client import (
     generate_latest,
 )
 
-from . import storage, adapter_client, models, tasks, birthday, polling
+from . import storage, adapter_client, models, tasks, birthday, polling, moderation
 from .audit import log_action
 from .config import get_channel_config, get_guild_config, load_config, save_config
 from .rate_limit import TokenBucket
@@ -137,6 +137,7 @@ reactionrole_group = app_commands.Group(
 )
 audit_group = app_commands.Group(name="audit", description="Audit log")
 poll_group = app_commands.Group(name="poll", description="Poll commands")
+mod_group = app_commands.Group(name="mod", description="Moderation commands")
 
 
 async def admin_rate_limit(interaction: discord.Interaction) -> bool:
@@ -373,6 +374,7 @@ class FLBot(commands.Bot):
                 )
         self.tree.add_command(birthday.birthday_group)
         self.tree.add_command(poll_group)
+        self.tree.add_command(mod_group)
         birthday.schedule(self)
         self.scheduler.start()
         self.loop.create_task(tasks.delete_expired_messages(self))
@@ -1174,6 +1176,210 @@ async def poll_list(interaction: discord.Interaction) -> None:
     await interaction.response.send_message("\n".join(lines), ephemeral=True)
 
 
+@mod_group.command(name="warn", description="Warn a user")
+@app_commands.describe(user="Member to warn", reason="Reason")
+@app_commands.default_permissions(moderate_members=True)
+@log_action("warn", target_param="user")
+async def mod_warn(
+    interaction: discord.Interaction,
+    user: discord.Member,
+    reason: str | None = None,
+) -> None:
+    if not getattr(getattr(interaction.user, "guild_permissions", None), "moderate_members", False):
+        await interaction.response.send_message("Moderate Members permission required", ephemeral=True)
+        return
+    db = storage.init_db()
+    try:
+        moderation.add_infraction(
+            db,
+            interaction.guild_id,
+            user.id,
+            interaction.user.id,
+            moderation.InfractionType.WARN,
+            reason,
+        )
+        escalate = moderation.escalate(db, interaction.guild_id, user.id)
+    finally:
+        db.close()
+    if escalate == moderation.InfractionType.MUTE:
+        await user.timeout(timedelta(minutes=10), reason="Auto escalation")
+        db2 = storage.init_db()
+        try:
+            moderation.add_infraction(
+                db2,
+                interaction.guild_id,
+                user.id,
+                interaction.user.id,
+                moderation.InfractionType.MUTE,
+                "Auto escalation",
+            )
+        finally:
+            db2.close()
+        msg = f"{user.mention} warned and muted"
+    else:
+        msg = f"{user.mention} warned"
+    await bot_bucket.acquire()
+    bot_tokens.set(bot_bucket.get_tokens())
+    await interaction.response.send_message(msg, ephemeral=True)
+
+
+@mod_group.command(name="mute", description="Mute a user")
+@app_commands.describe(user="Member to mute", minutes="Minutes to mute", reason="Reason")
+@app_commands.default_permissions(moderate_members=True)
+@log_action("mute", target_param="user")
+async def mod_mute(
+    interaction: discord.Interaction,
+    user: discord.Member,
+    minutes: int = 10,
+    reason: str | None = None,
+) -> None:
+    if not getattr(getattr(interaction.user, "guild_permissions", None), "moderate_members", False):
+        await interaction.response.send_message("Moderate Members permission required", ephemeral=True)
+        return
+    await user.timeout(timedelta(minutes=minutes), reason=reason)
+    db = storage.init_db()
+    try:
+        moderation.add_infraction(
+            db,
+            interaction.guild_id,
+            user.id,
+            interaction.user.id,
+            moderation.InfractionType.MUTE,
+            reason,
+            datetime.utcnow() + timedelta(minutes=minutes),
+        )
+    finally:
+        db.close()
+    await bot_bucket.acquire()
+    bot_tokens.set(bot_bucket.get_tokens())
+    await interaction.response.send_message(f"{user.mention} muted", ephemeral=True)
+
+
+@mod_group.command(name="kick", description="Kick a user")
+@app_commands.describe(user="Member to kick", reason="Reason")
+@app_commands.default_permissions(kick_members=True)
+@log_action("kick", target_param="user")
+async def mod_kick(
+    interaction: discord.Interaction,
+    user: discord.Member,
+    reason: str | None = None,
+) -> None:
+    await interaction.guild.kick(user, reason=reason)
+    db = storage.init_db()
+    try:
+        moderation.add_infraction(
+            db,
+            interaction.guild_id,
+            user.id,
+            interaction.user.id,
+            moderation.InfractionType.KICK,
+            reason,
+        )
+    finally:
+        db.close()
+    await bot_bucket.acquire()
+    bot_tokens.set(bot_bucket.get_tokens())
+    await interaction.response.send_message(f"{user.mention} kicked", ephemeral=True)
+
+
+@mod_group.command(name="ban", description="Ban a user")
+@app_commands.describe(user="Member to ban", reason="Reason")
+@app_commands.default_permissions(ban_members=True)
+@log_action("ban", target_param="user")
+async def mod_ban(
+    interaction: discord.Interaction,
+    user: discord.Member,
+    reason: str | None = None,
+) -> None:
+    await interaction.guild.ban(user, reason=reason)
+    db = storage.init_db()
+    try:
+        moderation.add_infraction(
+            db,
+            interaction.guild_id,
+            user.id,
+            interaction.user.id,
+            moderation.InfractionType.BAN,
+            reason,
+        )
+    finally:
+        db.close()
+    await bot_bucket.acquire()
+    bot_tokens.set(bot_bucket.get_tokens())
+    await interaction.response.send_message(f"{user.mention} banned", ephemeral=True)
+
+
+@mod_group.command(name="timeout", description="Timeout a user")
+@app_commands.describe(user="Member to timeout", minutes="Minutes to timeout", reason="Reason")
+@app_commands.default_permissions(moderate_members=True)
+@log_action("timeout", target_param="user")
+async def mod_timeout(
+    interaction: discord.Interaction,
+    user: discord.Member,
+    minutes: int,
+    reason: str | None = None,
+) -> None:
+    if minutes <= 0:
+        await interaction.response.send_message("minutes must be > 0", ephemeral=True)
+        return
+    await user.timeout(timedelta(minutes=minutes), reason=reason)
+    db = storage.init_db()
+    try:
+        moderation.add_infraction(
+            db,
+            interaction.guild_id,
+            user.id,
+            interaction.user.id,
+            moderation.InfractionType.TIMEOUT,
+            reason,
+            datetime.utcnow() + timedelta(minutes=minutes),
+        )
+    finally:
+        db.close()
+    await bot_bucket.acquire()
+    bot_tokens.set(bot_bucket.get_tokens())
+    await interaction.response.send_message(f"{user.mention} timed out", ephemeral=True)
+
+
+@mod_group.command(name="modlog", description="Show a user's infractions")
+@app_commands.describe(user="Member to query")
+@app_commands.default_permissions(moderate_members=True)
+@log_action("modlog", target_param="user")
+async def mod_modlog(interaction: discord.Interaction, user: discord.Member) -> None:
+    db = storage.init_db()
+    try:
+        rows = moderation.list_infractions(db, interaction.guild_id, user.id)
+    finally:
+        db.close()
+    lines = [f"{r.type} {r.reason or ''}" for r in rows] or ["No infractions"]
+    await bot_bucket.acquire()
+    bot_tokens.set(bot_bucket.get_tokens())
+    await interaction.response.send_message("\n".join(lines), ephemeral=True)
+
+
+@mod_group.command(name="purge", description="Delete messages with optional filters")
+@app_commands.describe(limit="Max messages to search", user="Only delete from user", contains="Only delete containing text")
+@app_commands.default_permissions(manage_messages=True)
+@log_action("purge")
+async def mod_purge(
+    interaction: discord.Interaction,
+    limit: int = 100,
+    user: Optional[discord.User] = None,
+    contains: Optional[str] = None,
+) -> None:
+    def check(msg: discord.Message) -> bool:
+        if user and msg.author.id != user.id:
+            return False
+        if contains and contains not in msg.content:
+            return False
+        return True
+
+    deleted = await interaction.channel.purge(limit=limit, check=check)
+    await bot_bucket.acquire()
+    bot_tokens.set(bot_bucket.get_tokens())
+    await interaction.response.send_message(
+        f"Deleted {len(deleted)} messages", ephemeral=True
+    )
 @bot.event
 async def on_raw_reaction_add(payload: discord.RawReactionActionEvent) -> None:
     info = storage.get_reaction_role(bot.db, payload.message_id, str(payload.emoji))
@@ -1406,6 +1612,7 @@ def create_management_app(db) -> web.Application:
     app.router.add_get("/logout", logout)
     app.router.add_get("/metrics", metrics_handler)
     app.router.add_get("/ready", ready_handler)
+    moderation.register_routes(app, db)
     return app
 
 
@@ -1431,3 +1638,4 @@ async def run_bot() -> None:
 if __name__ == "__main__":
     main()
     asyncio.run(run_bot())
+

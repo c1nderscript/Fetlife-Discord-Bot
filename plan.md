@@ -1,5 +1,5 @@
 ## Goal
-Add polling system with `/poll create`, `/poll close`, `/poll results`, and `/poll list` commands supporting yes/no, multiple choice, and ranked voting with reaction or button inputs, auto-close timers, and analytics in the web UI.
+Add moderation system with infractions table and moderation commands including `/warn`, `/mute`, `/kick`, `/ban`, `/timeout`, `/modlog`, `/purge`, plus appeal workflow scaffolding and dashboard stub.
 
 ## Constraints
 - Follow AGENTS.md: run `docker-compose -f tests/docker-compose.test.yml run --rm -e MOCK_ADAPTER=1 bot-test`, `docker-compose build`, and `docker-compose run --rm bot sh -c "pip install -r requirements-dev.txt && black --check bot && flake8 bot && mypy bot"` before committing.
@@ -7,9 +7,9 @@ Add polling system with `/poll create`, `/poll close`, `/poll results`, and `/po
 - Validate with `su nobody -s /bin/bash -c ./codex.sh fast-validate`.
 
 ## Risks
-- Concurrency issues could allow multiple votes per user if reactions aren't properly tracked.
-- Ranked-choice tallying may be miscomputed leading to incorrect results.
-- Auto-close timers might fail if the bot restarts before completion.
+- Misconfigured permissions could allow abuse of moderation commands.
+- Escalation logic might silence users more than intended.
+- Purge filters risk deleting unintended messages.
 
 ## Test Plan
 - `docker-compose -f tests/docker-compose.test.yml run --rm -e MOCK_ADAPTER=1 bot-test`
@@ -20,10 +20,10 @@ Add polling system with `/poll create`, `/poll close`, `/poll results`, and `/po
 - `su nobody -s /bin/bash -c ./codex.sh fast-validate`
 
 ## Semver
-Minor release: adds new feature without breaking existing APIs.
+Minor release: adds new features without breaking existing APIs.
 
 ## Affected Packages
-- `bot/polling.py`
+- `bot/moderation.py`
 - `bot/main.py`
 - `README.markdown`
 - `toaster.md`

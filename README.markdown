@@ -4,7 +4,7 @@
 
 ## Discord Bot
 
-The `bot/` directory contains a Python application using `discord.py` that relays FetLife updates into Discord. It implements `/fl` slash commands for managing subscriptions, `/timer` for self-deleting messages, `/autodelete` for per-channel defaults, `/poll` for gathering yes/no, multiple choice, or ranked responses with automatic closing and web UI analytics, and exposes Prometheus metrics at `/metrics` plus a readiness probe at `/ready`. Metrics include counters such as `fetlife_requests_total`, `discord_messages_sent_total`, and `duplicates_suppressed_total` as well as histograms like `poll_cycle_seconds` and gauges such as `rate_limit_tokens`. Configuration is read from a `.env` file and an optional `config.yaml`.
+The `bot/` directory contains a Python application using `discord.py` that relays FetLife updates into Discord. It implements `/fl` slash commands for managing subscriptions, `/timer` for self-deleting messages, `/autodelete` for per-channel defaults, moderation commands like `/warn`, `/mute`, `/kick`, `/ban`, `/timeout`, `/modlog`, `/purge`, `/poll` for gathering yes/no, multiple choice, or ranked responses with automatic closing and web UI analytics, and exposes Prometheus metrics at `/metrics` plus a readiness probe at `/ready`. Metrics include counters such as `fetlife_requests_total`, `discord_messages_sent_total`, and `duplicates_suppressed_total` as well as histograms like `poll_cycle_seconds` and gauges such as `rate_limit_tokens`. Configuration is read from a `.env` file and an optional `config.yaml`.
 
 ### Docker Compose Quick Start
 
@@ -36,8 +36,8 @@ Copy `.env.example` to `.env` and fill in your values. The `.env` file supports 
 
 After configuring the above variables, start the bot and visit `http://localhost:<MGMT_PORT>/`.
 Log in with Discord to access pages for viewing and editing subscriptions, reaction role mappings,
-and channel settings. An audit log viewer is available at `/audit` and the `/audit search` command
-allows filtering records by user or action.
+and channel settings. An audit log viewer is available at `/audit`, the `/audit search` command
+allows filtering records by user or action, and moderation appeals can be reviewed at `/appeals`.
 
 ### Poll Commands
 
