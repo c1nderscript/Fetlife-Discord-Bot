@@ -39,19 +39,37 @@ Log in with Discord to access pages for viewing and editing subscriptions, react
 and channel settings. An audit log viewer is available at `/audit`, the `/audit search` command
 allows filtering records by user or action, and moderation appeals can be reviewed at `/appeals`.
 
+### Audit Logs
+
+Use `/audit search user:123 action:ban` to list ban actions taken by user `123`.
+The management UI at `/audit` exposes the same records with filtering and pagination.
+
+### Timed Messages
+
+Send self-deleting messages with `/timer <duration> <content>`.
+Example: `/timer 10m Remember to stretch` deletes the reminder after ten minutes.
+Set channel defaults with `/autodelete enable 1h` and disable with `/autodelete disable`.
+
 ### Poll Commands
 
 Use `/poll create` to open a poll. Specify `yes/no`, `multiple`, or `ranked` types and provide
 semicolon-separated options for multi-option polls. Polls may auto-close after a duration.
+Example: `/poll create "Best snack?" type:multiple options:"chips;cookies"`.
 `/poll list` shows active polls, `/poll close` ends a poll early, and `/poll results` displays vote
 counts. Poll statistics are visible in the management web interface.
 
 ### Birthday Reminders
 
 Configure a `birthday_channel` for each guild in `config.yaml` to receive daily birthday announcements.
-Members can manage entries with `/birthday set`, `/birthday list`, and `/birthday remove`.
+Members can manage entries with `/birthday set 2000-01-01`, `/birthday list`, and `/birthday remove`.
 The command supports time zones, a privacy flag to hide mentions, and an optional role assignment
 applied on the user's birthday. A calendar view is available in the management UI at `/birthdays`.
+
+### Moderation Commands
+
+Server moderation tools include `/warn`, `/mute`, `/kick`, `/ban`, `/timeout`, `/modlog`, and `/purge`.
+Examples:
+`/warn @user Be respectful`, `/mute @user 10m`, and `/modlog` to review recent actions.
 
 ### Welcome Messages
 

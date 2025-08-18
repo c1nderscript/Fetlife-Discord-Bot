@@ -2,6 +2,9 @@ All notable changes to this project will be documented here.
 
 ## [Unreleased]
 
+### Docs
+- docs: add workflow examples for audit logs, timers, birthdays, polls, moderation, and welcome
+
 ## [1.12.0] - 2025-08-18
 
 ### Added
