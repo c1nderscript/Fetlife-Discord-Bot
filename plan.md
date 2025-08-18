@@ -1,5 +1,5 @@
 ## Goal
-Add management web UI support for polls including listing, creation, manual closing, and result display while documenting the new endpoints.
+Add management web UI pages for timers and auto-delete settings.
 
 ## Constraints
 - Follow AGENTS.md: run `docker-compose -f tests/docker-compose.test.yml run --rm -e MOCK_ADAPTER=1 bot-test`, `docker-compose build`, and `docker-compose run --rm bot sh -c "pip install -r requirements-dev.txt && black --check bot && flake8 bot && mypy bot"` before committing.
@@ -7,8 +7,8 @@ Add management web UI support for polls including listing, creation, manual clos
 - Validate with `su nobody -s /bin/bash -c ./codex.sh fast-validate`.
 
 ## Risks
-- Web handlers may expose unsecured inputs if validation is insufficient.
-- Discord interactions may fail during timed message scheduling.
+- Input validation for forms may be insufficient.
+- Timer scheduling or deletion could fail.
 
 ## Test Plan
 - `docker-compose -f tests/docker-compose.test.yml run --rm -e MOCK_ADAPTER=1 bot-test`
@@ -19,7 +19,7 @@ Add management web UI support for polls including listing, creation, manual clos
 - `su nobody -s /bin/bash -c ./codex.sh fast-validate`
 
 ## Semver
-Minor release: adds new management web features.
+Minor release: adds new management UI pages.
 
 ## Affected Files
 - `bot/main.py`
