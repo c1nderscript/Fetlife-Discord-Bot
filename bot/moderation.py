@@ -131,7 +131,9 @@ def register_routes(app, db: Session) -> None:
             f"<li>{a.id} infraction:{a.infraction_id} {a.text}<form method='post' action='/appeals/{a.id}/resolve'><button>Resolve</button></form></li>"
             for a in rows
         )
-        return web.Response(text=f"<h1>Appeals</h1><ul>{items}</ul>", content_type="text/html")
+        return web.Response(
+            text=f"<h1>Appeals</h1><ul>{items}</ul>", content_type="text/html"
+        )
 
     async def resolve(request: web.Request) -> web.Response:
         appeal_id = int(request.match_info["app_id"])

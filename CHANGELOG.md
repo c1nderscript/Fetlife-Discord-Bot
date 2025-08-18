@@ -2,6 +2,11 @@ All notable changes to this project will be documented here.
 
 ## [Unreleased]
 
+## [1.13.0] - 2025-08-18
+
+### Added
+- feat: expand management web UI with poll, timed message, and welcome pages
+
 ### Docs
 - docs: add workflow examples for audit logs, timers, birthdays, polls, moderation, and welcome
 

@@ -1,7 +1,7 @@
 import asyncio
 from aiohttp.test_utils import TestServer, TestClient
 
-from bot import main, storage, models
+from bot import main, storage, models, polling, welcome
 
 
 def test_management_ui(monkeypatch):
@@ -36,6 +36,48 @@ def test_management_ui(monkeypatch):
         resp = await client.get("/audit")
         text = await resp.text()
         assert "test" in text
+
+        await client.post(
+            "/polls",
+            data={
+                "question": "Best?",
+                "type": "yesno",
+                "options": "",
+                "channel_id": "1",
+            },
+        )
+        polls = polling.list_polls(db, active_only=False)
+        assert any(p.question == "Best?" for p in polls)
+
+        class DummyMsg:
+            id = 55
+            channel = type("Chan", (), {"id": 1})()
+
+        class DummyChannel:
+            id = 1
+
+            async def send(self, msg):
+                return DummyMsg()
+
+        monkeypatch.setattr(main.bot, "get_channel", lambda _cid: DummyChannel())
+        await client.post(
+            "/timed-messages",
+            data={"channel_id": "1", "message": "hi", "seconds": "5"},
+        )
+        tm = db.query(models.TimedMessage).first()
+        assert tm and tm.channel_id == 1
+
+        await client.post(
+            "/welcome",
+            data={
+                "guild_id": "1",
+                "channel_id": "1",
+                "message": "hello",
+                "verify_role": "2",
+            },
+        )
+        cfg = welcome.get_config(db, 1)
+        assert cfg and cfg.message == "hello"
         await client.close()
         await server.close()
 

@@ -1,5 +1,5 @@
 ## Goal
-Document audit logs, timers, birthdays, polls, moderation, and welcome workflows with practical examples in README.markdown, AGENTS.md, and toaster.md.
+Expose polling, timed message, moderation appeal, and welcome configuration controls via the management web UI and document the new capabilities.
 
 ## Constraints
 - Follow AGENTS.md: run `docker-compose -f tests/docker-compose.test.yml run --rm -e MOCK_ADAPTER=1 bot-test`, `docker-compose build`, and `docker-compose run --rm bot sh -c "pip install -r requirements-dev.txt && black --check bot && flake8 bot && mypy bot"` before committing.
@@ -7,8 +7,8 @@ Document audit logs, timers, birthdays, polls, moderation, and welcome workflows
 - Validate with `su nobody -s /bin/bash -c ./codex.sh fast-validate`.
 
 ## Risks
-- Examples may drift from actual command syntax.
-- Documentation could omit security requirements (HTTPS adapter URL).
+- Web handlers may expose unsecured inputs if validation is insufficient.
+- Discord interactions may fail during timed message scheduling.
 
 ## Test Plan
 - `docker-compose -f tests/docker-compose.test.yml run --rm -e MOCK_ADAPTER=1 bot-test`
@@ -19,13 +19,15 @@ Document audit logs, timers, birthdays, polls, moderation, and welcome workflows
 - `su nobody -s /bin/bash -c ./codex.sh fast-validate`
 
 ## Semver
-Patch release: documentation-only updates.
+Minor release: adds new management web features.
 
 ## Affected Files
+- `bot/main.py`
+- `bot/tests/test_web_interface.py`
 - `README.markdown`
-- `AGENTS.md`
-- `toaster.md`
 - `CHANGELOG.md`
+- `pyproject.toml`
+- `composer.json`
 - `plan.md`
 
 ## Rollback
