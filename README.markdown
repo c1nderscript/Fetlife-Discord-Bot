@@ -35,12 +35,77 @@ Copy `.env.example` to `.env` and fill in your values. The `.env` file supports 
 ### Management Web Interface
 
 After configuring the above variables, start the bot and visit `http://localhost:<MGMT_PORT>/`.
-Log in with Discord to access pages for viewing and editing subscriptions, reaction role mappings,
-channel settings, polls, timed messages, auto-delete settings, welcome configuration, and
-moderation actions. An audit log viewer is available at `/audit`, moderation forms at `/moderation`
-for warn, mute, kick, ban, timeout, and purge, appeals at `/appeals`, poll management at `/polls`
-for creating, closing, and viewing results, timed message scheduling at `/timers`, default
-auto-delete configuration at `/autodelete`, and welcome settings at `/welcome`.
+Log in with Discord; only IDs listed in `ADMIN_IDS` may access the interface. Each page mirrors a
+slash command and requires the bot to hold the noted Discord permissions:
+
+- **Subscriptions** – `/subscriptions`
+  - Manage channel subscriptions.
+  - Permission: none beyond login.
+  - Example:
+
+    ```text
+    ID  Type      Target
+    1   events    location:12345
+    ```
+
+- **Reaction Roles** – `/roles`
+  - Map message reactions to roles.
+  - Requires **Manage Roles**.
+  - Example removal form:
+
+    ```text
+    Message ID: 123 | Emoji: 👍 | Role ID: 456
+    ```
+
+- **Channels** – `/channels`
+  - Edit per-channel settings such as thread options.
+  - Requires **Manage Channels**.
+  - Example settings payload:
+
+    ```json
+    {"autodelete": 3600}
+    ```
+
+- **Birthdays** – `/birthdays`
+  - View stored birthdays.
+
+- **Polls** – `/polls`
+  - Create, close, and view polls.
+  - Example:
+
+    ```text
+    Question: Best snack?
+    Type: multiple
+    Options: chips;cookies
+    ```
+
+- **Timed Messages** – `/timers` (`/timed-messages`)
+  - Schedule self-deleting messages.
+
+- **Auto-Delete Defaults** – `/autodelete`
+  - Set default deletion timers.
+  - Requires **Administrator**.
+
+- **Welcome Configuration** – `/welcome`
+  - Configure welcome message and optional verification role.
+  - Requires **Administrator**.
+  - Example template:
+
+    ```text
+    Welcome {user} to the server!
+    ```
+
+- **Moderation Tools** – `/moderation`
+  - Forms for warn, mute, kick, ban, timeout, and purge.
+  - Requires relevant moderation permissions (Kick Members, Ban Members, Manage Messages).
+
+- **Appeals Dashboard** – `/appeals`
+  - Review and resolve member appeals.
+  - Requires **Administrator**.
+
+- **Audit Logs** – `/audit`
+  - View recorded management actions.
+
 Pages render using Jinja2 templates stored under `bot/templates/`.
 
 ### Audit Logs

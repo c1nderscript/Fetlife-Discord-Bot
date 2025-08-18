@@ -2,6 +2,11 @@ All notable changes to this project will be documented here.
 
 ## [Unreleased]
 
+## [1.18.1] - 2025-08-19
+
+### Docs
+- docs: expand management web interface instructions.
+
 ## [1.18.0] - 2025-08-19
 
 ### Added
