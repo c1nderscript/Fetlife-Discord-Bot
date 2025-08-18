@@ -2,6 +2,11 @@ All notable changes to this project will be documented here.
 
 ## [Unreleased]
 
+## [1.14.0] - 2025-08-18
+
+### Added
+- feat: implement poll management routes with creation, closing, and results via `/polls`
+
 ## [1.13.0] - 2025-08-18
 
 ### Added

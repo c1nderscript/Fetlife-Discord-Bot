@@ -1705,14 +1705,30 @@ def create_management_app(db) -> web.Application:
 
     async def polls_page(request: web.Request) -> web.Response:
         polls = polling.list_polls(db, active_only=False)
-        rows = "".join(f"<li>{p.id} {p.question}</li>" for p in polls)
+        rows = "".join(
+            (
+                f"<li>{p.id} {p.question}{' (closed)' if p.closed else ''} "
+                f"<a href='/polls/{p.id}'>Results</a>"
+                + (
+                    ("<form style='display:inline' method='post' action='/polls/{p.id}/close'><button>Close</button></form>").format(p=p)
+                    if not p.closed
+                    else ""
+                )
+                + "</li>"
+            )
+            for p in polls
+        )
         form = (
             "<form method='post'>"
             "Question:<input name='question'/><br>"
-            "Type:<input name='type'/><br>"
-            "Options:<input name='options'/><br>"
+            "Type:<select name='type'>"
+            "<option value='yesno'>yes/no</option>"
+            "<option value='multiple'>multiple</option>"
+            "<option value='ranked'>ranked</option>"
+            "</select><br>"
+            "Options (semicolon separated):<input name='options'/><br>"
             "Channel ID:<input name='channel_id'/><br>"
-            "Closes at (ISO):<input name='closes_at'/><br>"
+            "Duration minutes:<input name='duration'/><br>"
             "<button>Create</button></form>"
         )
         return web.Response(
@@ -1724,10 +1740,16 @@ def create_management_app(db) -> web.Application:
         data = await request.post()
         question = data.get("question", "").strip()
         poll_type = data.get("type", "yesno").strip()
+        if poll_type not in {"yesno", "multiple", "ranked"}:
+            return web.Response(status=400, text="invalid type")
         options = [o.strip() for o in data.get("options", "").split(";") if o.strip()]
         channel_id = int(data.get("channel_id", 0))
-        closes_at_str = data.get("closes_at")
-        closes_at = datetime.fromisoformat(closes_at_str) if closes_at_str else None
+        duration = data.get("duration")
+        closes_at = (
+            datetime.utcnow() + timedelta(minutes=int(duration))
+            if duration and duration.isdigit()
+            else None
+        )
         user_id = int(request["user"]["id"]) if request.get("user") else 0
         if not question or not channel_id:
             return web.Response(status=400, text="invalid poll")
@@ -1743,6 +1765,23 @@ def create_management_app(db) -> web.Application:
         if closes_at:
             polling.schedule_close(bot, poll.id, closes_at)
         raise web.HTTPFound("/polls")
+
+    async def poll_close(request: web.Request) -> web.Response:
+        poll_id = int(request.match_info["poll_id"])
+        polling.close_poll(db, poll_id)
+        raise web.HTTPFound("/polls")
+
+    async def poll_results_page(request: web.Request) -> web.Response:
+        poll_id = int(request.match_info["poll_id"])
+        results = polling.poll_results(db, poll_id)
+        poll = db.get(polling.Poll, poll_id)
+        if not poll:
+            return web.Response(status=404, text="not found")
+        rows = "".join(f"<li>{opt}: {count}</li>" for opt, count in results.items())
+        return web.Response(
+            text=f"<h1>{poll.question}</h1><ul>{rows}</ul>",
+            content_type="text/html",
+        )
 
     async def timed_messages_page(request: web.Request) -> web.Response:
         rows = db.query(models.TimedMessage).all()
@@ -1823,6 +1862,8 @@ def create_management_app(db) -> web.Application:
     app.router.add_post(r"/channels/{channel_id:\d+}/settings", channel_settings)
     app.router.add_get("/polls", polls_page)
     app.router.add_post("/polls", poll_create)
+    app.router.add_post(r"/polls/{poll_id:\d+}/close", poll_close)
+    app.router.add_get(r"/polls/{poll_id:\d+}", poll_results_page)
     app.router.add_get("/timed-messages", timed_messages_page)
     app.router.add_post("/timed-messages", timed_messages_create)
     app.router.add_get("/welcome", welcome_page)

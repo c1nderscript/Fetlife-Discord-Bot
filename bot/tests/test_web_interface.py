@@ -41,13 +41,21 @@ def test_management_ui(monkeypatch):
             "/polls",
             data={
                 "question": "Best?",
-                "type": "yesno",
-                "options": "",
+                "type": "multiple",
+                "options": "chips;cookies",
                 "channel_id": "1",
+                "duration": "1",
             },
         )
         polls = polling.list_polls(db, active_only=False)
-        assert any(p.question == "Best?" for p in polls)
+        poll = next(p for p in polls if p.question == "Best?")
+        polling.record_vote(db, poll.id, 1, 0)
+        resp = await client.get(f"/polls/{poll.id}")
+        text = await resp.text()
+        assert "chips" in text and "1" in text
+        await client.post(f"/polls/{poll.id}/close")
+        db.refresh(poll)
+        assert poll.closed
 
         class DummyMsg:
             id = 55
