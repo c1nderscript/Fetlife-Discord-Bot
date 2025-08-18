@@ -2,6 +2,11 @@ All notable changes to this project will be documented here.
 
 ## [Unreleased]
 
+## [1.12.0] - 2025-08-18
+
+### Added
+- Welcome system with `/welcome setup`, configurable messages, optional verification, and join/leave logging.
+
 ## [1.11.0] - 2025-08-18
 
 ### Added
