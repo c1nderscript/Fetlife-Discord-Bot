@@ -1,5 +1,5 @@
 ## Goal
-Add timed message auto-deletion with `/timer` and `/autodelete` commands, persistence, and metrics.
+Add birthday reminders with /birthday commands, daily announcements, optional role assignment, time zones, and web UI calendar.
 
 ## Constraints
 - Follow AGENTS.md: run `docker-compose -f tests/docker-compose.test.yml run --rm -e MOCK_ADAPTER=1 bot-test`, `docker-compose build`, and `docker-compose run --rm bot sh -c "pip install -r requirements-dev.txt && black --check bot && flake8 bot && mypy bot"` before committing.
@@ -7,8 +7,8 @@ Add timed message auto-deletion with `/timer` and `/autodelete` commands, persis
 - Validate with `su nobody -s /bin/bash -c ./codex.sh fast-validate`.
 
 ## Risks
-- Discord API errors could leave messages undeleted.
-- Misconfigured timers might remove messages unexpectedly.
+- Incorrect time zone handling could miss or duplicate announcements.
+- Privacy settings might expose dates if misconfigured.
 
 ## Test Plan
 - `docker-compose -f tests/docker-compose.test.yml run --rm -e MOCK_ADAPTER=1 bot-test`
@@ -19,19 +19,18 @@ Add timed message auto-deletion with `/timer` and `/autodelete` commands, persis
 - `su nobody -s /bin/bash -c ./codex.sh fast-validate`
 
 ## Semver
-Minor release: new features.
+Minor release: adds new feature without breaking existing APIs.
 
 ## Affected Packages
+- `bot/birthday.py`
 - `bot/main.py`
 - `bot/models.py`
-- `bot/tasks.py`
-- `alembic/versions/0006_add_timed_messages.py`
-- `CHANGELOG.md`
+- `bot/tests/test_birthday_commands.py`
 - `README.markdown`
+- `CHANGELOG.md`
 - `toaster.md`
 - `pyproject.toml`
 - `composer.json`
-- `bot/tests/test_timer_commands.py`
 
 ## Rollback
 Revert commit.

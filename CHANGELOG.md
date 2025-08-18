@@ -2,6 +2,11 @@ All notable changes to this project will be documented here.
 
 ## [Unreleased]
 
+## [1.9.0] - 2025-08-18
+
+### Added
+- Birthday reminders with `/birthday` commands, daily scheduler, timezone and privacy options, optional role assignment, and management UI calendar.
+
 ## [1.8.0] - 2025-08-18
 
 ### Added

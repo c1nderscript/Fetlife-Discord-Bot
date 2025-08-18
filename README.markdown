@@ -39,6 +39,13 @@ Log in with Discord to access pages for viewing and editing subscriptions, react
 and channel settings. An audit log viewer is available at `/audit` and the `/audit search` command
 allows filtering records by user or action.
 
+### Birthday Reminders
+
+Configure a `birthday_channel` for each guild in `config.yaml` to receive daily birthday announcements.
+Members can manage entries with `/birthday set`, `/birthday list`, and `/birthday remove`.
+The command supports time zones, a privacy flag to hide mentions, and an optional role assignment
+applied on the user's birthday. A calendar view is available in the management UI at `/birthdays`.
+
 ### Database Migrations
 
 The schema is managed with Alembic. Apply migrations with:
