@@ -1609,6 +1609,7 @@ def create_management_app(db) -> web.Application:
                 "<li><a href='/polls'>Polls</a></li>"
                 "<li><a href='/timed-messages'>Timed Messages</a></li>"
                 "<li><a href='/welcome'>Welcome</a></li>"
+                "<li><a href='/moderation'>Moderation</a></li>"
                 "<li><a href='/appeals'>Appeals</a></li>"
                 "<li><a href='/audit'>Audit Log</a></li>"
                 "</ul>"
@@ -1710,7 +1711,9 @@ def create_management_app(db) -> web.Application:
                 f"<li>{p.id} {p.question}{' (closed)' if p.closed else ''} "
                 f"<a href='/polls/{p.id}'>Results</a>"
                 + (
-                    ("<form style='display:inline' method='post' action='/polls/{p.id}/close'><button>Close</button></form>").format(p=p)
+                    (
+                        "<form style='display:inline' method='post' action='/polls/{p.id}/close'><button>Close</button></form>"
+                    ).format(p=p)
                     if not p.closed
                     else ""
                 )
@@ -1826,7 +1829,8 @@ def create_management_app(db) -> web.Application:
         rows = "".join(
             f"<li>{c.id} <form method='post'><input type='hidden' name='channel_id' value='{c.id}'/>"
             f"Seconds:<input name='seconds' value='{int((c.settings_json or {}).get('autodelete', 0))}'/>"
-            "<button>Save</button></form></li>" for c in channels
+            "<button>Save</button></form></li>"
+            for c in channels
         )
         return web.Response(
             text=f"<h1>Auto-Delete</h1><ul>{rows}</ul>",
@@ -1877,6 +1881,117 @@ def create_management_app(db) -> web.Application:
         welcome.set_config(db, guild_id, channel_id, message, verify_role_id)
         raise web.HTTPFound("/welcome")
 
+    async def moderation_page(request: web.Request) -> web.Response:
+        forms = (
+            "<h1>Moderation</h1>"
+            "<form method='post' action='/moderation/warn'>"
+            "Guild ID:<input name='guild_id'/><br>"
+            "User ID:<input name='user_id'/><br>"
+            "Reason:<input name='reason'/><br>"
+            "<button>Warn</button></form>"
+            "<form method='post' action='/moderation/mute'>"
+            "Guild ID:<input name='guild_id'/><br>"
+            "User ID:<input name='user_id'/><br>"
+            "Minutes:<input name='minutes' value='10'/><br>"
+            "Reason:<input name='reason'/><br>"
+            "<button>Mute</button></form>"
+            "<form method='post' action='/moderation/kick'>"
+            "Guild ID:<input name='guild_id'/><br>"
+            "User ID:<input name='user_id'/><br>"
+            "Reason:<input name='reason'/><br>"
+            "<button>Kick</button></form>"
+            "<form method='post' action='/moderation/ban'>"
+            "Guild ID:<input name='guild_id'/><br>"
+            "User ID:<input name='user_id'/><br>"
+            "Reason:<input name='reason'/><br>"
+            "<button>Ban</button></form>"
+            "<form method='post' action='/moderation/timeout'>"
+            "Guild ID:<input name='guild_id'/><br>"
+            "User ID:<input name='user_id'/><br>"
+            "Minutes:<input name='minutes'/><br>"
+            "Reason:<input name='reason'/><br>"
+            "<button>Timeout</button></form>"
+            "<form method='post' action='/moderation/purge'>"
+            "Channel ID:<input name='channel_id'/><br>"
+            "Limit:<input name='limit' value='100'/><br>"
+            "User ID:<input name='user_id'/><br>"
+            "Contains:<input name='contains'/><br>"
+            "<button>Purge</button></form>"
+        )
+        return web.Response(text=forms, content_type="text/html")
+
+    async def moderation_warn(request: web.Request) -> web.Response:
+        data = await request.post()
+        guild_id = int(data.get("guild_id", 0))
+        user_id = int(data.get("user_id", 0))
+        reason = data.get("reason")
+        moderator_id = int(request["user"]["id"]) if request.get("user") else 0
+        if not guild_id or not user_id:
+            return web.Response(status=400, text="invalid request")
+        await moderation.warn(bot, db, guild_id, moderator_id, user_id, reason)
+        raise web.HTTPFound("/moderation")
+
+    async def moderation_mute(request: web.Request) -> web.Response:
+        data = await request.post()
+        guild_id = int(data.get("guild_id", 0))
+        user_id = int(data.get("user_id", 0))
+        minutes = int(data.get("minutes", 0))
+        reason = data.get("reason")
+        moderator_id = int(request["user"]["id"]) if request.get("user") else 0
+        if not guild_id or not user_id or minutes <= 0:
+            return web.Response(status=400, text="invalid request")
+        await moderation.mute(bot, db, guild_id, moderator_id, user_id, minutes, reason)
+        raise web.HTTPFound("/moderation")
+
+    async def moderation_kick(request: web.Request) -> web.Response:
+        data = await request.post()
+        guild_id = int(data.get("guild_id", 0))
+        user_id = int(data.get("user_id", 0))
+        reason = data.get("reason")
+        moderator_id = int(request["user"]["id"]) if request.get("user") else 0
+        if not guild_id or not user_id:
+            return web.Response(status=400, text="invalid request")
+        await moderation.kick(bot, db, guild_id, moderator_id, user_id, reason)
+        raise web.HTTPFound("/moderation")
+
+    async def moderation_ban(request: web.Request) -> web.Response:
+        data = await request.post()
+        guild_id = int(data.get("guild_id", 0))
+        user_id = int(data.get("user_id", 0))
+        reason = data.get("reason")
+        moderator_id = int(request["user"]["id"]) if request.get("user") else 0
+        if not guild_id or not user_id:
+            return web.Response(status=400, text="invalid request")
+        await moderation.ban(bot, db, guild_id, moderator_id, user_id, reason)
+        raise web.HTTPFound("/moderation")
+
+    async def moderation_timeout(request: web.Request) -> web.Response:
+        data = await request.post()
+        guild_id = int(data.get("guild_id", 0))
+        user_id = int(data.get("user_id", 0))
+        minutes = int(data.get("minutes", 0))
+        reason = data.get("reason")
+        moderator_id = int(request["user"]["id"]) if request.get("user") else 0
+        if not guild_id or not user_id or minutes <= 0:
+            return web.Response(status=400, text="invalid request")
+        await moderation.timeout(
+            bot, db, guild_id, moderator_id, user_id, minutes, reason
+        )
+        raise web.HTTPFound("/moderation")
+
+    async def moderation_purge(request: web.Request) -> web.Response:
+        data = await request.post()
+        channel_id = int(data.get("channel_id", 0))
+        limit = int(data.get("limit", 0)) or 100
+        user_id = data.get("user_id")
+        contains = data.get("contains")
+        moderator_id = int(request["user"]["id"]) if request.get("user") else 0
+        uid = int(user_id) if user_id else None
+        if not channel_id:
+            return web.Response(status=400, text="invalid request")
+        await moderation.purge(bot, db, channel_id, moderator_id, limit, uid, contains)
+        raise web.HTTPFound("/moderation")
+
     app.router.add_get("/", index)
     app.router.add_get("/subscriptions", subscriptions_page)
     app.router.add_post(r"/subscriptions/{sub_id:\d+}/delete", subscription_delete)
@@ -1897,6 +2012,13 @@ def create_management_app(db) -> web.Application:
     app.router.add_post("/autodelete", autodelete_set)
     app.router.add_get("/welcome", welcome_page)
     app.router.add_post("/welcome", welcome_set)
+    app.router.add_get("/moderation", moderation_page)
+    app.router.add_post("/moderation/warn", moderation_warn)
+    app.router.add_post("/moderation/mute", moderation_mute)
+    app.router.add_post("/moderation/kick", moderation_kick)
+    app.router.add_post("/moderation/ban", moderation_ban)
+    app.router.add_post("/moderation/timeout", moderation_timeout)
+    app.router.add_post("/moderation/purge", moderation_purge)
     app.router.add_get("/audit", audit_page)
     app.router.add_get("/login", login)
     app.router.add_get("/oauth/callback", oauth_callback)

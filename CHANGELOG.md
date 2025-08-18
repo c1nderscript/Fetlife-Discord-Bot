@@ -2,6 +2,14 @@ All notable changes to this project will be documented here.
 
 ## [Unreleased]
 
+## [1.16.0] - 2025-08-19
+
+### Added
+- feat: add moderation management forms for warn, mute, kick, ban, timeout, and purge via `/moderation`.
+
+### Docs
+- docs: document moderation management forms.
+
 ## [1.15.0] - 2025-08-18
 
 ### Added

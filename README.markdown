@@ -36,8 +36,9 @@ Copy `.env.example` to `.env` and fill in your values. The `.env` file supports 
 
 After configuring the above variables, start the bot and visit `http://localhost:<MGMT_PORT>/`.
 Log in with Discord to access pages for viewing and editing subscriptions, reaction role mappings,
-channel settings, polls, timed messages, auto-delete settings, and welcome configuration. An audit
-log viewer is available at `/audit`, moderation appeals at `/appeals`, poll management at `/polls`
+channel settings, polls, timed messages, auto-delete settings, welcome configuration, and
+moderation actions. An audit log viewer is available at `/audit`, moderation forms at `/moderation`
+for warn, mute, kick, ban, timeout, and purge, appeals at `/appeals`, poll management at `/polls`
 for creating, closing, and viewing results, timed message scheduling at `/timers`, default
 auto-delete configuration at `/autodelete`, and welcome settings at `/welcome`.
 
