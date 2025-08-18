@@ -3,6 +3,9 @@ All notable changes to this project will be documented here.
 
 ## [Unreleased]
 
+### Docs
+- docs(toaster): refresh architecture, core files, deps
+
 ## [1.7.0] - 2025-08-18
 
 ### Added
