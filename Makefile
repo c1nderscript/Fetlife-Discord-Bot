@@ -13,5 +13,4 @@ check:
 	docker-compose run --rm adapter vendor/bin/phpunit
 
 health:
-	docker-compose exec bot curl -f http://localhost:8000/ready
-	docker-compose exec adapter curl -f http://localhost:8000/healthz
+	./scripts/health-check.sh --confirm
