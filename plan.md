@@ -1,5 +1,5 @@
 ## Goal
-Introduce a reusable health-check script to verify bot and adapter endpoints and wire Makefile target to use it.
+Add deployment validation script to ensure required env vars are set, database connectivity works, and a TLS certificate exists.
 
 ## Constraints
 - Follow AGENTS.md: run `docker-compose -f tests/docker-compose.test.yml run --rm -e MOCK_ADAPTER=1 bot-test`, `docker-compose build`, and `docker-compose run --rm bot sh -c "pip install -r requirements-dev.txt && black --check bot && flake8 bot && mypy bot"` before committing.
@@ -7,11 +7,10 @@ Introduce a reusable health-check script to verify bot and adapter endpoints and
 - Validate with `su nobody -s /bin/bash -c ./codex.sh fast-validate`.
 
 ## Risks
-- Script may fail when containers aren't running.
-- Root detection might block legitimate usage.
+- Missing Postgres client or TLS certificate may cause false negatives.
 
 ## Test Plan
-- `./scripts/health-check.sh`
+- `su nobody -s /bin/bash -c ./scripts/deploy-validate.sh`
 - `docker-compose build`
 - `docker-compose run --rm bot sh -c "pip install -r requirements-dev.txt && black --check bot && flake8 bot && mypy bot"`
 - `docker-compose -f tests/docker-compose.test.yml run --rm -e MOCK_ADAPTER=1 bot-test`
@@ -21,17 +20,16 @@ Introduce a reusable health-check script to verify bot and adapter endpoints and
 - `su nobody -s /bin/bash -c ./codex.sh fast-validate`
 
 ## Semver
-Patch release: CI helper script.
+Patch release: add deployment validation script.
 
 ## Affected Files
-- `scripts/health-check.sh`
-- `Makefile`
-- `README.markdown`
-- `CHANGELOG.md`
-- `pyproject.toml`
-- `composer.json`
-- `toaster.md`
-- `plan.md`
+- scripts/deploy-validate.sh
+- README.markdown
+- toaster.md
+- CHANGELOG.md
+- pyproject.toml
+- composer.json
+- plan.md
 
 ## Rollback
 Revert commit.
