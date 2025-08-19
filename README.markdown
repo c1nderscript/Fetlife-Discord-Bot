@@ -228,6 +228,8 @@ python -m bot.main
 
 ### Deployment
 
+Validate environment readiness with [`scripts/deploy-validate.sh`](scripts/deploy-validate.sh).
+
 For unattended deployments run [`scripts/setup.sh`](scripts/setup.sh) once to generate the `.env`, apply migrations, and perform initial configuration. Then choose one of the following options to keep the bot running continuously. The script prompts for `ADAPTER_AUTH_TOKEN`, `ADAPTER_BASE_URL`, `TELEGRAM_API_ID`, and `TELEGRAM_API_HASH`, using existing `.env` values as defaults.
 
 #### Docker Compose

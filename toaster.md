@@ -1,4 +1,4 @@
-# toaster.md — Fetlife-Discord-Bot (v1.18.2)
+# toaster.md — Fetlife-Discord-Bot (v1.18.3)
 
 **TL;DR:** Discord bot and PHP adapter that relay FetLife activity into chat channels.  
 **Primary runtime(s):** Python 3.11 & PHP 8.2 · **Targets:** bot, adapter services · **Owner(s):** @c1nderscript @raincoats  
@@ -127,6 +127,7 @@ python -m bot.main
 
 **Health/Readiness (if any):** `http://localhost:8000/ready`
 **Common tasks:** lint, build, test
+* Deployment validation: `scripts/deploy-validate.sh`
 
 ## Testing & Quality
 
