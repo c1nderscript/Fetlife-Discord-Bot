@@ -1,0 +1,17 @@
+name: deploy-validation
+on:
+  push:
+    branches: [main]
+  workflow_call:
+  workflow_dispatch:
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Run health check
+        run: ./scripts/health-check.sh
+      - name: Run deployment validation
+        run: ./scripts/deploy-validate.sh

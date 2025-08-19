@@ -2,6 +2,10 @@ All notable changes to this project will be documented here.
 
 ## [Unreleased]
 
+## [1.18.4] - 2025-08-19
+### CI
+- ci: add deploy validation workflow and gate pull requests on make health.
+
 ## [1.18.3] - 2025-08-19
 ### CI
 - ci: add deployment validation script to verify env vars, database connection, and TLS cert.

@@ -144,7 +144,7 @@ python -m bot.main
 ## Ops Notes
 
 * Docker/Compose images: `postgres:15`, local `bot` and `adapter` builds
-* CI workflows: `.github/workflows/release-hygiene.yml`, `.github/workflows/release.yml`
+* CI workflows: `.github/workflows/release-hygiene.yml`, `.github/workflows/release.yml`, `.github/workflows/deploy-validation.yml`
 * Metrics/Logs/Tracing: Prometheus metrics at `/metrics`
 
 ## Workflow Examples
