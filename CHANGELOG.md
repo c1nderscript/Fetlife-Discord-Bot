@@ -2,6 +2,9 @@ All notable changes to this project will be documented here.
 
 ## [Unreleased]
 
+## [1.19.0] - YYYY-MM-DD
+### CI
+- ci: introduce health-check scripts and deployment validation workflow.
 ### Docs
 - docs: document health and deploy validation scripts and CI integration.
 

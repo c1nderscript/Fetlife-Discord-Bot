@@ -1,5 +1,5 @@
 ## Goal
-Document health check and deploy validation scripts and their integration with `make health` and CI.
+Release version 1.19.0 capturing the new health-check scripts and deployment validation workflow and bump project versions.
 
 ## Constraints
 - Follow AGENTS.md: run `docker-compose -f tests/docker-compose.test.yml run --rm -e MOCK_ADAPTER=1 bot-test`, `docker-compose build`, and `docker-compose run --rm bot sh -c "pip install -r requirements-dev.txt && black --check bot && flake8 bot && mypy bot"` before committing.
@@ -7,26 +7,25 @@ Document health check and deploy validation scripts and their integration with `
 - Validate with `su nobody -s /bin/bash -c ./codex.sh fast-validate`.
 
 ## Risks
-- Scripts may fail if required environment variables or database are missing.
+- Docker or language tooling may be unavailable, causing tests or audits to fail.
 
 ## Test Plan
-- `./scripts/health-check.sh`
-- `./scripts/deploy-validate.sh`
-- `make health`
 - `docker-compose build`
 - `docker-compose run --rm bot sh -c "pip install -r requirements-dev.txt && black --check bot && flake8 bot && mypy bot"`
 - `docker-compose -f tests/docker-compose.test.yml run --rm -e MOCK_ADAPTER=1 bot-test`
 - `docker-compose -f tests/docker-compose.test.yml down || true`
-- `docker run --rm -v $(PWD):/app composer audit`
 - `pip-audit`
+- `docker run --rm -v $(PWD):/app composer audit`
 - `su nobody -s /bin/bash -c ./codex.sh fast-validate`
 
 ## Semver
-Patch release: documentation update.
+Minor release: introduces health-check scripts and deployment validation workflow.
 
 ## Affected Files
-- README.markdown
 - CHANGELOG.md
+- pyproject.toml
+- composer.json
+- toaster.md
 - plan.md
 
 ## Rollback
