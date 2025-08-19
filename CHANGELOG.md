@@ -2,6 +2,9 @@ All notable changes to this project will be documented here.
 
 ## [Unreleased]
 
+### Docs
+- docs: document health and deploy validation scripts and CI integration.
+
 ## [1.18.4] - 2025-08-19
 ### CI
 - ci: add deploy validation workflow and gate pull requests on make health.

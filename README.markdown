@@ -32,6 +32,14 @@ Copy `.env.example` to `.env` and fill in your values. The `.env` file supports 
 - `DISCORD_CLIENT_ID`, `DISCORD_CLIENT_SECRET`, `OAUTH_REDIRECT_URI` – Discord OAuth2 credentials for admin login.
 - `ADMIN_IDS` – comma-separated Discord user IDs allowed to access the management UI.
 
+### Health Checks and Deployment Validation
+
+`scripts/health-check.sh` probes the bot and adapter readiness and metrics endpoints. It refuses to run as root and defaults to a dry run; pass `--confirm` to execute the `curl` checks. `make health` wraps this script with `--confirm` and is used by CI to gate merges.
+
+`scripts/deploy-validate.sh` verifies required secrets (`SESSION_SECRET`, `ADAPTER_AUTH_TOKEN`, `ADMIN_IDS`, `DATABASE_URL`), confirms database connectivity, and ensures a TLS certificate exists at `TLS_CERT_PATH` (default `certs/tls.crt`). CI invokes this script to validate deployment environments.
+
+Both scripts assume the database is ready and the adapter is served over HTTPS in production. Set `ADAPTER_BASE_URL` to an `https://` address and provide valid certificates for external deployments.
+
 ### Management Web Interface
 
 After configuring the above variables, start the bot and visit `http://localhost:<MGMT_PORT>/`.
