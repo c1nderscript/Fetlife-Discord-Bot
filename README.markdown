@@ -172,7 +172,7 @@ future features. Use `/fl purge` to clear cached data when needed.
 
 ### Health Checks
 
-Docker Compose declares health checks for both services using these endpoints. After the stack is running, `make health` executes them manually.
+Docker Compose declares health checks for both services using these endpoints. After the stack is running, `scripts/health-check.sh --confirm` or `make health` runs them manually.
 
 - Adapter: `GET http://localhost:8000/healthz` for liveness and `GET http://localhost:8000/metrics` for Prometheus metrics.
 - Bot: `GET http://localhost:8000/ready` for readiness and `GET http://localhost:8000/metrics` for Prometheus metrics.

@@ -2,6 +2,11 @@ All notable changes to this project will be documented here.
 
 ## [Unreleased]
 
+## [1.18.2] - 2025-08-19
+
+### CI
+- ci: add unified health-check script for bot and adapter endpoints.
+
 ## [1.18.1] - 2025-08-19
 
 ### Docs

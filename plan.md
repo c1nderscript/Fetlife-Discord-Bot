@@ -1,5 +1,5 @@
 ## Goal
-Replace inline HTML management pages with Jinja2 templates and verify rendering.
+Introduce a reusable health-check script to verify bot and adapter endpoints and wire Makefile target to use it.
 
 ## Constraints
 - Follow AGENTS.md: run `docker-compose -f tests/docker-compose.test.yml run --rm -e MOCK_ADAPTER=1 bot-test`, `docker-compose build`, and `docker-compose run --rm bot sh -c "pip install -r requirements-dev.txt && black --check bot && flake8 bot && mypy bot"` before committing.
@@ -7,31 +7,30 @@ Replace inline HTML management pages with Jinja2 templates and verify rendering.
 - Validate with `su nobody -s /bin/bash -c ./codex.sh fast-validate`.
 
 ## Risks
-- Template paths misconfigured leading to runtime errors.
-- Tests may rely on previous inline HTML structure.
-- Unescaped input could allow HTML injection.
+- Script may fail when containers aren't running.
+- Root detection might block legitimate usage.
 
 ## Test Plan
-- `docker-compose -f tests/docker-compose.test.yml run --rm -e MOCK_ADAPTER=1 bot-test`
+- `./scripts/health-check.sh`
 - `docker-compose build`
 - `docker-compose run --rm bot sh -c "pip install -r requirements-dev.txt && black --check bot && flake8 bot && mypy bot"`
+- `docker-compose -f tests/docker-compose.test.yml run --rm -e MOCK_ADAPTER=1 bot-test`
+- `docker-compose -f tests/docker-compose.test.yml down || true`
+- `docker run --rm -v $(PWD):/app composer audit`
 - `pip-audit`
-- `composer audit`
 - `su nobody -s /bin/bash -c ./codex.sh fast-validate`
 
 ## Semver
-Minor release: add Jinja2-templated management web interface.
+Patch release: CI helper script.
 
 ## Affected Files
-- `bot/main.py`
-- `bot/templates/*`
-- `bot/tests/test_web_interface.py`
-- `requirements.txt`
-- `requirements.lock`
+- `scripts/health-check.sh`
+- `Makefile`
 - `README.markdown`
 - `CHANGELOG.md`
 - `pyproject.toml`
 - `composer.json`
+- `toaster.md`
 - `plan.md`
 
 ## Rollback
