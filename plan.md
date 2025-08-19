@@ -1,5 +1,5 @@
 ## Goal
-Add deployment validation script to ensure required env vars are set, database connectivity works, and a TLS certificate exists.
+Add deployment validation workflow and gate pull requests on make health.
 
 ## Constraints
 - Follow AGENTS.md: run `docker-compose -f tests/docker-compose.test.yml run --rm -e MOCK_ADAPTER=1 bot-test`, `docker-compose build`, and `docker-compose run --rm bot sh -c "pip install -r requirements-dev.txt && black --check bot && flake8 bot && mypy bot"` before committing.
@@ -7,10 +7,12 @@ Add deployment validation script to ensure required env vars are set, database c
 - Validate with `su nobody -s /bin/bash -c ./codex.sh fast-validate`.
 
 ## Risks
-- Missing Postgres client or TLS certificate may cause false negatives.
+- Health scripts may fail due to missing services or env vars.
 
 ## Test Plan
-- `su nobody -s /bin/bash -c ./scripts/deploy-validate.sh`
+- `./scripts/health-check.sh`
+- `./scripts/deploy-validate.sh`
+- `make health`
 - `docker-compose build`
 - `docker-compose run --rm bot sh -c "pip install -r requirements-dev.txt && black --check bot && flake8 bot && mypy bot"`
 - `docker-compose -f tests/docker-compose.test.yml run --rm -e MOCK_ADAPTER=1 bot-test`
@@ -20,15 +22,15 @@ Add deployment validation script to ensure required env vars are set, database c
 - `su nobody -s /bin/bash -c ./codex.sh fast-validate`
 
 ## Semver
-Patch release: add deployment validation script.
+Patch release: CI workflow improvements.
 
 ## Affected Files
-- scripts/deploy-validate.sh
-- README.markdown
-- toaster.md
+- .github/workflows/deploy-validation.yml
+- .github/workflows/release-hygiene.yml
 - CHANGELOG.md
 - pyproject.toml
 - composer.json
+- toaster.md
 - plan.md
 
 ## Rollback
