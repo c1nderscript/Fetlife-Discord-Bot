@@ -10,6 +10,10 @@ The `bot/` directory contains a Python application using `discord.py` that relay
 
 Structured JSON logs are emitted to stdout. A correlation ID is generated for each operation and propagated via `contextvars`. All log entries include `correlation_id` in their `extra` fields to enable cross-service tracing.
 
+### Resilience
+
+Adapter requests use a circuit breaker. After repeated failures the breaker opens for a cooldown period, empty results are returned, and `adapter_circuit_breaker_state` reports the status via Prometheus.
+
 ### Docker Compose Quick Start
 
 1. `bash scripts/install.sh` and select **Install**. This creates `.venv` and installs runtime and development dependencies.

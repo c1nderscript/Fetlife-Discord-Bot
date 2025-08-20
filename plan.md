@@ -1,5 +1,5 @@
 ## Goal
-Add correlation ID utilities and propagate IDs in logs for tracing.
+Introduce circuit breaker for adapter interactions with metrics and management UI.
 
 ## Constraints
 - Follow AGENTS.md: run `docker-compose -f tests/docker-compose.test.yml run --rm -e MOCK_ADAPTER=1 bot-test`, `docker-compose build`, and `docker-compose run --rm bot sh -c "pip install -r requirements-dev.txt && black --check bot && flake8 bot && mypy bot"` before committing.
@@ -15,19 +15,20 @@ Add correlation ID utilities and propagate IDs in logs for tracing.
 - `docker-compose -f tests/docker-compose.test.yml run --rm -e MOCK_ADAPTER=1 bot-test`
 - `docker-compose -f tests/docker-compose.test.yml down || true`
 - `pip-audit`
-- `docker run --rm -v $(PWD):/app composer audit`
+- `docker run --rm -v $(pwd):/app composer audit`
 - `su nobody -s /bin/bash -c ./codex.sh fast-validate`
 
 ## Semver
-Minor release: adds correlation ID logging without breaking APIs.
+Minor release: adds adapter circuit breaker with graceful degradation.
 
 ## Affected Files
-- bot/utils.py
+- bot/circuit_breaker.py
 - bot/main.py
-- bot/polling.py
-- bot/adapter_client.py
-- README.markdown
+- bot/templates/index.html
+- bot/tests/test_circuit_breaker.py
 - CHANGELOG.md
+- README.markdown
+- toaster.md
 - pyproject.toml
 - composer.json
 - plan.md

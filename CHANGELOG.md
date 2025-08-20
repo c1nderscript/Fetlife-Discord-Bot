@@ -2,6 +2,10 @@ All notable changes to this project will be documented here.
 
 ## [Unreleased]
 
+## [1.23.0] - 2025-08-20
+### Added
+- feat: add adapter circuit breaker with Prometheus metric and management UI.
+
 ## [1.22.0] - 2025-08-20
 ### Added
 - feat: add correlation ID utility and include IDs in logs.
