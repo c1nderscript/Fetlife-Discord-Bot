@@ -52,7 +52,9 @@ Copy `.env.example` to `.env` and fill in your values. The `.env` file supports 
 
 `scripts/backup-verify.sh` launches a temporary PostgreSQL container, generates a sample backup, restores it, and queries for expected rows to confirm integrity. `scripts/dr-validate.sh` restarts a Docker Compose service (default `bot`) and polls `http://localhost:8000/ready` until the bot responds, enabling disaster recovery drills. The optional `backup and DR validation` workflow exposes both scripts as manual CI jobs.
 
-Both scripts assume the database is ready and the adapter is served over HTTPS in production. Set `ADAPTER_BASE_URL` to an `https://` address and provide valid certificates for external deployments.
+`scripts/drift-check.sh` compares the repository's `config.yaml` against a deployed copy (default `/etc/fetlife/config.yaml`) using SHA256 checksums. It exits non-zero when drift is detected. Pass `--confirm` to overwrite the deployed file with the repository version; this discards local changes, so back up first. Supply an alternate deployed path as a final argument when needed.
+
+The backup and DR scripts assume the database is ready and the adapter is served over HTTPS in production. Set `ADAPTER_BASE_URL` to an `https://` address and provide valid certificates for external deployments.
 
 ### Management Web Interface
 
