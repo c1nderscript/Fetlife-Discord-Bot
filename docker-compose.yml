@@ -20,10 +20,15 @@ services:
     environment:
       ADAPTER_AUTH_TOKEN: ${ADAPTER_AUTH_TOKEN}
     depends_on:
-      - db
+      db:
+        condition: service_healthy
     ports:
       - "8000:8000"
     restart: unless-stopped
+    deploy:
+      update_config:
+        order: start-first
+        monitor: 30s
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8000/healthz"]
       interval: 30s
@@ -41,10 +46,16 @@ services:
       ADAPTER_AUTH_TOKEN: ${ADAPTER_AUTH_TOKEN}
       ADAPTER_BASE_URL: ${ADAPTER_BASE_URL}
     depends_on:
-      - adapter
-      - db
+      adapter:
+        condition: service_healthy
+      db:
+        condition: service_healthy
     command: ["python3", "-m", "bot.main"]
     restart: unless-stopped
+    deploy:
+      update_config:
+        order: start-first
+        monitor: 30s
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8000/ready"]
       interval: 30s

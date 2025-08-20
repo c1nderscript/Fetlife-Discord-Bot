@@ -21,6 +21,10 @@ Adapter requests use a circuit breaker. After repeated failures the breaker open
    `postgres:15` to digest `sha256:0de3e43bbb424d5fb7ca1889150f8e1b525d6c9fbaf9df6d853dcbc2ed5ffa1e` for reproducible builds.
 3. Generate an invite link from the [Discord Developer Portal](https://discord.com/developers/applications), invite the bot to your server, then run `/fl login` to verify adapter authentication, `/fl subscribe events location:cities/5898 min_attendees:10`, `/fl subscribe group_posts group:1`, `/fl subscribe messages inbox`, `/fl list`, and `/fl test <id>` in Discord.
 
+### Rolling Updates
+
+`docker-compose.yml` configures `depends_on` with `condition: service_healthy` and a `deploy.update_config` of `order: start-first` to enable rolling updates. During deployments, new containers start and pass health checks before old ones stop, reducing downtime.
+
 ### Environment Variables
 
 Copy `.env.example` to `.env` and fill in your values. The `.env` file supports these keys:
