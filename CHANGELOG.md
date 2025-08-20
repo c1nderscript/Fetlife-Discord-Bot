@@ -1,5 +1,9 @@
 All notable changes to this project will be documented here.
 
+## [1.24.0] - 2025-08-20
+### Added
+- feat: add health dashboard with metric charts and operational controls.
+
 ## [1.23.2] - 2025-08-20
 ### Docs
 - docs: add monitoring dashboard and alert runbook.

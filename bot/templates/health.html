@@ -1,0 +1,33 @@
+<h1>Health</h1>
+<div id="status">Loading...</div>
+<canvas id="breakerChart"></canvas>
+<button id="runCheck">Run Health Check</button>
+<button id="toggleBreaker">Toggle Circuit Breaker</button>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+const statusEl = document.getElementById('status');
+const ctx = document.getElementById('breakerChart').getContext('2d');
+const chart = new Chart(ctx, {type: 'line', data: {labels: [], datasets: [{label: 'Breaker State', data: []}]}});
+async function updateStatus(){
+  const res = await fetch('/ops/health');
+  const data = await res.json();
+  statusEl.textContent = `Last poll: ${data.last_poll} Queue: ${data.queue_depth} Status: ${data.status} Breaker: ${data.breaker}`;
+}
+async function updateChart(){
+  const res = await fetch('/metrics');
+  const text = await res.text();
+  const match = text.match(/adapter_circuit_breaker_state (\d+)/);
+  const value = match ? parseInt(match[1],10) : 0;
+  const now = new Date().toLocaleTimeString();
+  chart.data.labels.push(now);
+  chart.data.datasets[0].data.push(value);
+  if(chart.data.labels.length>20){chart.data.labels.shift();chart.data.datasets[0].data.shift();}
+  chart.update();
+}
+setInterval(updateStatus,5000);
+setInterval(updateChart,5000);
+document.getElementById('runCheck').onclick=async()=>{await fetch('/ops/health-check',{method:'POST'});await updateStatus();};
+document.getElementById('toggleBreaker').onclick=async()=>{await fetch('/ops/breaker/toggle',{method:'POST'});await updateStatus();};
+updateStatus();
+updateChart();
+</script>
