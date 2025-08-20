@@ -2,6 +2,14 @@ All notable changes to this project will be documented here.
 
 ## [Unreleased]
 
+## [1.20.0] - 2025-08-20
+### Added
+- feat: add configurable retries and intervals for health checks.
+### CI
+- ci: invoke `make health` in deploy validation workflow.
+### Docs
+- docs: document health check retry behavior and environment overrides.
+
 ## [1.19.1] - 2025-08-20
 ### CI
 - ci: validate adapter HTTPS health and login endpoints with retries in deploy validation script.

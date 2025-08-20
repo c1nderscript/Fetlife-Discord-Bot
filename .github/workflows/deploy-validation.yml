@@ -12,6 +12,6 @@ jobs:
         with:
           fetch-depth: 0
       - name: Run health check
-        run: ./scripts/health-check.sh
+        run: make health
       - name: Run deployment validation
         run: ./scripts/deploy-validate.sh
