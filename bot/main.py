@@ -40,6 +40,7 @@ from . import (
     moderation,
     welcome,
 )
+from .circuit_breaker import CircuitBreaker, CircuitBreakerOpen
 from .utils import get_correlation_id, new_correlation_id
 from .audit import log_action
 from .config import get_channel_config, get_guild_config, load_config, save_config
@@ -141,8 +142,31 @@ queue_depth = Gauge("internal_queue_depth", "Scheduled job count")
 adapter_bucket = TokenBucket(5, 1)
 bot_bucket = TokenBucket(5, 1)
 
+breaker_state = Gauge(
+    "adapter_circuit_breaker_state",
+    "Adapter circuit breaker state (0=closed,1=open)",
+)
 MAX_FAILURES = 3
 PAUSE_COOLDOWN = 300
+adapter_breaker = CircuitBreaker(MAX_FAILURES, PAUSE_COOLDOWN)
+
+
+async def adapter_request(fn, *args, fallback=None, **kwargs):
+    try:
+        adapter_breaker.before_call()
+    except CircuitBreakerOpen:
+        breaker_state.set(1)
+        return fallback, False
+    try:
+        result = await fn(*args, **kwargs)
+        adapter_breaker.record_success()
+        breaker_state.set(0)
+        return result, True
+    except Exception:
+        adapter_errors.inc()
+        adapter_breaker.record_failure()
+        breaker_state.set(1 if adapter_breaker.is_open else 0)
+        return fallback, False
 
 fl_group = app_commands.Group(name="fl", description="FetLife commands")
 account_group = app_commands.Group(
@@ -204,33 +228,52 @@ async def poll_adapter(db, sub_id: int, data: Dict[str, Any]):
         last_seen, last_ids = storage.get_cursor(db, sub_id)
         items: list[dict[str, Any]] = []
         req_start = time.perf_counter()
-        try:
-            if sub.type == "events":
-                items = await adapter_client.fetch_events(
-                    ADAPTER_BASE_URL, sub.target_id, account_id=sub.account_id
-                )
-            elif sub.type == "writings":
-                items = await adapter_client.fetch_writings(
-                    ADAPTER_BASE_URL, sub.target_id, account_id=sub.account_id
-                )
-            elif sub.type == "group_posts":
-                items = await adapter_client.fetch_group_posts(
-                    ADAPTER_BASE_URL, sub.target_id, account_id=sub.account_id
-                )
-            elif sub.type == "attendees":
-                items = await adapter_client.fetch_attendees(
-                    ADAPTER_BASE_URL, sub.target_id, account_id=sub.account_id
-                )
-            elif sub.type == "messages":
-                items = await adapter_client.fetch_messages(
-                    ADAPTER_BASE_URL, account_id=sub.account_id
-                )
-        except Exception:
-            adapter_errors.inc()
-            raise
-        finally:
+        if sub.type == "events":
+            items, ok = await adapter_request(
+                adapter_client.fetch_events,
+                ADAPTER_BASE_URL,
+                sub.target_id,
+                account_id=sub.account_id,
+                fallback=[],
+            )
+        elif sub.type == "writings":
+            items, ok = await adapter_request(
+                adapter_client.fetch_writings,
+                ADAPTER_BASE_URL,
+                sub.target_id,
+                account_id=sub.account_id,
+                fallback=[],
+            )
+        elif sub.type == "group_posts":
+            items, ok = await adapter_request(
+                adapter_client.fetch_group_posts,
+                ADAPTER_BASE_URL,
+                sub.target_id,
+                account_id=sub.account_id,
+                fallback=[],
+            )
+        elif sub.type == "attendees":
+            items, ok = await adapter_request(
+                adapter_client.fetch_attendees,
+                ADAPTER_BASE_URL,
+                sub.target_id,
+                account_id=sub.account_id,
+                fallback=[],
+            )
+        elif sub.type == "messages":
+            items, ok = await adapter_request(
+                adapter_client.fetch_messages,
+                ADAPTER_BASE_URL,
+                account_id=sub.account_id,
+                fallback=[],
+            )
+        else:
+            ok = False
+        if ok:
             adapter_latency.observe(time.perf_counter() - req_start)
-        fetlife_requests.inc()
+            fetlife_requests.inc()
+        else:
+            success = False
         new_ids: list[str] = []
         for item in items:
             item_id = str(item.get("id"))
@@ -609,11 +652,15 @@ async def welcome_setup(
 @fl_group.command(name="login", description="Validate adapter service connectivity")
 @log_action("login")
 async def fl_login(interaction: discord.Interaction) -> None:
-    try:
-        ok = await adapter_client.login_adapter(ADAPTER_BASE_URL)
+    ok, called = await adapter_request(
+        adapter_client.login_adapter,
+        ADAPTER_BASE_URL,
+        fallback=False,
+    )
+    if not called:
+        msg = "Adapter unavailable"
+    else:
         msg = "Adapter login successful" if ok else "Adapter login failed"
-    except ClientError as exc:  # pragma: no cover - network error path
-        msg = f"Adapter login failed: {exc}"
     await bot_bucket.acquire()
     bot_tokens.set(bot_bucket.get_tokens())
     await interaction.response.send_message(msg)
@@ -631,9 +678,16 @@ async def fl_account_add(
         ):
             raise PermissionError("Administrator permissions required")
         acct_id = storage.add_account(bot.db, username, password)
-        await adapter_client.login(
-            ADAPTER_BASE_URL, username, password, account_id=acct_id
+        _, ok = await adapter_request(
+            adapter_client.login,
+            ADAPTER_BASE_URL,
+            username,
+            password,
+            account_id=acct_id,
+            fallback={},
         )
+        if not ok:
+            raise RuntimeError("Adapter login failed")
         await bot_bucket.acquire()
         bot_tokens.set(bot_bucket.get_tokens())
         await interaction.response.send_message(f"Account {acct_id} added")
@@ -1659,7 +1713,7 @@ async def ready_handler(request: web.Request) -> web.Response:
     return web.Response(status=503, text="not ready")
 
 
-def create_management_app(db) -> web.Application:
+def create_management_app(db, breaker: CircuitBreaker) -> web.Application:
     app = web.Application(middlewares=[auth_middleware])
     templates = Environment(
         loader=FileSystemLoader(Path(__file__).parent / "templates"),
@@ -1673,7 +1727,8 @@ def create_management_app(db) -> web.Application:
         )
 
     async def index(request: web.Request) -> web.Response:
-        return render("index.html")
+        state = "open" if breaker.is_open else "closed"
+        return render("index.html", breaker_state=state)
 
     async def subscriptions_page(request: web.Request) -> web.Response:
         subs = db.query(models.Subscription).all()
@@ -1973,7 +2028,7 @@ def create_management_app(db) -> web.Application:
 async def run_bot() -> None:
     if not TOKEN:
         raise RuntimeError("DISCORD_TOKEN is not set")
-    app = create_management_app(bot.db)
+    app = create_management_app(bot.db, adapter_breaker)
     runner = web.AppRunner(app)
     await runner.setup()
     site = web.TCPSite(runner, "0.0.0.0", MGMT_PORT)
