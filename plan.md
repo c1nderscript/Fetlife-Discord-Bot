@@ -1,5 +1,5 @@
 ## Goal
-Release version 1.21.0 adding Prometheus counters, histograms, and gauges for improved observability.
+Add correlation ID utilities and propagate IDs in logs for tracing.
 
 ## Constraints
 - Follow AGENTS.md: run `docker-compose -f tests/docker-compose.test.yml run --rm -e MOCK_ADAPTER=1 bot-test`, `docker-compose build`, and `docker-compose run --rm bot sh -c "pip install -r requirements-dev.txt && black --check bot && flake8 bot && mypy bot"` before committing.
@@ -19,16 +19,17 @@ Release version 1.21.0 adding Prometheus counters, histograms, and gauges for im
 - `su nobody -s /bin/bash -c ./codex.sh fast-validate`
 
 ## Semver
-Minor release: adds new observability features without breaking APIs.
+Minor release: adds correlation ID logging without breaking APIs.
 
 ## Affected Files
+- bot/utils.py
 - bot/main.py
-- bot/telegram_bridge.py
+- bot/polling.py
+- bot/adapter_client.py
 - README.markdown
 - CHANGELOG.md
 - pyproject.toml
 - composer.json
-- toaster.md
 - plan.md
 
 ## Rollback

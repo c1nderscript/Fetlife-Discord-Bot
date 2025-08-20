@@ -2,6 +2,10 @@ All notable changes to this project will be documented here.
 
 ## [Unreleased]
 
+## [1.22.0] - 2025-08-20
+### Added
+- feat: add correlation ID utility and include IDs in logs.
+
 ## [1.21.0] - 2025-08-20
 ### Added
 - feat: expose additional Prometheus metrics for error rates, request latency, queue depth, and Telegram connectivity.

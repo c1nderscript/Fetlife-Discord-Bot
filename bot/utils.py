@@ -1,8 +1,41 @@
 from __future__ import annotations
 
-from typing import Any, Dict, List, Tuple
+import contextvars
+import uuid
+from contextlib import contextmanager
+from typing import Any, Dict, Iterator, List, Tuple
 
 import discord
+
+
+correlation_id_var: contextvars.ContextVar[str] = contextvars.ContextVar(
+    "correlation_id", default=""
+)
+
+
+def new_correlation_id() -> str:
+    """Generate and store a new correlation ID for the current context."""
+    cid = str(uuid.uuid4())
+    correlation_id_var.set(cid)
+    return cid
+
+
+def get_correlation_id() -> str:
+    """Return the current correlation ID, generating one if missing."""
+    cid = correlation_id_var.get()
+    if not cid:
+        cid = new_correlation_id()
+    return cid
+
+
+@contextmanager
+def correlation_context(correlation_id: str | None = None) -> Iterator[str]:
+    """Context manager to run code with a specific correlation ID."""
+    token = correlation_id_var.set(correlation_id or str(uuid.uuid4()))
+    try:
+        yield correlation_id_var.get()
+    finally:
+        correlation_id_var.reset(token)
 
 
 def parse_subscribe_command(text: str) -> Tuple[str, str, Dict[str, Any]]:

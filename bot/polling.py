@@ -17,7 +17,13 @@ from sqlalchemy import (
 )
 from sqlalchemy.orm import Session
 
+import logging
+
 from .db import Base, SessionLocal
+from .utils import get_correlation_id
+
+
+logger = logging.getLogger(__name__)
 
 
 class Poll(Base):
@@ -65,6 +71,10 @@ def create_poll(
     db.add(poll)
     db.commit()
     db.refresh(poll)
+    logger.info(
+        "poll_created",
+        extra={"poll_id": poll.id, "correlation_id": get_correlation_id()},
+    )
     return poll
 
 
@@ -89,6 +99,14 @@ def record_vote(
     vote.choice = choice
     vote.ranking_json = ranking
     db.commit()
+    logger.info(
+        "poll_vote",
+        extra={
+            "poll_id": poll_id,
+            "user_id": user_id,
+            "correlation_id": get_correlation_id(),
+        },
+    )
 
 
 def close_poll(db: Session, poll_id: int) -> None:
@@ -96,6 +114,10 @@ def close_poll(db: Session, poll_id: int) -> None:
     if poll and not poll.closed:
         poll.closed = True
         db.commit()
+        logger.info(
+            "poll_closed",
+            extra={"poll_id": poll_id, "correlation_id": get_correlation_id()},
+        )
 
 
 def list_polls(db: Session, active_only: bool = True) -> List[Poll]:

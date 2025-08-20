@@ -40,6 +40,7 @@ from . import (
     moderation,
     welcome,
 )
+from .utils import get_correlation_id, new_correlation_id
 from .audit import log_action
 from .config import get_channel_config, get_guild_config, load_config, save_config
 from .rate_limit import TokenBucket
@@ -131,7 +132,9 @@ messages_scheduled = Counter(
 
 adapter_errors = Counter("adapter_errors_total", "Adapter request errors")
 bot_errors = Counter("bot_errors_total", "Discord request errors")
-adapter_latency = Histogram("adapter_request_latency_seconds", "Adapter request latency")
+adapter_latency = Histogram(
+    "adapter_request_latency_seconds", "Adapter request latency"
+)
 bot_latency = Histogram("bot_request_latency_seconds", "Discord request latency")
 queue_depth = Gauge("internal_queue_depth", "Scheduled job count")
 
@@ -186,6 +189,7 @@ def admin_cooldown() -> Callable[[Callable[..., Any]], Callable[..., Any]]:
 
 async def poll_adapter(db, sub_id: int, data: Dict[str, Any]):
     """Poll adapter with jitter and backoff, caching cursor and deduping."""
+    new_correlation_id()
     cycle_start = time.perf_counter()
     queue_depth.set(len(bot.scheduler.get_jobs()))
     await adapter_bucket.acquire()
@@ -234,7 +238,14 @@ async def poll_adapter(db, sub_id: int, data: Dict[str, Any]):
                 continue
             if storage.has_relayed(db, sub_id, item_id):
                 duplicates_suppressed.inc()
-                logger.info("duplicate", extra={"sub_id": sub_id, "item": item_id})
+                logger.info(
+                    "duplicate",
+                    extra={
+                        "sub_id": sub_id,
+                        "item": item_id,
+                        "correlation_id": get_correlation_id(),
+                    },
+                )
                 continue
             if sub.type == "events":
                 start_dt = None
@@ -301,15 +312,32 @@ async def poll_adapter(db, sub_id: int, data: Dict[str, Any]):
                             sub.channel_id, item.get("text", "")
                         )
                     except Exception:  # pragma: no cover - bridge errors
-                        logger.exception("telegram forward failed")
+                        logger.exception(
+                            "telegram forward failed",
+                            extra={"correlation_id": get_correlation_id()},
+                        )
             new_ids.append(item_id)
         if new_ids:
             storage.update_cursor(db, sub_id, datetime.utcnow(), new_ids)
     except ClientError as exc:  # pragma: no cover - network error path
-        logger.error("poll_http_error", extra={"sub_id": sub_id, "error": str(exc)})
+        logger.error(
+            "poll_http_error",
+            extra={
+                "sub_id": sub_id,
+                "error": str(exc),
+                "correlation_id": get_correlation_id(),
+            },
+        )
         success = False
     except Exception as exc:  # pragma: no cover - error path
-        logger.error("poll_error", extra={"sub_id": sub_id, "error": str(exc)})
+        logger.error(
+            "poll_error",
+            extra={
+                "sub_id": sub_id,
+                "error": str(exc),
+                "correlation_id": get_correlation_id(),
+            },
+        )
         success = False
     finally:
         poll_cycle.observe(time.perf_counter() - cycle_start)
@@ -458,14 +486,21 @@ ready_flag = False
 async def on_ready() -> None:
     global ready_flag
     ready_flag = True
-    logger.info("bot_ready", extra={"user": str(bot.user)})
+    logger.info(
+        "bot_ready",
+        extra={"user": str(bot.user), "correlation_id": get_correlation_id()},
+    )
 
 
 @bot.event
 async def on_member_join(member: discord.Member) -> None:
     logger.info(
         "member_join",
-        extra={"guild_id": member.guild.id, "user_id": member.id},
+        extra={
+            "guild_id": member.guild.id,
+            "user_id": member.id,
+            "correlation_id": get_correlation_id(),
+        },
     )
     cfg = welcome.get_config(bot.db, member.guild.id)
     if not cfg:
@@ -484,7 +519,11 @@ async def on_member_join(member: discord.Member) -> None:
 async def on_member_remove(member: discord.Member) -> None:
     logger.info(
         "member_leave",
-        extra={"guild_id": member.guild.id, "user_id": member.id},
+        extra={
+            "guild_id": member.guild.id,
+            "user_id": member.id,
+            "correlation_id": get_correlation_id(),
+        },
     )
 
 
