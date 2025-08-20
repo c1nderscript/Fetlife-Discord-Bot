@@ -1730,6 +1730,55 @@ def create_management_app(db, breaker: CircuitBreaker) -> web.Application:
         state = "open" if breaker.is_open else "closed"
         return render("index.html", breaker_state=state)
 
+    async def health_page(request: web.Request) -> web.Response:
+        return render("health.html")
+
+    async def health_status(request: web.Request) -> web.Response:
+        depth = len(bot.scheduler.get_jobs())
+        last = (
+            datetime.utcfromtimestamp(bot.last_poll).isoformat()
+            if bot.last_poll
+            else "never"
+        )
+        status_lines = []
+        for sid, s in bot.sub_status.items():
+            line = f"{sid}: {s['failures']} fails"
+            if s.get("paused_until"):
+                until = datetime.utcfromtimestamp(s["paused_until"]).isoformat()
+                line += f", paused until {until}"
+            status_lines.append(line)
+        status = "; ".join(status_lines) if status_lines else "ok"
+        breaker_state = "open" if breaker.is_open else "closed"
+        return web.json_response(
+            {
+                "last_poll": last,
+                "queue_depth": depth,
+                "status": status,
+                "breaker": breaker_state,
+            }
+        )
+
+    async def trigger_health_check(request: web.Request) -> web.Response:
+        base_url = bot.config.get("ADAPTER_BASE_URL", "")
+        if not base_url.startswith("https://"):
+            return web.json_response({"error": "invalid adapter base url"}, status=400)
+        ok = False
+        try:
+            async with ClientSession() as session:
+                async with session.get(f"{base_url}/healthz", timeout=5) as resp:
+                    ok = resp.status == 200
+        except Exception:
+            ok = False
+        return web.json_response({"adapter": "ok" if ok else "error"})
+
+    async def breaker_toggle(request: web.Request) -> web.Response:
+        if breaker.is_open:
+            breaker.record_success()
+        else:
+            breaker.opened_at = time.time()
+        state = "open" if breaker.is_open else "closed"
+        return web.json_response({"state": state})
+
     async def subscriptions_page(request: web.Request) -> web.Response:
         subs = db.query(models.Subscription).all()
         return render("subscriptions.html", subs=subs)
@@ -1988,6 +2037,10 @@ def create_management_app(db, breaker: CircuitBreaker) -> web.Application:
         raise web.HTTPFound("/moderation")
 
     app.router.add_get("/", index)
+    app.router.add_get("/health", health_page)
+    app.router.add_get("/ops/health", health_status)
+    app.router.add_post("/ops/health-check", trigger_health_check)
+    app.router.add_post("/ops/breaker/toggle", breaker_toggle)
     app.router.add_get("/subscriptions", subscriptions_page)
     app.router.add_post(r"/subscriptions/{sub_id:\d+}/delete", subscription_delete)
     app.router.add_get("/roles", roles_page)

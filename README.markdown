@@ -125,6 +125,9 @@ slash command and requires the bot to hold the noted Discord permissions:
 
 - **Audit Logs** – `/audit`
   - View recorded management actions.
+- **Health Dashboard** – `/health`
+  - Display health status and circuit breaker state with live metric charts.
+  - Trigger adapter health checks and toggle the circuit breaker.
 
 Pages render using Jinja2 templates stored under `bot/templates/`.
 
