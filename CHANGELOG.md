@@ -1,6 +1,8 @@
 All notable changes to this project will be documented here.
 
-## [Unreleased]
+## [1.23.1] - 2025-08-20
+### Changed
+- fix: use health-aware dependencies and start-first rolling updates in Docker Compose.
 
 ## [1.23.0] - 2025-08-20
 ### Added

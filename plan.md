@@ -1,5 +1,5 @@
 ## Goal
-Introduce circuit breaker for adapter interactions with metrics and management UI.
+Align Docker Compose services with health-based dependencies and rolling update strategy.
 
 ## Constraints
 - Follow AGENTS.md: run `docker-compose -f tests/docker-compose.test.yml run --rm -e MOCK_ADAPTER=1 bot-test`, `docker-compose build`, and `docker-compose run --rm bot sh -c "pip install -r requirements-dev.txt && black --check bot && flake8 bot && mypy bot"` before committing.
@@ -19,16 +19,12 @@ Introduce circuit breaker for adapter interactions with metrics and management U
 - `su nobody -s /bin/bash -c ./codex.sh fast-validate`
 
 ## Semver
-Minor release: adds adapter circuit breaker with graceful degradation.
+Patch release: configuration and documentation improvements.
 
 ## Affected Files
-- bot/circuit_breaker.py
-- bot/main.py
-- bot/templates/index.html
-- bot/tests/test_circuit_breaker.py
-- CHANGELOG.md
+- docker-compose.yml
 - README.markdown
-- toaster.md
+- CHANGELOG.md
 - pyproject.toml
 - composer.json
 - plan.md
