@@ -1,5 +1,11 @@
 All notable changes to this project will be documented here.
 
+## [1.24.1] - 2025-08-20
+### CI
+- ci: add backup restore and disaster recovery validation scripts with optional manual workflow
+### Docs
+- docs: document backup verification and DR validation scripts
+
 ## [1.24.0] - 2025-08-20
 ### Added
 - feat: add health dashboard with metric charts and operational controls.
