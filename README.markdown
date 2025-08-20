@@ -36,7 +36,7 @@ Copy `.env.example` to `.env` and fill in your values. The `.env` file supports 
 
 `scripts/health-check.sh` probes the bot and adapter readiness and metrics endpoints. It refuses to run as root and defaults to a dry run; pass `--confirm` to execute the `curl` checks. `make health` wraps this script with `--confirm` and is used by CI to gate merges.
 
-`scripts/deploy-validate.sh` verifies required secrets (`SESSION_SECRET`, `ADAPTER_AUTH_TOKEN`, `ADMIN_IDS`, `DATABASE_URL`), confirms database connectivity, and ensures a TLS certificate exists at `TLS_CERT_PATH` (default `certs/tls.crt`). CI invokes this script to validate deployment environments.
+`scripts/deploy-validate.sh` verifies required secrets (`SESSION_SECRET`, `ADAPTER_AUTH_TOKEN`, `ADMIN_IDS`, `DATABASE_URL`, `ADAPTER_BASE_URL`), ensures `ADAPTER_BASE_URL` uses `https://`, confirms the adapter responds with `200` on `/healthz` and allows an authenticated `/login` request, retries failed checks with incremental backoff, confirms database connectivity, and ensures a TLS certificate exists at `TLS_CERT_PATH` (default `certs/tls.crt`). CI invokes this script to validate deployment environments.
 
 Both scripts assume the database is ready and the adapter is served over HTTPS in production. Set `ADAPTER_BASE_URL` to an `https://` address and provide valid certificates for external deployments.
 
@@ -236,7 +236,7 @@ python -m bot.main
 
 ### Deployment
 
-Validate environment readiness with [`scripts/deploy-validate.sh`](scripts/deploy-validate.sh).
+Validate environment readiness with [`scripts/deploy-validate.sh`](scripts/deploy-validate.sh), which now checks adapter HTTPS endpoints with retries and an authenticated login request.
 
 For unattended deployments run [`scripts/setup.sh`](scripts/setup.sh) once to generate the `.env`, apply migrations, and perform initial configuration. Then choose one of the following options to keep the bot running continuously. The script prompts for `ADAPTER_AUTH_TOKEN`, `ADAPTER_BASE_URL`, `TELEGRAM_API_ID`, and `TELEGRAM_API_HASH`, using existing `.env` values as defaults.
 
