@@ -1,5 +1,9 @@
 All notable changes to this project will be documented here.
 
+## [1.23.2] - 2025-08-20
+### Docs
+- docs: add monitoring dashboard and alert runbook.
+
 ## [1.23.1] - 2025-08-20
 ### Changed
 - fix: use health-aware dependencies and start-first rolling updates in Docker Compose.

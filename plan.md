@@ -1,5 +1,5 @@
 ## Goal
-Align Docker Compose services with health-based dependencies and rolling update strategy.
+Add monitoring dashboard and alert runbook documentation and reference them in the README.
 
 ## Constraints
 - Follow AGENTS.md: run `docker-compose -f tests/docker-compose.test.yml run --rm -e MOCK_ADAPTER=1 bot-test`, `docker-compose build`, and `docker-compose run --rm bot sh -c "pip install -r requirements-dev.txt && black --check bot && flake8 bot && mypy bot"` before committing.
@@ -7,7 +7,7 @@ Align Docker Compose services with health-based dependencies and rolling update 
 - Validate with `su nobody -s /bin/bash -c ./codex.sh fast-validate`.
 
 ## Risks
-- Docker or language tooling may be unavailable, causing tests or audits to fail.
+- Docker or dependency tooling may be unavailable, causing tests or audits to fail.
 
 ## Test Plan
 - `docker-compose build`
@@ -19,10 +19,11 @@ Align Docker Compose services with health-based dependencies and rolling update 
 - `su nobody -s /bin/bash -c ./codex.sh fast-validate`
 
 ## Semver
-Patch release: configuration and documentation improvements.
+Patch release: documentation additions.
 
 ## Affected Files
-- docker-compose.yml
+- docs/monitoring/dashboard.json
+- docs/alert-runbook.md
 - README.markdown
 - CHANGELOG.md
 - pyproject.toml
