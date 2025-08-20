@@ -1,5 +1,8 @@
 .PHONY: check fmt health
 
+HEALTH_RETRIES ?= 5
+HEALTH_INTERVAL ?= 2
+
 fmt:
 	docker-compose run --rm bot sh -c "pip install -r requirements-dev.txt && black bot"
 
@@ -13,4 +16,4 @@ check:
 	docker-compose run --rm adapter vendor/bin/phpunit
 
 health:
-	./scripts/health-check.sh --confirm
+	HEALTH_RETRIES=$(HEALTH_RETRIES) HEALTH_INTERVAL=$(HEALTH_INTERVAL) ./scripts/health-check.sh --confirm

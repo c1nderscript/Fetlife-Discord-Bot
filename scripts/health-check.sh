@@ -18,14 +18,32 @@ $confirm && dry_run=false
 run() {
   if $dry_run; then
     echo "[dry-run] $*"
+    return 0
   else
     "$@"
   fi
 }
 
-run docker-compose exec bot curl -fsS -o /dev/null http://localhost:8000/ready
-run docker-compose exec bot curl -fsS -o /dev/null http://localhost:8000/metrics
-run docker-compose exec adapter curl -fsS -o /dev/null http://localhost:8000/healthz
-run docker-compose exec adapter curl -fsS -o /dev/null http://localhost:8000/metrics
+retries=${HEALTH_RETRIES:-5}
+interval=${HEALTH_INTERVAL:-2}
+
+check() {
+  local container=$1
+  local url=$2
+  local attempt=1
+  until run docker-compose exec "$container" curl -fsS -o /dev/null "$url"; do
+    if (( attempt >= retries )); then
+      echo "health check failed: $container $url" >&2
+      return 1
+    fi
+    attempt=$((attempt + 1))
+    sleep "$interval"
+  done
+}
+
+check bot http://localhost:8000/ready
+check bot http://localhost:8000/metrics
+check adapter http://localhost:8000/healthz
+check adapter http://localhost:8000/metrics
 
 echo "health checks passed"
