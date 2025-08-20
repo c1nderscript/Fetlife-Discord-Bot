@@ -10,6 +10,8 @@ from pathlib import Path
 from aiohttp import ClientSession, ClientTimeout
 from jsonschema import ValidationError, validate
 
+from .utils import get_correlation_id
+
 
 logger = logging.getLogger(__name__)
 
@@ -45,7 +47,10 @@ def _validate_list(
         validate(data, array_schema)
         return data
     except ValidationError:
-        logger.warning("adapter_schema_mismatch", extra={"schema": schema_name})
+        logger.warning(
+            "adapter_schema_mismatch",
+            extra={"schema": schema_name, "correlation_id": get_correlation_id()},
+        )
         return [{fallback_key: item.get(fallback_key)} for item in data]
 
 
