@@ -26,6 +26,7 @@ from prometheus_client import (
     Counter,
     Gauge,
     Summary,
+    Histogram,
     generate_latest,
 )
 
@@ -128,6 +129,12 @@ messages_scheduled = Counter(
     "timed_messages_scheduled_total", "Timed messages scheduled"
 )
 
+adapter_errors = Counter("adapter_errors_total", "Adapter request errors")
+bot_errors = Counter("bot_errors_total", "Discord request errors")
+adapter_latency = Histogram("adapter_request_latency_seconds", "Adapter request latency")
+bot_latency = Histogram("bot_request_latency_seconds", "Discord request latency")
+queue_depth = Gauge("internal_queue_depth", "Scheduled job count")
+
 adapter_bucket = TokenBucket(5, 1)
 bot_bucket = TokenBucket(5, 1)
 
@@ -180,6 +187,7 @@ def admin_cooldown() -> Callable[[Callable[..., Any]], Callable[..., Any]]:
 async def poll_adapter(db, sub_id: int, data: Dict[str, Any]):
     """Poll adapter with jitter and backoff, caching cursor and deduping."""
     cycle_start = time.perf_counter()
+    queue_depth.set(len(bot.scheduler.get_jobs()))
     await adapter_bucket.acquire()
     adapter_tokens.set(adapter_bucket.get_tokens())
     success = True
@@ -191,26 +199,33 @@ async def poll_adapter(db, sub_id: int, data: Dict[str, Any]):
         channel = bot.get_channel(sub.channel_id)
         last_seen, last_ids = storage.get_cursor(db, sub_id)
         items: list[dict[str, Any]] = []
-        if sub.type == "events":
-            items = await adapter_client.fetch_events(
-                ADAPTER_BASE_URL, sub.target_id, account_id=sub.account_id
-            )
-        elif sub.type == "writings":
-            items = await adapter_client.fetch_writings(
-                ADAPTER_BASE_URL, sub.target_id, account_id=sub.account_id
-            )
-        elif sub.type == "group_posts":
-            items = await adapter_client.fetch_group_posts(
-                ADAPTER_BASE_URL, sub.target_id, account_id=sub.account_id
-            )
-        elif sub.type == "attendees":
-            items = await adapter_client.fetch_attendees(
-                ADAPTER_BASE_URL, sub.target_id, account_id=sub.account_id
-            )
-        elif sub.type == "messages":
-            items = await adapter_client.fetch_messages(
-                ADAPTER_BASE_URL, account_id=sub.account_id
-            )
+        req_start = time.perf_counter()
+        try:
+            if sub.type == "events":
+                items = await adapter_client.fetch_events(
+                    ADAPTER_BASE_URL, sub.target_id, account_id=sub.account_id
+                )
+            elif sub.type == "writings":
+                items = await adapter_client.fetch_writings(
+                    ADAPTER_BASE_URL, sub.target_id, account_id=sub.account_id
+                )
+            elif sub.type == "group_posts":
+                items = await adapter_client.fetch_group_posts(
+                    ADAPTER_BASE_URL, sub.target_id, account_id=sub.account_id
+                )
+            elif sub.type == "attendees":
+                items = await adapter_client.fetch_attendees(
+                    ADAPTER_BASE_URL, sub.target_id, account_id=sub.account_id
+                )
+            elif sub.type == "messages":
+                items = await adapter_client.fetch_messages(
+                    ADAPTER_BASE_URL, account_id=sub.account_id
+                )
+        except Exception:
+            adapter_errors.inc()
+            raise
+        finally:
+            adapter_latency.observe(time.perf_counter() - req_start)
         fetlife_requests.inc()
         new_ids: list[str] = []
         for item in items:
@@ -271,8 +286,15 @@ async def poll_adapter(db, sub_id: int, data: Dict[str, Any]):
                             embed.add_field(name="Published", value=item["published"])
                 await bot_bucket.acquire()
                 bot_tokens.set(bot_bucket.get_tokens())
-                await cast(discord.abc.Messageable, channel).send(embed=embed)
-                messages_sent.inc()
+                send_start = time.perf_counter()
+                try:
+                    await cast(discord.abc.Messageable, channel).send(embed=embed)
+                    messages_sent.inc()
+                except Exception:
+                    bot_errors.inc()
+                    raise
+                finally:
+                    bot_latency.observe(time.perf_counter() - send_start)
                 if sub.type == "messages" and bot.bridge:
                     try:
                         await bot.bridge.send_to_telegram(
@@ -348,6 +370,7 @@ async def poll_adapter(db, sub_id: int, data: Dict[str, Any]):
         replace_existing=True,
         run_date=run_date,
     )
+    queue_depth.set(len(bot.scheduler.get_jobs()))
 
 
 class FLBot(commands.Bot):
