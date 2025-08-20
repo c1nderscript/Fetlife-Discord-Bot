@@ -1,5 +1,5 @@
 ## Goal
-Add production deployment guide with scaling tips and troubleshooting; link from README and CHANGELOG; bump patch version.
+Ensure deployment validation and release hygiene workflows run `make health --confirm` with retry logic, execute backup and disaster-recovery validation scripts, upload monitoring dashboard artifacts, and bump minor version with CHANGELOG entry.
 
 ## Constraints
 - Follow AGENTS.md: run `docker-compose build`, `docker-compose run --rm bot sh -c "pip install -r requirements-dev.txt && black --check bot && flake8 bot && mypy bot"`, and `docker-compose -f tests/docker-compose.test.yml run --rm -e MOCK_ADAPTER=1 bot-test` before committing.
@@ -7,7 +7,7 @@ Add production deployment guide with scaling tips and troubleshooting; link from
 - Validate with `su nobody -s /bin/bash -c ./codex.sh fast-validate`.
 
 ## Risks
-- Documentation may drift from implementation.
+- Workflow retries or DR simulations may hang or fail unexpectedly.
 - Docker or dependency tooling may be unavailable, causing tests or audits to fail.
 
 ## Test Plan
@@ -20,15 +20,16 @@ Add production deployment guide with scaling tips and troubleshooting; link from
 - `su nobody -s /bin/bash -c ./codex.sh fast-validate`
 
 ## Semver
-Patch release: documentation update only.
+Minor release: adds workflow validation features.
 
 ## Affected Files
-- docs/production.md
-- README.markdown
+- .github/workflows/deploy-validation.yml
+- .github/workflows/release-hygiene.yml
 - CHANGELOG.md
 - pyproject.toml
 - composer.json
 - plan.md
+- toaster.md
 
 ## Rollback
 Revert commit.

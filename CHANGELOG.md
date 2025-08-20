@@ -1,5 +1,9 @@
 All notable changes to this project will be documented here.
 
+## [1.26.0] - 2025-08-20
+### Added
+- feat: run health checks with confirmation, backup/DR validation, and upload monitoring dashboards in workflows
+
 ## [1.25.1] - 2025-08-20
 ### Docs
 - docs: add production deployment guide [docs/production.md](docs/production.md)
