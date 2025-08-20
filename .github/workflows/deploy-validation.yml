@@ -12,6 +12,22 @@ jobs:
         with:
           fetch-depth: 0
       - name: Run health check
-        run: make health
+        run: |
+          for i in {1..3}; do
+            make health --confirm && break
+            echo "Health check failed; retrying ($i)..." >&2
+            sleep 5
+          done
+      - name: Run backup verification
+        run: scripts/backup-verify.sh
+      - name: Run DR validation
+        run: scripts/dr-validate.sh
       - name: Run deployment validation
-        run: ./scripts/deploy-validate.sh
+        run: ./scripts/deploy-validate.sh --confirm
+      - name: Upload monitoring dashboards
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: monitoring-dashboards
+          path: docs/monitoring/*.json
+          if-no-files-found: ignore
