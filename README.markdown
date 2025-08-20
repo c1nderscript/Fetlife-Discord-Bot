@@ -50,6 +50,8 @@ Copy `.env.example` to `.env` and fill in your values. The `.env` file supports 
 
 `scripts/deploy-validate.sh` verifies required secrets (`SESSION_SECRET`, `ADAPTER_AUTH_TOKEN`, `ADMIN_IDS`, `DATABASE_URL`, `ADAPTER_BASE_URL`), ensures `ADAPTER_BASE_URL` uses `https://`, confirms the adapter responds with `200` on `/healthz` and allows an authenticated `/login` request, retries failed checks with incremental backoff, confirms database connectivity, and ensures a TLS certificate exists at `TLS_CERT_PATH` (default `certs/tls.crt`). CI invokes this script to validate deployment environments.
 
+`scripts/backup-verify.sh` launches a temporary PostgreSQL container, generates a sample backup, restores it, and queries for expected rows to confirm integrity. `scripts/dr-validate.sh` restarts a Docker Compose service (default `bot`) and polls `http://localhost:8000/ready` until the bot responds, enabling disaster recovery drills. The optional `backup and DR validation` workflow exposes both scripts as manual CI jobs.
+
 Both scripts assume the database is ready and the adapter is served over HTTPS in production. Set `ADAPTER_BASE_URL` to an `https://` address and provide valid certificates for external deployments.
 
 ### Management Web Interface

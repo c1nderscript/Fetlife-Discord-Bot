@@ -1,5 +1,5 @@
 ## Goal
-Add health status and metric charts to the management UI with periodic AJAX polling, expose routes to trigger health checks and toggle the circuit breaker, and document the new controls.
+Add backup verification and disaster recovery validation scripts, wire them into CI as optional manual jobs, bump patch version, update docs.
 
 ## Constraints
 - Follow AGENTS.md: run `docker-compose build`, `docker-compose run --rm bot sh -c "pip install -r requirements-dev.txt && black --check bot && flake8 bot && mypy bot"`, and `docker-compose -f tests/docker-compose.test.yml run --rm -e MOCK_ADAPTER=1 bot-test` before committing.
@@ -19,12 +19,12 @@ Add health status and metric charts to the management UI with periodic AJAX poll
 - `su nobody -s /bin/bash -c ./codex.sh fast-validate`
 
 ## Semver
-Minor release: adds new UI features.
+Patch release: adds CI scripts and documentation.
 
 ## Affected Files
-- bot/templates/health.html
-- bot/templates/index.html
-- bot/main.py
+- scripts/backup-verify.sh
+- scripts/dr-validate.sh
+- .github/workflows/backup-dr.yml
 - README.markdown
 - CHANGELOG.md
 - pyproject.toml
