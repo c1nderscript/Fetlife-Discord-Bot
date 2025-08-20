@@ -1,5 +1,5 @@
 ## Goal
-Add config drift detection script with optional remediation and document usage; bump minor version.
+Add production deployment guide with scaling tips and troubleshooting; link from README and CHANGELOG; bump patch version.
 
 ## Constraints
 - Follow AGENTS.md: run `docker-compose build`, `docker-compose run --rm bot sh -c "pip install -r requirements-dev.txt && black --check bot && flake8 bot && mypy bot"`, and `docker-compose -f tests/docker-compose.test.yml run --rm -e MOCK_ADAPTER=1 bot-test` before committing.
@@ -7,7 +7,7 @@ Add config drift detection script with optional remediation and document usage; 
 - Validate with `su nobody -s /bin/bash -c ./codex.sh fast-validate`.
 
 ## Risks
-- Overwriting deployed configuration during remediation if path mis-specified.
+- Documentation may drift from implementation.
 - Docker or dependency tooling may be unavailable, causing tests or audits to fail.
 
 ## Test Plan
@@ -20,15 +20,14 @@ Add config drift detection script with optional remediation and document usage; 
 - `su nobody -s /bin/bash -c ./codex.sh fast-validate`
 
 ## Semver
-Minor release: adds new drift detection script.
+Patch release: documentation update only.
 
 ## Affected Files
-- scripts/drift-check.sh
+- docs/production.md
 - README.markdown
 - CHANGELOG.md
 - pyproject.toml
 - composer.json
-- toaster.md
 - plan.md
 
 ## Rollback
