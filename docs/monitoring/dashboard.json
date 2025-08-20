@@ -1,0 +1,9 @@
+{
+  "title": "FetLife Discord Bot Dashboard",
+  "panels": [
+    {"name": "Error Rate", "query": "rate(bot_errors_total[5m])"},
+    {"name": "Request Latency", "query": "histogram_quantile(0.95, sum(rate(bot_request_latency_seconds_bucket[5m])) by (le))"},
+    {"name": "Internal Queue Depth", "query": "internal_queue_depth"},
+    {"name": "Telegram Bridge Health", "query": "telegram_bridge_connected"}
+  ]
+}
