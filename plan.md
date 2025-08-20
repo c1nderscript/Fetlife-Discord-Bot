@@ -1,5 +1,5 @@
 ## Goal
-Release version 1.19.0 capturing the new health-check scripts and deployment validation workflow and bump project versions.
+Release version 1.19.1 adding HTTPS and authenticated adapter endpoint checks with retry logic to `scripts/deploy-validate.sh` and updating documentation and versions.
 
 ## Constraints
 - Follow AGENTS.md: run `docker-compose -f tests/docker-compose.test.yml run --rm -e MOCK_ADAPTER=1 bot-test`, `docker-compose build`, and `docker-compose run --rm bot sh -c "pip install -r requirements-dev.txt && black --check bot && flake8 bot && mypy bot"` before committing.
@@ -19,13 +19,14 @@ Release version 1.19.0 capturing the new health-check scripts and deployment val
 - `su nobody -s /bin/bash -c ./codex.sh fast-validate`
 
 ## Semver
-Minor release: introduces health-check scripts and deployment validation workflow.
+Patch release: enhances deployment validation without changing APIs.
 
 ## Affected Files
+- scripts/deploy-validate.sh
+- README.markdown
 - CHANGELOG.md
 - pyproject.toml
 - composer.json
-- toaster.md
 - plan.md
 
 ## Rollback
