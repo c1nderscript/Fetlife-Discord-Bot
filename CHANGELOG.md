@@ -1,5 +1,11 @@
 All notable changes to this project will be documented here.
 
+## [1.25.0] - 2025-08-20
+### Added
+- feat: detect config drift and optionally restore deployed config with --confirm
+### Docs
+- docs: describe drift detection and override risks
+
 ## [1.24.1] - 2025-08-20
 ### CI
 - ci: add backup restore and disaster recovery validation scripts with optional manual workflow
