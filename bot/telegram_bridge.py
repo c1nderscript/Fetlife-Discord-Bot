@@ -2,15 +2,26 @@ from __future__ import annotations
 
 import asyncio
 import logging
+import time
 from io import BytesIO
 from typing import Dict, Optional
 
 import discord
 from telethon import TelegramClient, events  # type: ignore[import-untyped]
+from prometheus_client import Counter, Gauge, Histogram
 
 from .config import load_config, save_config
 
 logger = logging.getLogger("flbot")
+
+telegram_connected = Gauge(
+    "telegram_bridge_connected", "Telegram bridge connectivity"
+)
+telegram_errors = Counter("telegram_bridge_errors_total", "Telegram bridge errors")
+telegram_latency = Histogram(
+    "telegram_bridge_request_latency_seconds",
+    "Telegram message send latency",
+)
 
 
 class TelegramBridge:
@@ -44,14 +55,18 @@ class TelegramBridge:
         while True:
             try:
                 await self.client.start()
+                telegram_connected.set(1)
                 break
             except Exception as exc:  # pragma: no cover - network errors
                 logger.exception("telegram start failed: %s", exc)
+                telegram_errors.inc()
+                telegram_connected.set(0)
                 await asyncio.sleep(5)
 
     async def stop(self) -> None:
         if self.client:
             await self.client.disconnect()
+            telegram_connected.set(0)
 
     async def _handle_message(self, event) -> None:
         chat_id = str(event.chat_id)
@@ -78,6 +93,7 @@ class TelegramBridge:
                 await channel.send(text if text else None, files=files or None)
             except Exception as exc:  # pragma: no cover - simple error path
                 logger.exception("telegram relay failed: %s", exc)
+                telegram_errors.inc()
 
     def add_mapping(self, chat_id: int, channel_id: int) -> None:
         self.mappings[str(chat_id)] = str(channel_id)
@@ -98,7 +114,10 @@ class TelegramBridge:
             return
         for chat_id, mapped in self.mappings.items():
             if mapped == str(channel_id):
+                start = time.perf_counter()
                 try:
                     await self.client.send_message(int(chat_id), text)
+                    telegram_latency.observe(time.perf_counter() - start)
                 except Exception as exc:  # pragma: no cover - simple error path
                     logger.exception("telegram send failed: %s", exc)
+                    telegram_errors.inc()
