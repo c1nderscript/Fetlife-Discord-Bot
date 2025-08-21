@@ -1,5 +1,11 @@
 All notable changes to this project will be documented here.
 
+## [1.26.4] - 2025-08-21
+### Fixed
+- fix: serialize extra log fields like correlation_id
+### Tests
+- test: cover JsonFormatter extra fields
+
 ## [1.26.3] - 2025-08-21
 ### Fixed
 - fix: propagate task cancellation in adapter_request
