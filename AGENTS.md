@@ -10,6 +10,6 @@
 - Audit logs: `/audit search user:123 action:ban`
 - Timers: `/timer 10m cleanup`
 - Birthdays: `/birthday set 2000-01-01`
-- Polls: `/poll create "Best snack?" type:multiple options:"chips;cookies"`
+- Polls: `/poll create "Best snack?" type:multiple options:"chips; cookies"`
 - Moderation: `/warn @user Be nice`
 - Welcome: `/welcome setup channel:#introductions message:"Welcome {user}" verify-role:@member`
