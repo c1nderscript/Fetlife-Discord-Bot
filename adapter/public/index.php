@@ -7,7 +7,9 @@ use Slim\Psr7\Response;
 use FetLife\User as FetLifeUser;
 use FetLife\Connection;
 
-session_start();
+if (session_status() === PHP_SESSION_NONE) {
+    @session_start();
+}
 if (!isset($_SESSION['accounts'])) {
     $_SESSION['accounts'] = [];
 }
@@ -18,14 +20,22 @@ $dotenv->safeLoad();
 $app = AppFactory::create();
 
 $token = $_ENV['ADAPTER_AUTH_TOKEN'] ?? null;
+if (!$token) {
+    log_json('critical', 'missing ADAPTER_AUTH_TOKEN');
+}
 
 $app->add(function ($request, $handler) use ($token) {
     $path = $request->getUri()->getPath();
     if (in_array($path, ['/healthz', '/metrics', '/openapi.yaml'])) {
         return $handler->handle($request);
     }
+    if (!$token) {
+        $response = new Response();
+        $response->getBody()->write(json_encode(['error' => 'server misconfigured']));
+        return $response->withStatus(500)->withHeader('Content-Type', 'application/json');
+    }
     $auth = $request->getHeaderLine('Authorization');
-    if ($token && $auth !== "Bearer $token") {
+    if ($auth !== "Bearer $token") {
         $response = new Response();
         $response->getBody()->write(json_encode(['error' => 'unauthorized']));
         return $response->withStatus(401)->withHeader('Content-Type', 'application/json');

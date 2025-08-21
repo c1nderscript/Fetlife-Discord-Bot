@@ -1,5 +1,13 @@
 All notable changes to this project will be documented here.
 
+## [1.26.2] - 2025-08-20
+### Fixed
+- fix: return `500` when `ADAPTER_AUTH_TOKEN` is missing
+### Docs
+- docs: note mandatory adapter auth token
+### Tests
+- test: cover missing adapter auth token
+
 ## [1.26.1] - 2025-08-20
 ### Fixed
 - fix: include extra log fields in JSON formatter
