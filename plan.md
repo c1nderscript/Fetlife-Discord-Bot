@@ -1,35 +1,35 @@
 ## Goal
-Ensure deployment validation and release hygiene workflows run `make health --confirm` with retry logic, execute backup and disaster-recovery validation scripts, upload monitoring dashboard artifacts, and bump minor version with CHANGELOG entry.
+Include extra fields like `correlation_id` in JSON log output.
 
 ## Constraints
-- Follow AGENTS.md: run `docker-compose build`, `docker-compose run --rm bot sh -c "pip install -r requirements-dev.txt && black --check bot && flake8 bot && mypy bot"`, and `docker-compose -f tests/docker-compose.test.yml run --rm -e MOCK_ADAPTER=1 bot-test` before committing.
+- Follow AGENTS.md: run `black bot`, `flake8 bot`, `mypy bot`, and `docker-compose -f tests/docker-compose.test.yml run --rm -e MOCK_ADAPTER=1 bot-test` before committing.
 - Run `pip-audit` and `docker run --rm -v $(pwd):/app composer audit`.
 - Validate with `su nobody -s /bin/bash -c ./codex.sh fast-validate`.
 
 ## Risks
-- Workflow retries or DR simulations may hang or fail unexpectedly.
-- Docker or dependency tooling may be unavailable, causing tests or audits to fail.
+- Failing to exclude standard LogRecord fields could cause noisy or incorrect log output.
+- Dependency or Docker tooling may be unavailable, causing validation to fail.
 
 ## Test Plan
-- `docker-compose build`
-- `docker-compose run --rm bot sh -c "pip install -r requirements-dev.txt && black --check bot && flake8 bot && mypy bot"`
-- `docker-compose -f tests/docker-compose.test.yml run --rm -e MOCK_ADAPTER=1 bot-test`
-- `docker-compose -f tests/docker-compose.test.yml down || true`
+- `black bot`
+- `flake8 bot`
+- `mypy bot`
 - `pip-audit`
 - `docker run --rm -v $(pwd):/app composer audit`
+- `docker-compose -f tests/docker-compose.test.yml run --rm -e MOCK_ADAPTER=1 bot-test`
+- `docker-compose -f tests/docker-compose.test.yml down || true`
 - `su nobody -s /bin/bash -c ./codex.sh fast-validate`
 
 ## Semver
-Minor release: adds workflow validation features.
+Patch release: backward-compatible fix.
 
 ## Affected Files
-- .github/workflows/deploy-validation.yml
-- .github/workflows/release-hygiene.yml
+- bot/main.py
+- bot/tests/test_main.py
 - CHANGELOG.md
 - pyproject.toml
 - composer.json
 - plan.md
-- toaster.md
 
 ## Rollback
 Revert commit.
