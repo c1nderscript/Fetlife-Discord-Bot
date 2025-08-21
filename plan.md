@@ -1,34 +1,33 @@
 ## Goal
-Ensure JsonFormatter serializes extra log fields like correlation_id.
+Document major directories with AGENTS.md files and bump version to 1.26.5.
 
 ## Constraints
 - Follow AGENTS.md instructions.
-- Run security audits and linters before committing.
+- Keep docs (AGENTS.md, toaster.md, README.markdown, plan.md) in sync.
+- Run CI commands before committing.
 
 ## Risks
-- Non-JSON-serializable extras could break logging.
+- Documentation may become inconsistent.
+- CI commands may fail due to missing dependencies.
 
 ## Test Plan
 - `pip-audit`
 - `composer audit`
-- `black bot`
-- `flake8 bot`
-- `mypy bot`
 - `docker-compose -f tests/docker-compose.test.yml run --rm -e MOCK_ADAPTER=1 bot-test`
-- `docker-compose -f tests/docker-compose.test.yml down || true`
-- `su nobody -s /bin/bash -c ./codex.sh fast-validate`
+- `docker-compose build`
+- `docker-compose run --rm bot sh -c "pip install -r requirements-dev.txt && black --check bot && flake8 bot && mypy bot"`
 
 ## Semver
-Patch release: backward-compatible logging fix.
+Patch release: add AGENTS documentation and version bump.
 
 ## Affected Files
-- bot/main.py
-- bot/tests/test_main.py
-- CHANGELOG.md
+- AGENTS.md files
 - pyproject.toml
 - composer.json
+- CHANGELOG.md
 - toaster.md
 - plan.md
+- README.markdown
 
 ## Rollback
 Revert commit.

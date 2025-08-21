@@ -1,6 +1,8 @@
-# libFetLife - README
+# libFetLife - README (v1.26.5)
 
 `libFetLife` is a PHP class implementing a simple API useful for interfacing with the amateur porn and fetish dating website [FetLife.com](https://fetlife.com/). Learn more [about the political motivation for this library](https://web.archive.org/web/20150912020717/https://bandanablog.wordpress.com/2015/04/30/fetlifes-best-customers/).
+
+Top-level directories now include `AGENTS.md` files describing their purpose and key files.
 
 ## Discord Bot
 
