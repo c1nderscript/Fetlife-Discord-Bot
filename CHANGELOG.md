@@ -1,5 +1,11 @@
 All notable changes to this project will be documented here.
 
+## [1.26.3] - 2025-08-21
+### Fixed
+- fix: propagate task cancellation in adapter_request
+### Tests
+- test: cover adapter_request cancellation
+
 ## [1.26.2] - 2025-08-20
 ### Fixed
 - fix: return `500` when `ADAPTER_AUTH_TOKEN` is missing

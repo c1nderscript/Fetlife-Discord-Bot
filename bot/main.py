@@ -189,6 +189,8 @@ async def adapter_request(fn, *args, fallback=None, **kwargs):
         adapter_breaker.record_success()
         breaker_state.set(0)
         return result, True
+    except asyncio.CancelledError:
+        raise
     except Exception:
         adapter_errors.inc()
         adapter_breaker.record_failure()
