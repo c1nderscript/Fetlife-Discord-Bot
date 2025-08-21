@@ -68,6 +68,33 @@ class JsonFormatter(logging.Formatter):
             "name": record.name,
             "message": record.getMessage(),
         }
+        standard = {
+            "name",
+            "msg",
+            "args",
+            "levelname",
+            "levelno",
+            "pathname",
+            "filename",
+            "module",
+            "exc_info",
+            "exc_text",
+            "stack_info",
+            "lineno",
+            "funcName",
+            "created",
+            "msecs",
+            "relativeCreated",
+            "thread",
+            "threadName",
+            "processName",
+            "process",
+            "message",
+        }
+        extras = {
+            key: value for key, value in record.__dict__.items() if key not in standard
+        }
+        base.update(extras)
         return json.dumps(base)
 
 
@@ -167,6 +194,7 @@ async def adapter_request(fn, *args, fallback=None, **kwargs):
         adapter_breaker.record_failure()
         breaker_state.set(1 if adapter_breaker.is_open else 0)
         return fallback, False
+
 
 fl_group = app_commands.Group(name="fl", description="FetLife commands")
 account_group = app_commands.Group(

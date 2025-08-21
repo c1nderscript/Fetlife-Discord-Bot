@@ -1,6 +1,11 @@
 import importlib
 from prometheus_client import REGISTRY
 import sys
+import io
+import json
+import logging
+
+from bot.main import JsonFormatter
 
 
 def test_flbot_without_telegram(monkeypatch):
@@ -14,3 +19,17 @@ def test_flbot_without_telegram(monkeypatch):
     m.main(require_env=False)
     bot = m.FLBot()
     assert bot.bridge is None
+
+
+def test_json_formatter_outputs_extra_fields():
+    stream = io.StringIO()
+    handler = logging.StreamHandler(stream)
+    handler.setFormatter(JsonFormatter())
+    logger = logging.getLogger("test_json_formatter")
+    logger.addHandler(handler)
+    logger.propagate = False
+    logger.info("hi", extra={"correlation_id": "123"})
+    handler.flush()
+    output = stream.getvalue().strip()
+    logger.removeHandler(handler)
+    assert json.loads(output)["correlation_id"] == "123"
