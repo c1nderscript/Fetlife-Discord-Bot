@@ -1,4 +1,4 @@
-# toaster.md — Fetlife-Discord-Bot (v1.26.5)
+# toaster.md — Fetlife-Discord-Bot (v1.26.6)
 
 **TL;DR:** Discord bot and PHP adapter that relay FetLife activity into chat channels.  
 Each major directory now includes an `AGENTS.md` describing its purpose and key files.
@@ -153,7 +153,7 @@ python -m bot.main
 - **Audit logs:** `/audit search user:123 action:ban` → records stored via `bot/audit.py` and viewable at `/audit`.
 - **Timers:** `/timer 10m cleanup` → `apscheduler` schedules deletion in `bot/tasks.py`.
 - **Birthdays:** `/birthday set 2000-01-01` → `bot/birthday.py` saves the date and daily jobs announce in configured channels.
-- **Polls:** `/poll create "Best snack?" type:multiple options:"chips;cookies"` → `bot/polling.py` tracks votes and auto-closes.
+- **Polls:** `/poll create "Best snack?" type:multiple options:"chips; cookies"` → `bot/polling.py` tracks votes and auto-closes.
 - **Moderation:** `/mute @user 10m` → `bot/moderation.py` logs an infraction and `bot/audit.py` records the action.
 - **Welcome:** `/welcome setup channel:#introductions message:"Welcome {user}" verify-role:@member` → `bot/welcome.py` sends messages and logs joins.
 

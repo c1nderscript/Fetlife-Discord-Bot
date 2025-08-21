@@ -6,6 +6,7 @@ from contextlib import contextmanager
 from typing import Any, Dict, Iterator, List, Tuple
 
 import discord
+import shlex
 
 
 correlation_id_var: contextvars.ContextVar[str] = contextvars.ContextVar(
@@ -43,7 +44,7 @@ def parse_subscribe_command(text: str) -> Tuple[str, str, Dict[str, Any]]:
 
     Example: "events location:cities/5898 radius_km:50 keywords:rope,consent"
     """
-    parts = text.strip().split()
+    parts = shlex.split(text)
     if len(parts) < 2:
         raise ValueError("command requires type and target")
     sub_type = parts[0]

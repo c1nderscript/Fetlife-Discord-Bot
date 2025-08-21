@@ -1,5 +1,5 @@
 ## Goal
-Document major directories with AGENTS.md files and bump version to 1.26.5.
+Support quoted filter values in subscription commands and bump version to 1.26.6.
 
 ## Constraints
 - Follow AGENTS.md instructions.
@@ -7,27 +7,26 @@ Document major directories with AGENTS.md files and bump version to 1.26.5.
 - Run CI commands before committing.
 
 ## Risks
-- Documentation may become inconsistent.
+- Incorrect parsing could break existing subscriptions.
 - CI commands may fail due to missing dependencies.
 
 ## Test Plan
-- `pip-audit`
-- `composer audit`
 - `docker-compose -f tests/docker-compose.test.yml run --rm -e MOCK_ADAPTER=1 bot-test`
 - `docker-compose build`
 - `docker-compose run --rm bot sh -c "pip install -r requirements-dev.txt && black --check bot && flake8 bot && mypy bot"`
 
 ## Semver
-Patch release: add AGENTS documentation and version bump.
+Patch release: fix subscription command parsing and bump version to 1.26.6.
 
 ## Affected Files
-- AGENTS.md files
+- bot/utils.py
+- bot/tests/test_utils.py
+- CHANGELOG.md
 - pyproject.toml
 - composer.json
-- CHANGELOG.md
+- README.markdown
 - toaster.md
 - plan.md
-- README.markdown
 
 ## Rollback
 Revert commit.

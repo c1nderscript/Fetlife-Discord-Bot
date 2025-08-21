@@ -1,4 +1,4 @@
-# libFetLife - README (v1.26.5)
+# libFetLife - README (v1.26.6)
 
 `libFetLife` is a PHP class implementing a simple API useful for interfacing with the amateur porn and fetish dating website [FetLife.com](https://fetlife.com/). Learn more [about the political motivation for this library](https://web.archive.org/web/20150912020717/https://bandanablog.wordpress.com/2015/04/30/fetlifes-best-customers/).
 
@@ -155,7 +155,8 @@ defaults may be configured at `/autodelete`.
 
 Use `/poll create` to open a poll. Specify `yes/no`, `multiple`, or `ranked` types and provide
 semicolon-separated options for multi-option polls. Polls may auto-close after a duration.
-Example: `/poll create "Best snack?" type:multiple options:"chips;cookies"`.
+Example: `/poll create "Best snack?" type:multiple options:"chips; cookies"`.
+Quoted values allow spaces inside options.
 `/poll list` shows active polls, `/poll close` ends a poll early, and `/poll results` displays vote
 counts. Poll statistics and manual poll creation are available in the management UI at `/polls`.
 

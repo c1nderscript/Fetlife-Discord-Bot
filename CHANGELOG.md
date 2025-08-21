@@ -1,5 +1,11 @@
 All notable changes to this project will be documented here.
 
+## [1.26.6] - 2025-08-21
+### Fixed
+- fix: handle quoted filter values in subscribe command parsing
+### Tests
+- test: parse subscription options with quoted values
+
 ## [1.26.5] - 2025-08-21
 ### Docs
 - docs: add AGENTS.md files for key directories

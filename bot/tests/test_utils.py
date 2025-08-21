@@ -20,6 +20,15 @@ def test_parse_subscribe_command():
     assert filters == {"min_attendees": 10, "keywords": ["rope", "consent"]}
 
 
+def test_parse_subscribe_command_quoted_value():
+    sub_type, target, filters = parse_subscribe_command(
+        'events location:cities/1 options:"chips; cookies"'
+    )
+    assert sub_type == "events"
+    assert target == "location:cities/1"
+    assert filters == {"options": "chips; cookies"}
+
+
 def test_matches_filters():
     filters = {"keywords": ["rope"], "city": "NYC", "min_attendees": 5}
     item = {"title": "Rope Night", "city": "NYC", "attendees": 10}
