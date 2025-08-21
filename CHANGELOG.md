@@ -1,5 +1,9 @@
 All notable changes to this project will be documented here.
 
+## [1.26.5] - 2025-08-21
+### Docs
+- docs: add AGENTS.md files for key directories
+
 ## [1.26.4] - 2025-08-21
 ### Fixed
 - fix: serialize extra log fields like correlation_id
