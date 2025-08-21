@@ -63,11 +63,6 @@ OAUTH_REDIRECT_URI = ""
 
 class JsonFormatter(logging.Formatter):
     def format(self, record: logging.LogRecord) -> str:  # pragma: no cover - formatting
-        base = {
-            "level": record.levelname,
-            "name": record.name,
-            "message": record.getMessage(),
-        }
         standard = {
             "name",
             "msg",
@@ -91,11 +86,13 @@ class JsonFormatter(logging.Formatter):
             "process",
             "message",
         }
-        extras = {
-            key: value for key, value in record.__dict__.items() if key not in standard
+        data = {
+            "level": record.levelname,
+            "name": record.name,
+            "message": record.getMessage(),
+            **{k: v for k, v in record.__dict__.items() if k not in standard},
         }
-        base.update(extras)
-        return json.dumps(base)
+        return json.dumps(data)
 
 
 handler = logging.StreamHandler()

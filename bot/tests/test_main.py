@@ -32,4 +32,6 @@ def test_json_formatter_outputs_extra_fields():
     handler.flush()
     output = stream.getvalue().strip()
     logger.removeHandler(handler)
-    assert json.loads(output)["correlation_id"] == "123"
+    data = json.loads(output)
+    assert data["correlation_id"] == "123"
+    assert "msg" not in data
