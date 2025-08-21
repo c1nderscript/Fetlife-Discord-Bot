@@ -6,6 +6,7 @@ This guide covers common patterns for running the FetLife Discord Bot in product
 - **Docker Compose**: Use the provided `docker-compose.yml` with `deploy.update_config` set to `order: start-first` for rolling updates. Validate deployments with [`scripts/deploy-validate.sh`](../scripts/deploy-validate.sh) to ensure environment variables, database connectivity, and TLS certificates are correct.
 - **Systemd**: For single-host setups, convert the Docker services into systemd units and enable automatic restarts on failure.
 - **Backups and DR**: Regularly run [`scripts/backup-verify.sh`](../scripts/backup-verify.sh) and [`scripts/dr-validate.sh`](../scripts/dr-validate.sh) to exercise backup restoration and disaster recovery procedures.
+- **Auth Token**: Set `ADAPTER_AUTH_TOKEN` for the adapter service; it logs a critical error and responds with `500` if the token is missing.
 
 ## Scaling Tips
 - Allocate dedicated database resources and tune PostgreSQL for expected load.
