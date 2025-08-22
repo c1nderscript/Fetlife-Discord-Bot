@@ -1,5 +1,9 @@
 All notable changes to this project will be documented here.
 
+## [1.28.1] - 2025-08-22
+### Docs
+- docs: move libFetLife sections into docs/libfetlife.md and describe bot/adapter architecture in README
+
 ## [1.28.0] - 2025-08-22
 ### Added
 - feat: require --confirm for install script and support --dry-run

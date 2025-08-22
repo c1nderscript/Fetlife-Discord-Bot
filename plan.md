@@ -1,5 +1,5 @@
 ## Goal
-Add dry-run default and --confirm flag to scripts/install.sh, document usage, and bump version to 1.28.0.
+Reorganize documentation by moving `libFetLife` sections into `docs/libfetlife.md`, rewrite the README opening to describe the bot/adapter architecture, and bump version to 1.28.1.
 
 ## Constraints
 - Follow AGENTS.md instructions.
@@ -7,7 +7,7 @@ Add dry-run default and --confirm flag to scripts/install.sh, document usage, an
 - Run CI commands before committing.
 
 ## Risks
-- Missing --confirm could lead to accidental operations if logic is wrong.
+- Cross-file version mismatch could confuse releases.
 - CI commands may fail due to missing dependencies.
 
 ## Test Plan
@@ -16,15 +16,16 @@ Add dry-run default and --confirm flag to scripts/install.sh, document usage, an
 - `docker-compose run --rm bot sh -c "pip install -r requirements-dev.txt && black --check bot && flake8 bot && mypy bot"`
 
 ## Semver
-Minor release: require --confirm for install actions and add --dry-run default, bump version to 1.28.0.
+Patch release: documentation updates and refactor, bump version to 1.28.1.
 
 ## Affected Files
-- scripts/install.sh
-- scripts/AGENTS.md
 - README.markdown
+- docs/libfetlife.md
+- docs/AGENTS.md
 - toaster.md
 - CHANGELOG.md
 - pyproject.toml
+- composer.json
 - plan.md
 
 ## Rollback
