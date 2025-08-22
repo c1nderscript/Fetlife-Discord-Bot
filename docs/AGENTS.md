@@ -6,3 +6,4 @@
 - `alert-runbook.md`: operational response playbook.
 - `monitoring/`: dashboards and monitoring resources.
 - `decisions/`: architecture decision records.
+- `libfetlife.md`: legacy PHP library documentation.
