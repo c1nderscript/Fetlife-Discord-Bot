@@ -1,5 +1,5 @@
 ## Goal
-Reorganize documentation by moving `libFetLife` sections into `docs/libfetlife.md`, rewrite the README opening to describe the bot/adapter architecture, and bump version to 1.28.1.
+Add detailed AGENTS.md files for `bot/tests` and `bot/templates` directories and bump version to 1.28.2.
 
 ## Constraints
 - Follow AGENTS.md instructions.
@@ -7,7 +7,7 @@ Reorganize documentation by moving `libFetLife` sections into `docs/libfetlife.m
 - Run CI commands before committing.
 
 ## Risks
-- Cross-file version mismatch could confuse releases.
+- Missing template rules could confuse contributors.
 - CI commands may fail due to missing dependencies.
 
 ## Test Plan
@@ -16,12 +16,12 @@ Reorganize documentation by moving `libFetLife` sections into `docs/libfetlife.m
 - `docker-compose run --rm bot sh -c "pip install -r requirements-dev.txt && black --check bot && flake8 bot && mypy bot"`
 
 ## Semver
-Patch release: documentation updates and refactor, bump version to 1.28.1.
+Patch release: documentation updates, bump version to 1.28.2.
 
 ## Affected Files
+- bot/tests/AGENTS.md
+- bot/templates/AGENTS.md
 - README.markdown
-- docs/libfetlife.md
-- docs/AGENTS.md
 - toaster.md
 - CHANGELOG.md
 - pyproject.toml
