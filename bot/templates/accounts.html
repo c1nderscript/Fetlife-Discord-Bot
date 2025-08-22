@@ -1,0 +1,11 @@
+<h1>Accounts</h1>
+<ul>
+{% for id, username in accounts %}
+<li>{{ id }} {{ username }}<form method='post' action='/accounts'><input type='hidden' name='remove' value='{{ id }}'/><button>Delete</button></form></li>
+{% endfor %}
+</ul>
+<form method='post' action='/accounts'>
+<input type='text' name='username' placeholder='username'/>
+<input type='password' name='password' placeholder='password'/>
+<button>Add</button>
+</form>

@@ -1,4 +1,4 @@
-# toaster.md — Fetlife-Discord-Bot (v1.26.6)
+# toaster.md — Fetlife-Discord-Bot (v1.27.0)
 
 **TL;DR:** Discord bot and PHP adapter that relay FetLife activity into chat channels.  
 Each major directory now includes an `AGENTS.md` describing its purpose and key files.
@@ -30,7 +30,7 @@ flowchart LR
 | bot/adapter_client.py | HTTP client for adapter service | Validates adapter responses and handles auth | `_get_session`, `fetch_events` |
 | bot/db.py | Database URL builder and engine setup | Provides SQLAlchemy session and credential hashing | `SessionLocal`, `hash_credentials` |
 | bot/models.py | ORM models | Defines tables for guilds, channels, accounts, subscriptions | `Guild`, `Subscription` |
-| bot/storage.py | Subscription persistence helpers | Adds and retrieves subscriptions from DB | `add_subscription`, `list_subscriptions` |
+| bot/storage.py | Subscription and account persistence helpers | Manage subscriptions and FetLife accounts | `add_subscription`, `list_accounts` |
 | bot/rate_limit.py | Async token bucket rate limiter | Throttles admin commands | `TokenBucket` |
 | bot/tasks.py | Background cleanup tasks | Deletes expired timed messages | `delete_expired_messages` |
 | bot/telegram_bridge.py | Telegram integration | Bridges messages between Discord and Telegram | `TelegramBridge` |
@@ -151,6 +151,7 @@ python -m bot.main
 ## Workflow Examples
 
 - **Audit logs:** `/audit search user:123 action:ban` → records stored via `bot/audit.py` and viewable at `/audit`.
+- **Accounts:** add or remove FetLife logins at `/accounts`; credentials stored via `bot/storage.py`.
 - **Timers:** `/timer 10m cleanup` → `apscheduler` schedules deletion in `bot/tasks.py`.
 - **Birthdays:** `/birthday set 2000-01-01` → `bot/birthday.py` saves the date and daily jobs announce in configured channels.
 - **Polls:** `/poll create "Best snack?" type:multiple options:"chips; cookies"` → `bot/polling.py` tracks votes and auto-closes.
