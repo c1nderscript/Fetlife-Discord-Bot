@@ -1,5 +1,5 @@
 ## Goal
-Support quoted filter values in subscription commands and bump version to 1.26.6.
+Add management page to list, add, and remove FetLife accounts and bump version to 1.27.0.
 
 ## Constraints
 - Follow AGENTS.md instructions.
@@ -7,7 +7,7 @@ Support quoted filter values in subscription commands and bump version to 1.26.6
 - Run CI commands before committing.
 
 ## Risks
-- Incorrect parsing could break existing subscriptions.
+- Credentials may be stored incorrectly or duplicate accounts might be added.
 - CI commands may fail due to missing dependencies.
 
 ## Test Plan
@@ -16,16 +16,17 @@ Support quoted filter values in subscription commands and bump version to 1.26.6
 - `docker-compose run --rm bot sh -c "pip install -r requirements-dev.txt && black --check bot && flake8 bot && mypy bot"`
 
 ## Semver
-Patch release: fix subscription command parsing and bump version to 1.26.6.
+Minor release: add accounts management UI and bump version to 1.27.0.
 
 ## Affected Files
-- bot/utils.py
-- bot/tests/test_utils.py
+- bot/main.py
+- bot/templates/accounts.html
+- bot/templates/AGENTS.md
+- README.markdown
+- toaster.md
 - CHANGELOG.md
 - pyproject.toml
 - composer.json
-- README.markdown
-- toaster.md
 - plan.md
 
 ## Rollback

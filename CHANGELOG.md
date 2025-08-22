@@ -1,5 +1,9 @@
 All notable changes to this project will be documented here.
 
+## [1.27.0] - 2025-08-21
+### Added
+- feat: manage FetLife accounts via web UI
+
 ## [1.26.6] - 2025-08-21
 ### Fixed
 - fix: handle quoted filter values in subscribe command parsing

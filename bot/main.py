@@ -1806,6 +1806,23 @@ def create_management_app(db, breaker: CircuitBreaker) -> web.Application:
         state = "open" if breaker.is_open else "closed"
         return web.json_response({"state": state})
 
+    async def accounts_page(request: web.Request) -> web.Response:
+        accounts = storage.list_accounts(db)
+        return render("accounts.html", accounts=accounts)
+
+    async def accounts_post(request: web.Request) -> web.Response:
+        data = await request.post()
+        remove_id = data.get("remove")
+        if remove_id:
+            storage.remove_account(db, int(remove_id))
+        else:
+            username = data.get("username", "").strip()
+            password = data.get("password", "")
+            if not username or not password:
+                return web.Response(status=400, text="invalid request")
+            storage.add_account(db, username, password)
+        raise web.HTTPFound("/accounts")
+
     async def subscriptions_page(request: web.Request) -> web.Response:
         subs = db.query(models.Subscription).all()
         return render("subscriptions.html", subs=subs)
@@ -2068,6 +2085,8 @@ def create_management_app(db, breaker: CircuitBreaker) -> web.Application:
     app.router.add_get("/ops/health", health_status)
     app.router.add_post("/ops/health-check", trigger_health_check)
     app.router.add_post("/ops/breaker/toggle", breaker_toggle)
+    app.router.add_get("/accounts", accounts_page)
+    app.router.add_post("/accounts", accounts_post)
     app.router.add_get("/subscriptions", subscriptions_page)
     app.router.add_post(r"/subscriptions/{sub_id:\d+}/delete", subscription_delete)
     app.router.add_get("/roles", roles_page)
