@@ -1,5 +1,9 @@
 All notable changes to this project will be documented here.
 
+## [1.27.1] - 2025-08-21
+### Tests
+- test: cover roles, birthdays, and moderation management pages
+
 ## [1.27.0] - 2025-08-21
 ### Added
 - feat: manage FetLife accounts via web UI
