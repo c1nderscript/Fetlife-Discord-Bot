@@ -1,5 +1,11 @@
 All notable changes to this project will be documented here.
 
+## [1.28.0] - 2025-08-22
+### Added
+- feat: require --confirm for install script and support --dry-run
+### Docs
+- docs: document install script flags in README
+
 ## [1.27.1] - 2025-08-21
 ### Tests
 - test: cover roles, birthdays, and moderation management pages

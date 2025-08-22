@@ -1,46 +1,71 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+DRY_RUN=1
+
+usage() {
+  cat <<'USAGE'
+Usage: scripts/install.sh [--confirm] [--dry-run] [--help]
+
+Options:
+  --dry-run   Print actions without executing (default)
+  --confirm   Execute install, reinstall, and uninstall operations
+  -h, --help  Show this help message
+USAGE
+}
+
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    --dry-run) DRY_RUN=1 ;;
+    --confirm) DRY_RUN=0 ;;
+    -h|--help) usage; exit 0 ;;
+    *) echo "Unknown option: $1"; usage; exit 1 ;;
+  esac
+  shift
+done
+
+if [[ "$DRY_RUN" -eq 1 ]]; then
+  echo "Running in dry-run mode. Use --confirm to perform actions."
+fi
+
+run_cmd() {
+  if [[ "$DRY_RUN" -eq 1 ]]; then
+    printf 'DRY RUN:'
+    for arg in "$@"; do
+      printf ' %q' "$arg"
+    done
+    echo
+  else
+    "$@"
+  fi
+}
+
 ensure_gitignore() {
   if [[ ! -f .gitignore ]] || ! grep -qxF '.venv/' .gitignore; then
-    echo '.venv/' >> .gitignore
+    run_cmd bash -c "echo '.venv/' >> .gitignore"
   fi
 }
 
 install() {
   if [[ ! -d .venv ]]; then
-    python3 -m venv .venv
+    run_cmd python3 -m venv .venv
   else
     echo ".venv already exists; using existing environment."
   fi
-  # shellcheck source=/dev/null
-  source .venv/bin/activate
-  pip install -r requirements.lock -r requirements-dev.txt
+  run_cmd bash -c "source .venv/bin/activate && pip install -r requirements.lock -r requirements-dev.txt"
 }
 
 reinstall() {
   if [[ -d .venv ]]; then
-    read -r -p ".venv exists. Delete and reinstall? (y/N): " resp
-    if [[ "$resp" =~ ^[Yy]$ ]]; then
-      rm -rf .venv
-      install
-    else
-      echo "Reinstall aborted."
-    fi
-  else
-    install
+    run_cmd rm -rf .venv
   fi
+  install
 }
 
 uninstall() {
   if [[ -d .venv ]]; then
-    read -r -p "Remove existing .venv? (y/N): " resp
-    if [[ "$resp" =~ ^[Yy]$ ]]; then
-      rm -rf .venv
-      echo ".venv removed."
-    else
-      echo "Uninstall aborted."
-    fi
+    run_cmd rm -rf .venv
+    echo ".venv removed."
   else
     echo "No .venv found."
   fi

@@ -1,5 +1,5 @@
 ## Goal
-Add tests for web interface roles, birthdays, and moderation endpoints and bump version to 1.27.1.
+Add dry-run default and --confirm flag to scripts/install.sh, document usage, and bump version to 1.28.0.
 
 ## Constraints
 - Follow AGENTS.md instructions.
@@ -7,7 +7,7 @@ Add tests for web interface roles, birthdays, and moderation endpoints and bump 
 - Run CI commands before committing.
 
 ## Risks
-- Missing mocks could cause Discord calls during tests.
+- Missing --confirm could lead to accidental operations if logic is wrong.
 - CI commands may fail due to missing dependencies.
 
 ## Test Plan
@@ -16,16 +16,15 @@ Add tests for web interface roles, birthdays, and moderation endpoints and bump 
 - `docker-compose run --rm bot sh -c "pip install -r requirements-dev.txt && black --check bot && flake8 bot && mypy bot"`
 
 ## Semver
-Patch release: add web interface tests and bump version to 1.27.1.
+Minor release: require --confirm for install actions and add --dry-run default, bump version to 1.28.0.
 
 ## Affected Files
-- bot/tests/AGENTS.md
-- bot/tests/test_web_interface.py
+- scripts/install.sh
+- scripts/AGENTS.md
 - README.markdown
 - toaster.md
 - CHANGELOG.md
 - pyproject.toml
-- composer.json
 - plan.md
 
 ## Rollback
