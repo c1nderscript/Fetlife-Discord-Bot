@@ -1,4 +1,4 @@
-# libFetLife - README (v1.27.1)
+# libFetLife - README (v1.28.0)
 
 `libFetLife` is a PHP class implementing a simple API useful for interfacing with the amateur porn and fetish dating website [FetLife.com](https://fetlife.com/). Learn more [about the political motivation for this library](https://web.archive.org/web/20150912020717/https://bandanablog.wordpress.com/2015/04/30/fetlifes-best-customers/).
 
@@ -19,7 +19,7 @@ Adapter requests use a circuit breaker. After repeated failures the breaker open
 
 ### Docker Compose Quick Start
 
-1. `bash scripts/install.sh` and select **Install**. This creates `.venv` and installs runtime and development dependencies.
+1. `bash scripts/install.sh --confirm` and select **Install**. By default the script only prints actions; `--confirm` creates `.venv` and installs runtime and development dependencies.
 2. `docker compose up -d` to launch the adapter, bot, and database. The `db` service pins
    `postgres:15` to digest `sha256:0de3e43bbb424d5fb7ca1889150f8e1b525d6c9fbaf9df6d853dcbc2ed5ffa1e` for reproducible builds.
 3. Generate an invite link from the [Discord Developer Portal](https://discord.com/developers/applications), invite the bot to your server, then run `/fl login` to verify adapter authentication, `/fl subscribe events location:cities/5898 min_attendees:10`, `/fl subscribe group_posts group:1`, `/fl subscribe messages inbox`, `/fl list`, and `/fl test <id>` in Discord.
@@ -212,7 +212,7 @@ Docker Compose declares health checks for both services using these endpoints. A
 
 ### Manual Setup
 
-1. `bash scripts/install.sh` and select **Install** to create `.venv` and install dependencies from `requirements.txt` and `requirements-dev.txt`. The `.env` file contains secrets and **must not** be committed to version control.
+1. `bash scripts/install.sh --confirm` and select **Install** to create `.venv` and install dependencies from `requirements.txt` and `requirements-dev.txt`. Omit `--confirm` for a dry run. The `.env` file contains secrets and **must not** be committed to version control.
 2. Customize `config.yaml` for per-guild or per-channel defaults. A minimal example:
 
    ```yaml
