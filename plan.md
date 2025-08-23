@@ -1,5 +1,5 @@
 ## Goal
-Add regression test for HTTP adapter URL requirement and bump version to 1.28.4.
+Replace deprecated `FetLife::base_url` references with `Connection::BASE_URL` and bump version to 1.28.5.
 
 ## Constraints
 - Follow AGENTS.md instructions.
@@ -7,8 +7,8 @@ Add regression test for HTTP adapter URL requirement and bump version to 1.28.4.
 - Run CI commands before committing.
 
 ## Risks
+- Missed references could break generated links.
 - CI commands may fail due to missing dependencies.
-- New test may fail to trigger the expected SystemExit.
 
 ## Test Plan
 - `docker-compose -f tests/docker-compose.test.yml run --rm -e MOCK_ADAPTER=1 bot-test`
@@ -16,16 +16,13 @@ Add regression test for HTTP adapter URL requirement and bump version to 1.28.4.
 - `docker-compose run --rm bot sh -c "pip install -r requirements-dev.txt && black --check bot && flake8 bot && mypy bot"`
 
 ## Semver
-Patch release: add test coverage for HTTPS adapter requirement and bump version to 1.28.4.
+Patch release: fix adapter links and bump version to 1.28.5.
 
 ## Repo Structure
-- `bot/tests/test_adapter_https.py`: ensures the bot exits when ADAPTER_BASE_URL uses HTTP without `MOCK_ADAPTER`.
+- `adapter/public/index.php`: use `Connection::BASE_URL` for link generation.
 
 ## Affected Files
-- bot/tests/test_adapter_https.py
-- bot/tests/AGENTS.md
-- bot/tests/test_web_interface.py
-- bot/telegram_bridge.py
+- adapter/public/index.php
 - README.markdown
 - toaster.md
 - CHANGELOG.md
@@ -35,3 +32,4 @@ Patch release: add test coverage for HTTPS adapter requirement and bump version 
 
 ## Rollback
 Revert commit.
+

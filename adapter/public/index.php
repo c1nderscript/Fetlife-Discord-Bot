@@ -150,7 +150,7 @@ $app->get('/events', function ($request, $response) {
         $data[] = [
             'id' => $user->parseIdFromUrl($link),
             'title' => trim($node->getElementsByTagName('h2')->item(0)->textContent ?? ''),
-            'link' => FetLife::base_url . $link,
+            'link' => Connection::BASE_URL . $link,
             'time' => ($node->getElementsByTagName('time')->item(0)->getAttribute('datetime') ?? null)
         ];
     }
@@ -255,7 +255,7 @@ $app->get('/groups/{id}/posts', function ($request, $response, $args) {
         $posts[] = [
             'id' => $user->parseIdFromUrl($link),
             'title' => trim($a ? $a->textContent : ''),
-            'link' => FetLife::base_url . $link,
+            'link' => Connection::BASE_URL . $link,
             'published' => $timeEl ? $timeEl->getAttribute('datetime') : null,
         ];
     }
