@@ -1,5 +1,9 @@
 All notable changes to this project will be documented here.
 
+## [1.28.6] - 2025-08-22
+### Docs
+- docs: add fixtures AGENTS file and bump version to 1.28.6
+
 ## [1.28.5] - 2025-08-22
 ### Fixed
 - fix: use `Connection::BASE_URL` when constructing adapter links
