@@ -14,9 +14,7 @@ from .config import load_config, save_config
 
 logger = logging.getLogger("flbot")
 
-telegram_connected = Gauge(
-    "telegram_bridge_connected", "Telegram bridge connectivity"
-)
+telegram_connected = Gauge("telegram_bridge_connected", "Telegram bridge connectivity")
 telegram_errors = Counter("telegram_bridge_errors_total", "Telegram bridge errors")
 telegram_latency = Histogram(
     "telegram_bridge_request_latency_seconds",

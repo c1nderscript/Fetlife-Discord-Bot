@@ -1,5 +1,5 @@
 ## Goal
-Add AGENTS.md for `adapter/public` and bump version to 1.28.3.
+Add regression test for HTTP adapter URL requirement and bump version to 1.28.4.
 
 ## Constraints
 - Follow AGENTS.md instructions.
@@ -8,7 +8,7 @@ Add AGENTS.md for `adapter/public` and bump version to 1.28.3.
 
 ## Risks
 - CI commands may fail due to missing dependencies.
-- New AGENTS file might miss required context.
+- New test may fail to trigger the expected SystemExit.
 
 ## Test Plan
 - `docker-compose -f tests/docker-compose.test.yml run --rm -e MOCK_ADAPTER=1 bot-test`
@@ -16,13 +16,16 @@ Add AGENTS.md for `adapter/public` and bump version to 1.28.3.
 - `docker-compose run --rm bot sh -c "pip install -r requirements-dev.txt && black --check bot && flake8 bot && mypy bot"`
 
 ## Semver
-Patch release: documentation updates, bump version to 1.28.3.
+Patch release: add test coverage for HTTPS adapter requirement and bump version to 1.28.4.
 
 ## Repo Structure
-- `adapter/public/AGENTS.md` documents the adapter HTTP entrypoint.
+- `bot/tests/test_adapter_https.py`: ensures the bot exits when ADAPTER_BASE_URL uses HTTP without `MOCK_ADAPTER`.
 
 ## Affected Files
-- adapter/public/AGENTS.md
+- bot/tests/test_adapter_https.py
+- bot/tests/AGENTS.md
+- bot/tests/test_web_interface.py
+- bot/telegram_bridge.py
 - README.markdown
 - toaster.md
 - CHANGELOG.md

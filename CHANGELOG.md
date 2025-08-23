@@ -1,5 +1,14 @@
 All notable changes to this project will be documented here.
 
+## [1.28.4] - 2025-08-22
+### Test
+- test: exit when `ADAPTER_BASE_URL` uses HTTP without `MOCK_ADAPTER`
+- test: remove unused import in management web interface test
+### Chore
+- chore: format `telegram_bridge.py` with `black`
+### Docs
+- docs: bump version to 1.28.4
+
 ## [1.28.3] - 2025-08-22
 ### Docs
 - docs: document adapter public entrypoint and bump version

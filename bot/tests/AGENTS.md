@@ -10,6 +10,7 @@
 - `conftest.py`: shared fixtures.
 - `fixtures/`: reusable test data.
 - `test_web_interface.py`: management web interface tests.
+- `test_adapter_https.py`: ensures the bot exits on an HTTP `ADAPTER_BASE_URL` without `MOCK_ADAPTER`.
 - `test_*.py`: feature-specific tests for bot components.
 
 ## Rules
