@@ -1,5 +1,9 @@
 All notable changes to this project will be documented here.
 
+## [1.28.3] - 2025-08-22
+### Docs
+- docs: document adapter public entrypoint and bump version
+
 ## [1.28.2] - 2025-08-22
 ### Docs
 - docs: add AGENTS for bot tests and templates
