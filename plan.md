@@ -1,5 +1,5 @@
 ## Goal
-Ensure `adapter_client` imports `logging` and bump version to 1.28.7.
+Add `asyncio` import to rate limiter and bump version to 1.28.8.
 
 ## Constraints
 - Follow AGENTS.md instructions.
@@ -8,7 +8,7 @@ Ensure `adapter_client` imports `logging` and bump version to 1.28.7.
 
 ## Risks
 - Lint or type checks may fail if dependencies are missing.
-- Logging import changes could introduce unforeseen errors.
+- Adjusting imports could introduce unforeseen errors.
 
 ## Test Plan
 - `docker-compose -f tests/docker-compose.test.yml run --rm -e MOCK_ADAPTER=1 bot-test`
@@ -16,13 +16,13 @@ Ensure `adapter_client` imports `logging` and bump version to 1.28.7.
 - `docker-compose run --rm bot sh -c "pip install -r requirements-dev.txt && black --check bot && flake8 bot && mypy bot"`
 
 ## Semver
-Patch release: fix logging import and bump version to 1.28.7.
+Patch release: ensure rate limiter imports `asyncio` and bump version to 1.28.8.
 
 ## Repo Structure
-- `bot/adapter_client.py`: logging import.
+- `bot/rate_limit.py`: ensure asyncio import.
 
 ## Affected Files
-- bot/adapter_client.py
+- bot/rate_limit.py
 - CHANGELOG.md
 - README.markdown
 - toaster.md
