@@ -1,5 +1,5 @@
 ## Goal
-Add AGENTS.md for `adapter/public` and bump version to 1.28.3.
+Default `scripts/setup.sh` to a dry run requiring `--confirm` for changes and document the new safety flags across docs.
 
 ## Constraints
 - Follow AGENTS.md instructions.
@@ -7,8 +7,8 @@ Add AGENTS.md for `adapter/public` and bump version to 1.28.3.
 - Run CI commands before committing.
 
 ## Risks
+- Interactive script changes could break prompts.
 - CI commands may fail due to missing dependencies.
-- New AGENTS file might miss required context.
 
 ## Test Plan
 - `docker-compose -f tests/docker-compose.test.yml run --rm -e MOCK_ADAPTER=1 bot-test`
@@ -16,13 +16,14 @@ Add AGENTS.md for `adapter/public` and bump version to 1.28.3.
 - `docker-compose run --rm bot sh -c "pip install -r requirements-dev.txt && black --check bot && flake8 bot && mypy bot"`
 
 ## Semver
-Patch release: documentation updates, bump version to 1.28.3.
+Patch release: update setup script behavior and docs, bump version to 1.28.4.
 
 ## Repo Structure
-- `adapter/public/AGENTS.md` documents the adapter HTTP entrypoint.
+- `scripts/AGENTS.md` documents setup script.
 
 ## Affected Files
-- adapter/public/AGENTS.md
+- scripts/setup.sh
+- scripts/AGENTS.md
 - README.markdown
 - toaster.md
 - CHANGELOG.md
@@ -32,3 +33,4 @@ Patch release: documentation updates, bump version to 1.28.3.
 
 ## Rollback
 Revert commit.
+

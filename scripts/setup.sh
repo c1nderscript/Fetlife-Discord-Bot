@@ -3,6 +3,37 @@ set -euo pipefail
 
 ENV_FILE=".env"
 
+usage() {
+  cat <<'EOF'
+Usage: $0 [--dry-run|--confirm]
+Gather credentials, optionally create config.yaml, apply migrations, and start the bot.
+Defaults to --dry-run and prints actions without changing files. Pass --confirm to apply changes.
+EOF
+}
+
+DRY_RUN=1
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    --confirm)
+      DRY_RUN=0
+      shift
+      ;;
+    --dry-run)
+      DRY_RUN=1
+      shift
+      ;;
+    -h|--help)
+      usage
+      exit 0
+      ;;
+    *)
+      echo "Unknown option: $1" >&2
+      usage
+      exit 1
+      ;;
+  esac
+done
+
 prompt() {
   local msg="$1" default="${2-}"
   local val
@@ -15,6 +46,10 @@ prompt() {
 
 write_env() {
   local key="$1" value="$2"
+  if (( DRY_RUN )); then
+    echo "Would write $key=$value to $ENV_FILE"
+    return
+  fi
   if [[ -f "$ENV_FILE" ]] && grep -q "^${key}=" "$ENV_FILE"; then
     echo "$key already set in $ENV_FILE; skipping."
   else
@@ -31,12 +66,20 @@ current_env() {
 
 # Ensure .env exists
 if [[ ! -f "$ENV_FILE" ]]; then
-  if [[ -f ".env.example" ]]; then
-    cp .env.example "$ENV_FILE"
-    echo "Copied .env.example to $ENV_FILE"
+  if (( DRY_RUN )); then
+    if [[ -f ".env.example" ]]; then
+      echo "Would copy .env.example to $ENV_FILE"
+    else
+      echo "Would create $ENV_FILE"
+    fi
   else
-    touch "$ENV_FILE"
-    echo "Created $ENV_FILE"
+    if [[ -f ".env.example" ]]; then
+      cp .env.example "$ENV_FILE"
+      echo "Copied .env.example to $ENV_FILE"
+    else
+      touch "$ENV_FILE"
+      echo "Created $ENV_FILE"
+    fi
   fi
 fi
 
@@ -75,16 +118,31 @@ write_env TELEGRAM_API_HASH "$TELEGRAM_API_HASH"
 # Optionally create config.yaml
 read -r -p "Create config.yaml? (y/N): " cfg
 if [[ "$cfg" =~ ^[Yy]$ ]]; then
-  if [[ -f "config.yaml" ]]; then
-    echo "config.yaml already exists; leaving as is."
+  if (( DRY_RUN )); then
+    if [[ -f "config.yaml" ]]; then
+      echo "Would leave existing config.yaml as is"
+    else
+      echo "Would write config.yaml"
+    fi
   else
-    cat > config.yaml <<'EOC'
+    if [[ -f "config.yaml" ]]; then
+      echo "config.yaml already exists; leaving as is."
+    else
+      cat > config.yaml <<'EOC'
 # Default settings applied to all channels
 defaults:
   thread_per_event: false
 EOC
-    echo "Wrote config.yaml"
+      echo "Wrote config.yaml"
+    fi
   fi
+fi
+
+if (( DRY_RUN )); then
+  echo "Would export environment from $ENV_FILE"
+  echo "Would apply database migrations"
+  echo "Would start bot"
+  exit 0
 fi
 
 # Export environment

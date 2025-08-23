@@ -1,5 +1,11 @@
 All notable changes to this project will be documented here.
 
+## [1.28.4] - 2025-08-23
+### Changed
+- chore: default setup.sh to dry run and require --confirm
+### Docs
+- docs: mention setup.sh safety flags in README and toaster
+
 ## [1.28.3] - 2025-08-22
 ### Docs
 - docs: document adapter public entrypoint and bump version

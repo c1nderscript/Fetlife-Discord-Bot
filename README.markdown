@@ -1,4 +1,4 @@
-# FetLife Discord Bot - README (v1.28.3)
+# FetLife Discord Bot - README (v1.28.4)
 
 Python Discord bot paired with a PHP adapter to relay FetLife activity into chat channels. The bot polls the adapter, which wraps the legacy `libFetLife` scraper, and persists state in PostgreSQL. Documentation for `libFetLife` lives in [docs/libfetlife.md](docs/libfetlife.md).
 
@@ -263,7 +263,7 @@ python -m bot.main
 
 Validate environment readiness with [`scripts/deploy-validate.sh`](scripts/deploy-validate.sh), which now checks adapter HTTPS endpoints with retries and an authenticated login request.
 
-For unattended deployments run [`scripts/setup.sh`](scripts/setup.sh) once to generate the `.env`, apply migrations, and perform initial configuration. Then choose one of the following options to keep the bot running continuously. The script prompts for `ADAPTER_AUTH_TOKEN`, `ADAPTER_BASE_URL`, `TELEGRAM_API_ID`, and `TELEGRAM_API_HASH`, using existing `.env` values as defaults.
+For unattended deployments run [`scripts/setup.sh`](scripts/setup.sh) once to generate the `.env`, apply migrations, and perform initial configuration. The script defaults to a dry run; pass `--confirm` to write files and start services. Then choose one of the following options to keep the bot running continuously. The script prompts for `ADAPTER_AUTH_TOKEN`, `ADAPTER_BASE_URL`, `TELEGRAM_API_ID`, and `TELEGRAM_API_HASH`, using existing `.env` values as defaults.
 
 #### Docker Compose
 

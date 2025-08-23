@@ -1,4 +1,4 @@
-# toaster.md — Fetlife-Discord-Bot (v1.28.3)
+# toaster.md — Fetlife-Discord-Bot (v1.28.4)
 
 **TL;DR:** Discord bot and PHP adapter that relay FetLife activity into chat channels.  
 Each major directory now includes an `AGENTS.md` describing its purpose and key files.
@@ -145,6 +145,7 @@ python -m bot.main
 ## Ops Notes
 
 * `scripts/install.sh` defaults to `--dry-run` and requires `--confirm` for changes.
+* `scripts/setup.sh` defaults to `--dry-run` and requires `--confirm` for changes.
 * Docker/Compose images: `postgres:15`, local `bot` and `adapter` builds
 * CI workflows: `.github/workflows/release-hygiene.yml`, `.github/workflows/release.yml`, `.github/workflows/deploy-validation.yml`
 * Metrics/Logs/Tracing: Prometheus metrics at `/metrics`
