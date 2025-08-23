@@ -1,5 +1,11 @@
 All notable changes to this project will be documented here.
 
+## [1.28.10] - 2025-08-23
+### Fixed
+- fix: import timezone modules in birthday reminders
+### Docs
+- docs: bump version to 1.28.10
+
 ## [1.28.9] - 2025-08-23
 ### Fixed
 - fix: import asyncio in tasks

@@ -1,5 +1,5 @@
 ## Goal
-Add `asyncio` import to tasks and bump version to 1.28.9.
+Import timezone modules in birthday reminders and bump version to 1.28.10.
 
 ## Constraints
 - Follow AGENTS.md instructions.
@@ -16,13 +16,13 @@ Add `asyncio` import to tasks and bump version to 1.28.9.
 - `docker-compose run --rm bot sh -c "pip install -r requirements-dev.txt && black --check bot && flake8 bot && mypy bot"`
 
 ## Semver
-Patch release: ensure tasks import `asyncio` and bump version to 1.28.9.
+Patch release: ensure birthday module imports required timezone tools and bump version to 1.28.10.
 
 ## Repo Structure
-- `bot/tasks.py`: ensure asyncio import.
+- `bot/birthday.py`: ensure timezone imports.
 
 ## Affected Files
-- bot/tasks.py
+- bot/birthday.py
 - CHANGELOG.md
 - README.markdown
 - toaster.md
