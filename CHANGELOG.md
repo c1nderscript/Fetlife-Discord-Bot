@@ -1,5 +1,11 @@
 All notable changes to this project will be documented here.
 
+## [1.28.7] - 2025-08-22
+### Fixed
+- fix: import logging in adapter_client
+### Docs
+- docs: bump version to 1.28.7
+
 ## [1.28.6] - 2025-08-22
 ### Docs
 - docs: add fixtures AGENTS file and bump version to 1.28.6

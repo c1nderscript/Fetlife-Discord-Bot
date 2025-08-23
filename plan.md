@@ -1,5 +1,5 @@
 ## Goal
-Document test fixtures with an AGENTS file and bump version to 1.28.6.
+Ensure `adapter_client` imports `logging` and bump version to 1.28.7.
 
 ## Constraints
 - Follow AGENTS.md instructions.
@@ -7,8 +7,8 @@ Document test fixtures with an AGENTS file and bump version to 1.28.6.
 - Run CI commands before committing.
 
 ## Risks
-- Fixture descriptions could drift from JSON content.
-- CI commands may fail due to missing dependencies.
+- Lint or type checks may fail if dependencies are missing.
+- Logging import changes could introduce unforeseen errors.
 
 ## Test Plan
 - `docker-compose -f tests/docker-compose.test.yml run --rm -e MOCK_ADAPTER=1 bot-test`
@@ -16,13 +16,13 @@ Document test fixtures with an AGENTS file and bump version to 1.28.6.
 - `docker-compose run --rm bot sh -c "pip install -r requirements-dev.txt && black --check bot && flake8 bot && mypy bot"`
 
 ## Semver
-Patch release: add documentation and bump version to 1.28.6.
+Patch release: fix logging import and bump version to 1.28.7.
 
 ## Repo Structure
-- `bot/tests/fixtures/AGENTS.md`: document JSON fixtures.
+- `bot/adapter_client.py`: logging import.
 
 ## Affected Files
-- bot/tests/fixtures/AGENTS.md
+- bot/adapter_client.py
 - CHANGELOG.md
 - README.markdown
 - toaster.md
