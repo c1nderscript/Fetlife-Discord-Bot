@@ -1,5 +1,11 @@
 All notable changes to this project will be documented here.
 
+## [1.28.5] - 2025-08-22
+### Fixed
+- fix: use `Connection::BASE_URL` when constructing adapter links
+### Docs
+- docs: bump version to 1.28.5
+
 ## [1.28.4] - 2025-08-22
 ### Test
 - test: exit when `ADAPTER_BASE_URL` uses HTTP without `MOCK_ADAPTER`
