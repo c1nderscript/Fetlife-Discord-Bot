@@ -1,4 +1,4 @@
-# FetLife Discord Bot - README (v1.28.6)
+# FetLife Discord Bot - README (v1.28.7)
 
 Python Discord bot paired with a PHP adapter to relay FetLife activity into chat channels. The bot polls the adapter, which wraps the legacy `libFetLife` scraper, and persists state in PostgreSQL. Documentation for `libFetLife` lives in [docs/libfetlife.md](docs/libfetlife.md).
 
