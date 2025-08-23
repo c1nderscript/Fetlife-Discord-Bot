@@ -1,5 +1,5 @@
 ## Goal
-Add detailed AGENTS.md files for `bot/tests` and `bot/templates` directories and bump version to 1.28.2.
+Add AGENTS.md for `adapter/public` and bump version to 1.28.3.
 
 ## Constraints
 - Follow AGENTS.md instructions.
@@ -7,8 +7,8 @@ Add detailed AGENTS.md files for `bot/tests` and `bot/templates` directories and
 - Run CI commands before committing.
 
 ## Risks
-- Missing template rules could confuse contributors.
 - CI commands may fail due to missing dependencies.
+- New AGENTS file might miss required context.
 
 ## Test Plan
 - `docker-compose -f tests/docker-compose.test.yml run --rm -e MOCK_ADAPTER=1 bot-test`
@@ -16,11 +16,13 @@ Add detailed AGENTS.md files for `bot/tests` and `bot/templates` directories and
 - `docker-compose run --rm bot sh -c "pip install -r requirements-dev.txt && black --check bot && flake8 bot && mypy bot"`
 
 ## Semver
-Patch release: documentation updates, bump version to 1.28.2.
+Patch release: documentation updates, bump version to 1.28.3.
+
+## Repo Structure
+- `adapter/public/AGENTS.md` documents the adapter HTTP entrypoint.
 
 ## Affected Files
-- bot/tests/AGENTS.md
-- bot/templates/AGENTS.md
+- adapter/public/AGENTS.md
 - README.markdown
 - toaster.md
 - CHANGELOG.md
