@@ -1,5 +1,5 @@
 ## Goal
-Add `asyncio` import to rate limiter and bump version to 1.28.8.
+Add `asyncio` import to tasks and bump version to 1.28.9.
 
 ## Constraints
 - Follow AGENTS.md instructions.
@@ -16,13 +16,13 @@ Add `asyncio` import to rate limiter and bump version to 1.28.8.
 - `docker-compose run --rm bot sh -c "pip install -r requirements-dev.txt && black --check bot && flake8 bot && mypy bot"`
 
 ## Semver
-Patch release: ensure rate limiter imports `asyncio` and bump version to 1.28.8.
+Patch release: ensure tasks import `asyncio` and bump version to 1.28.9.
 
 ## Repo Structure
-- `bot/rate_limit.py`: ensure asyncio import.
+- `bot/tasks.py`: ensure asyncio import.
 
 ## Affected Files
-- bot/rate_limit.py
+- bot/tasks.py
 - CHANGELOG.md
 - README.markdown
 - toaster.md

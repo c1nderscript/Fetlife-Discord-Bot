@@ -1,5 +1,11 @@
 All notable changes to this project will be documented here.
 
+## [1.28.9] - 2025-08-23
+### Fixed
+- fix: import asyncio in tasks
+### Docs
+- docs: bump version to 1.28.9
+
 ## [1.28.8] - 2025-08-23
 ### Fixed
 - fix: ensure rate limiter imports asyncio
