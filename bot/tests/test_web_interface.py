@@ -1,5 +1,4 @@
 import asyncio
-from datetime import date
 from aiohttp.test_utils import TestServer, TestClient
 
 from bot import main, storage, models, polling, welcome, birthday, moderation
