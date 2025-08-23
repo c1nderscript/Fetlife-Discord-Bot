@@ -1,5 +1,11 @@
 All notable changes to this project will be documented here.
 
+## [1.28.8] - 2025-08-23
+### Fixed
+- fix: ensure rate limiter imports asyncio
+### Docs
+- docs: bump version to 1.28.8
+
 ## [1.28.7] - 2025-08-22
 ### Fixed
 - fix: import logging in adapter_client
