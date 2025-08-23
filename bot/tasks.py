@@ -3,9 +3,13 @@ from datetime import datetime
 from typing import cast
 
 import discord
+import logging
 from prometheus_client import Counter
 
 from . import models
+
+
+logger = logging.getLogger(__name__)
 
 
 messages_deleted = Counter("timed_messages_deleted_total", "Timed messages deleted")
@@ -28,7 +32,7 @@ async def _delete_once(bot: discord.Client) -> None:
                 await fetched.delete()
                 messages_deleted.inc()
             except Exception:
-                pass
+                logger.exception("Failed to delete timed message %s", msg.message_id)
         bot.db.delete(msg)
     bot.db.commit()
 

@@ -1,4 +1,4 @@
-# toaster.md — Fetlife-Discord-Bot (v1.28.10)
+# toaster.md — Fetlife-Discord-Bot (v1.28.11)
 
 **TL;DR:** Discord bot and PHP adapter that relay FetLife activity into chat channels.  
 Each major directory now includes an `AGENTS.md` describing its purpose and key files.
